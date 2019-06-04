@@ -204,12 +204,6 @@ def abi_dl(date_time, sector, band=1):
     success = False
     band = padding_zero(band, 10)
 
-    if (get_os() == 'linux'):
-        path = PATH_LINUX_ABI
-    else:
-        path = PATH_WIN_ABI
-
-    # Make sure we have a list
     if (len(date_time) != 12 ):
         print('ERROR: Invalid date-time string (aws_dl.abi_dl)')
         sys.exit(0)
@@ -269,7 +263,7 @@ def abi_dl(date_time, sector, band=1):
                     s3.download_file('noaa-goes16', x, join(path, local_fname))
                     success = True
                 except botocore.exceptions.ClientError as e:
-                    if e.response['Error']['Code'] == "404":
+                    if (e.response['Error']['Code'] == "404"):
                         print("The file does not exist in this AWS bucket.")
                     else:
                         print("Error downloading file from AWS")
