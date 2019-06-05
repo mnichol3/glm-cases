@@ -4,47 +4,30 @@ from botocore.handlers import disable_signing
 import goesawsinterface
 import sys
 
-"""
-date_time = '201905232107'
-sector = 'meso1'
 
-abi_dl(date_time, sector)
-"""
 
 """
-
 s3conn = boto3.resource('s3')
 s3conn.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
 bucket = s3conn.Bucket('noaa-goes16')
 resp = bucket.meta.client.list_objects(Bucket='noaa-goes16', Delimiter='/')
-print(resp)
-print('\n')
 
-
-
-for x in resp.get('CommonPrefixes'):
-    print(list(x.values())[0][:-1])
-
-for y in resp.get('Contents'):
-    print(y)
-
-prefix = 'ABI-L2-CMIPM/'
-print(prefix)
+prefix = 'ABI-L2-CMIPM/2018/362/12/'
 
 resp = bucket.meta.client.list_objects(Bucket='noaa-goes16', Prefix=prefix, Delimiter='/')
-print(resp)
+#print(list(resp))
+#print(list(resp['Contents']))
+for x in list(resp['Contents']):
+    print(x['Key'])
+
 
 """
 
+
+
 conn = goesawsinterface.GoesAWSInterface()
 
-products = conn.get_avail_products('goes16')
-print(products)
-
-
-years = conn.get_avail_years('goes16', 'ABI-L2-CMIPM')
-print(years)
-
-
 days = conn.get_avail_days('goes16', 'ABI-L2-CMIPM', 2018)
-print(days)
+#print(days)
+#print(conn.decode_julian_day('2018', days))
+print(conn.get_avail_images('goes16', 'ABI-L2-CMIPM', '5-23-2019', 20))
