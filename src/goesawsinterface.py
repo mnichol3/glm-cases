@@ -9,6 +9,9 @@ import pytz
 import six
 from botocore.handlers import disable_signing
 
+from awsgoesfile import AwsGoesFile
+from collections import OrderedDict
+
 
 """
 import goesawsinterface
@@ -112,21 +115,85 @@ class GoesAWSInterface(object):
 
 
 
-    def get_avail_images(self, satellite, product, date, hour):
+    def get_avail_images(self, satellite, product, date, sector, channel):
         images = []
 
-        year = date[-4:]
-        jul_day = datetime.strptime(date, '%m-%d-%Y').timetuple().tm_yday
+        if (not isinstance(date, datetime)):
+            date = datetime.strptime(date, '%m-%d-%Y-%H')
+
+        year = date.year
+        hour = date.hour
+        jul_day = date.timetuple().tm_yday
 
         prefix = self.build_prefix(product, year, jul_day, hour)
         resp = self.get_sat_bucket(satellite, prefix)
 
         for each in list(resp['Contents']):
+
             match = self._scan_re.search(each['Key'])
             if (match is not None):
-                images.append(match.group(1) + '-' + match.group(2))
+                if (sector in match.group(1) and channel in match.group(1)):
+                    time = match.group(2)
+                    dt = datetime.strptime(str(year) + ' ' + str(jul_day) + ' ' + time, '%Y %j %H%M')
+                    dt = dt.strftime('%m-%d-%Y-%H:%M')
+                    images.append(AwsGoesFile(each['Key'], match.group(1) + ' ' + dt, dt))
 
         return images
+
+
+
+    """
+    start : str
+        format: 'MM-DD-YYYY-HHMM'
+    end : str
+        format: 'MM-DD-YYYY-HHMM'
+    """
+    def get_avail_images_in_range(self, satellite, product, start, end, sector, channel):
+        images = {}
+
+        start_dt = datetime.strptime(start, '%m-%d-%Y-%H:%M')
+        end_dt = datetime.strptime(end, '%m-%d-%Y-%H:%M')
+
+        for day in self.datetime_range(start_dt, end_dt):
+
+            avail_imgs = self.get_avail_images(satellite, product, day, sector, channel)
+
+            for img in avail_imgs:
+                if (self.build_channel_format(channel) in img.shortfname and sector in img.shortfname):
+                    if self._is_within_range(start_dt, end_dt, datetime.strptime(img.scan_time, '%m-%d-%Y-%H:%M')):
+                        images[img.shortfname] = img
+
+        return images
+
+
+
+    def download(self, awsgoesfiles, basepath, keep_aws_folders=False, threads=6):
+
+        if type(awsgoesfiles) == AwsGoesFile:
+            awsgoesfiles = [awsgoesfiles]
+
+        localfiles = []
+        errors = []
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=threads) as executor:
+            future_download = {executor.submit(self._download,goesfile,basepath,keep_aws_folders): goesfile for goesfile in awsgoesfiles}
+
+            for future in concurrent.futures.as_completed(future_download):
+                try:
+                    result = future.result()
+                    localfiles.append(result)
+                    six.print_("Downloaded {}".format(result.filename))
+                except GoesAwsDownloadError:
+                    error = future.exception()
+                    errors.append(error.awsgoesfile)
+
+        # Sort returned list of NexradLocalFile objects by the scan_time
+        localfiles.sort(key=lambda x:x.scan_time)
+        downloadresults = DownloadResults(localfiles,errors)
+        six.print_('{} out of {} files downloaded...{} errors'.format(downloadresults.success_count,
+                                                                      downloadresults.total,
+                                                                      downloadresults.failed_count))
+        return downloadresults
 
 
 
@@ -177,6 +244,14 @@ class GoesAWSInterface(object):
 
 
 
+    def build_channel_format(self, channel):
+        if not isinstance(channel, str):
+            channel = str(channel)
+
+        return 'C' + channel.zfill(2)
+
+
+
     def get_sat_bucket(self, satellite, prefix):
         resp = None
 
@@ -189,6 +264,43 @@ class GoesAWSInterface(object):
             sys.exit(0)
 
         return resp
+
+
+
+    def datetime_range(self, start, end):
+        diff = (end + timedelta(minutes = 1)) - start
+
+        for x in range(int(diff.total_seconds() / 60)):
+            yield start + timedelta(minutes = x)
+
+
+
+    def _is_within_range(self, start, end, value):
+        if value >= start and value <= end:
+            return True
+        else:
+            return False
+
+
+
+    def parse_partial_fname(self, satellite, product, sector, channel, date):
+
+        if (date.year > 2018):
+            mode = 'M6'
+        else:
+            mode = 'M3'
+
+        year = str(date.year)
+        day = str(date.timetuple().tm_yday)
+        hour = str(date.hour)
+        minute = str(date.minute)
+
+        fname = 'ABI-L2-' + product + '/' + year + '/' + day
+        fname += '/OR_ABI-L2-' + product + sector + '-' + mode
+        fname += self.build_channel_format(channel) + '_G' + satellite[-2:] + '_'
+        fname += 's' + year + day + hour + minute
+
+        return fname
 
 
 
@@ -210,3 +322,31 @@ class GoesAWSInterface(object):
             return list(dates)
         else:
             return dates
+
+
+
+    def _download(self, awsnexradfile, basepath, keep_aws_folders):
+        dirpath, filepath = awsgoesfile.create_filepath(basepath, keep_aws_folders)
+        try:
+            os.makedirs(dirpath)
+        except OSError as exc:
+            if exc.errno == errno.EEXIST and os.path.isdir(dirpath):
+                pass
+            else:
+                raise
+
+        try:
+            s3 = boto3.client('s3')
+            s3.meta.events.register('choose-signer.s3.*', disable_signing)
+            s3.download_file('noaa-nexrad-level2', awsgoesfile.key, filepath)
+            return LocalNexradFile(awsnexradfile, filepath)
+        except:
+            message = 'Download failed for {}'.format(awsgoesfile.shortfname)
+            raise NexradAwsDownloadError(message, awsgoesfile)
+
+
+
+class GoesAwsDownloadError(Exception):
+    def __init__(self, message, awsgoesfile):
+        super(GoesAwsDownloadError, self).__init__(message)
+        self.awsgoesfile = awsgoesfile

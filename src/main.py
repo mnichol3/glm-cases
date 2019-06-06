@@ -27,7 +27,8 @@ for x in list(resp['Contents']):
 
 conn = goesawsinterface.GoesAWSInterface()
 
-days = conn.get_avail_days('goes16', 'ABI-L2-CMIPM', 2018)
+#days = conn.get_avail_days('goes16', 'ABI-L2-CMIPM', 2018)
 #print(days)
 #print(conn.decode_julian_day('2018', days))
-print(conn.get_avail_images('goes16', 'ABI-L2-CMIPM', '5-23-2019', 20))
+print(conn.get_avail_images('goes16', 'ABI-L2-CMIPM', '6-6-2019-12', 'M1', '13'))
+#print(conn.get_avail_images_in_range('goes16', 'ABI-L2-CMIPM', '5-6-2019-15:05', '5-6-2019-15:25', 'M2', '1'))
