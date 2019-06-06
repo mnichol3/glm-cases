@@ -339,9 +339,9 @@ class GoesAWSInterface(object):
         try:
             s3 = boto3.client('s3')
             s3.meta.events.register('choose-signer.s3.*', disable_signing)
-            if (satellite = 'goes16'):
+            if (satellite == 'goes16'):
                 bucket = 'noaa-goes16'
-            elif (satellite = 'goes17'):
+            elif (satellite == 'goes17'):
                 bucket = 'noaa-goes17'
             else:
                 print('Error: Invalid satellite')
