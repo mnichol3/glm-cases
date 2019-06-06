@@ -8,9 +8,9 @@ import errno
 import pytz
 import six
 from botocore.handlers import disable_signing
+import concurrent.futures
 
 from awsgoesfile import AwsGoesFile
-from collections import OrderedDict
 
 
 """
@@ -167,7 +167,7 @@ class GoesAWSInterface(object):
 
 
 
-    def download(self, awsgoesfiles, basepath, keep_aws_folders=False, threads=6):
+    def download(self, satellite, awsgoesfiles, basepath, keep_aws_folders=False, threads=6):
 
         if type(awsgoesfiles) == AwsGoesFile:
             awsgoesfiles = [awsgoesfiles]
@@ -176,7 +176,7 @@ class GoesAWSInterface(object):
         errors = []
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=threads) as executor:
-            future_download = {executor.submit(self._download,goesfile,basepath,keep_aws_folders): goesfile for goesfile in awsgoesfiles}
+            future_download = {executor.submit(self._download,goesfile,basepath,keep_aws_folders,satellite): goesfile for goesfile in awsgoesfiles}
 
             for future in concurrent.futures.as_completed(future_download):
                 try:
@@ -325,8 +325,9 @@ class GoesAWSInterface(object):
 
 
 
-    def _download(self, awsnexradfile, basepath, keep_aws_folders):
+    def _download(self, awsgoesfile, basepath, keep_aws_folders, satellite):
         dirpath, filepath = awsgoesfile.create_filepath(basepath, keep_aws_folders)
+
         try:
             os.makedirs(dirpath)
         except OSError as exc:
@@ -338,11 +339,19 @@ class GoesAWSInterface(object):
         try:
             s3 = boto3.client('s3')
             s3.meta.events.register('choose-signer.s3.*', disable_signing)
-            s3.download_file('noaa-nexrad-level2', awsgoesfile.key, filepath)
-            return LocalNexradFile(awsnexradfile, filepath)
+            if (satellite = 'goes16'):
+                bucket = 'noaa-goes16'
+            elif (satellite = 'goes17'):
+                bucket = 'noaa-goes17'
+            else:
+                print('Error: Invalid satellite')
+                sys.exit(0)
+
+            s3.download_file(bucket, awsgoesfile.key, filepath)
+            return LocalGoesFile(awsgoesfile, filepath)
         except:
             message = 'Download failed for {}'.format(awsgoesfile.shortfname)
-            raise NexradAwsDownloadError(message, awsgoesfile)
+            raise GoesAwsDownloadError(message, awsgoesfile)
 
 
 
