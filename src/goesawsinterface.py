@@ -11,6 +11,8 @@ from botocore.handlers import disable_signing
 import concurrent.futures
 
 from awsgoesfile import AwsGoesFile
+from downloadresults import DownloadResults
+from localgoesfile import LocalGoesFile
 
 
 """
@@ -40,7 +42,8 @@ class GoesAWSInterface(object):
         self._year_re = re.compile(r'/(\d{4})/')
         self._day_re = re.compile(r'/\d{4}/(\d{3})/')
         self._hour_re = re.compile(r'/\d{4}/\d{3}/(\d{2})/')
-        self._scan_re = re.compile(r'(\w{5}\d?-M\dC\d{2})_G\d{2}_s\d{7}(\d{4})\d{3}')
+        self._scan_m_re = re.compile(r'(\w{4}M\d-M\dC\d{2})_G\d{2}_s\d{7}(\d{4})\d{3}')
+        self._scan_c_re = re.compile(r'(\w{5}-M\dC\d{2})_G\d{2}_s\d{7}(\d{4})\d{3}')
         self._s3conn = boto3.resource('s3')
         self._s3conn.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
         self._bucket_16 = self._s3conn.Bucket('noaa-goes16')
@@ -118,6 +121,11 @@ class GoesAWSInterface(object):
     def get_avail_images(self, satellite, product, date, sector, channel):
         images = []
 
+        if (sector == 'C'):
+            scan_re = self._scan_c_re
+        else:
+            scan_re = self._scan_m_re
+
         if (not isinstance(date, datetime)):
             date = datetime.strptime(date, '%m-%d-%Y-%H')
 
@@ -130,7 +138,7 @@ class GoesAWSInterface(object):
 
         for each in list(resp['Contents']):
 
-            match = self._scan_re.search(each['Key'])
+            match = scan_re.search(each['Key'])
             if (match is not None):
                 if (sector in match.group(1) and channel in match.group(1)):
                     time = match.group(2)
@@ -149,7 +157,8 @@ class GoesAWSInterface(object):
         format: 'MM-DD-YYYY-HHMM'
     """
     def get_avail_images_in_range(self, satellite, product, start, end, sector, channel):
-        images = {}
+        images = []
+        added = []
 
         start_dt = datetime.strptime(start, '%m-%d-%Y-%H:%M')
         end_dt = datetime.strptime(end, '%m-%d-%Y-%H:%M')
@@ -161,7 +170,9 @@ class GoesAWSInterface(object):
             for img in avail_imgs:
                 if (self.build_channel_format(channel) in img.shortfname and sector in img.shortfname):
                     if self._is_within_range(start_dt, end_dt, datetime.strptime(img.scan_time, '%m-%d-%Y-%H:%M')):
-                        images[img.shortfname] = img
+                        if (img.shortfname not in added):
+                            added.append(img.shortfname)
+                            images.append(img)
 
         return images
 
