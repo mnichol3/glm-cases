@@ -12,24 +12,37 @@ import sys
 from os import listdir
 
 
-def print_keys(fname):
+def print_keys(fname, keyword=None):
     grb = pygrib.open(fname)
     grb = grb[1]
 
-    for key in grb.keys():
-        print(key)
+    if (keyword is not None):
+        for key in grb.keys():
+            if keyword in key:
+                print(key)
+    else:
+        for key in grb.keys():
+            print(key)
 
 
 
-def get_keys(fname):
+def get_keys(fname, keyword=None):
     grb = pygrib.open(fname)
     grb = grb[1]
 
-    return grb.keys()
+    if (keyword is not None):
+        keys = []
+
+        for key in grb.keys():
+            if keyword in key:
+                keys.append(key)
+        return keys
+    else:
+        return grb.keys()
 
 
 
-def plot_grb(fname):
+def plot_grb(fname, grid=None):
 
     grb = pygrib.open(fname)
     grb = grb[1]
@@ -37,7 +50,12 @@ def plot_grb(fname):
     major_ax = grb.earthMajorAxis
     minor_ax = grb.earthMinorAxis
 
-    lat, lon = grb.latlons()
+    if (grid):
+        lon = grid[0]
+        lat = grid[1]
+    else:
+        lat, lon = grb.latlons()
+
     data = grb.values
 
     data[data <= 0] = float('nan')
@@ -95,15 +113,52 @@ def get_files_in_dir(path):
 
 
 
+def grid_info(fname):
+    grb = pygrib.open(fname)
+    grb = grb[1]
+
+    print('Grid type:', grb.gridType)
+    print('Grid Description Section Present:', grb.gridDescriptionSectionPresent)
+    print('Grid Definition Template Number:', grb.gridDefinitionTemplateNumber)
+    print('Grid Definition Description:', grb.gridDefinitionDescription)
+    print('Grid Longitudes (First, Last):', grb.longitudeOfFirstGridPointInDegrees, grb.longitudeOfLastGridPointInDegrees)
+    print('Grid Latitudes (First, Last):', grb.latitudeOfFirstGridPointInDegrees, grb.latitudeOfLastGridPointInDegrees)
+
+
+
+def init_grid(debug=None):
+    inc = 0.01
+    lons = np.arange(-129.995, -60.005, inc) # -129.995 to -60.005
+    lats = np.arange(54.995, 19.995, inc * -1) # 54.995 to 20.005
+    #grid = np.meshgrid(lons, lats)
+
+    if (debug):
+        print("Lons length:", len(lons))
+        print(lons)
+        print("Lats length:", len(lats))
+        print(lats)
+
+
+    return (lons, lats)
+
+
+
 def main():
 
     f_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms'
-    f_name = 'MRMS_MergedReflectivityQC_01.00_20190523-212434.grib2'
+    f_name = 'MRMS_MergedReflectivityQC_00.50_20190523-212434.grib2'
 
     f_abs = join(f_path, f_name)
 
-    #plot_grb(fname)
-    print(get_files_in_dir(f_path))
+
+    #print_keys(f_abs)
+    #plot_grb(f_abs)
+    #print(get_files_in_dir(f_path))
+    #print(init_grid())
+    grid_info(f_abs)
+    #sys.exit(0)
+    grid = init_grid(True)
+    plot_grb(f_abs, grid)
 
 
 
