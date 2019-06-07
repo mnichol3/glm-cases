@@ -132,6 +132,9 @@ def init_grid(debug=None):
     lats = np.arange(54.995, 19.995, inc * -1) # 54.995 to 20.005
     #grid = np.meshgrid(lons, lats)
 
+    lons = trunc(lons, 3)
+    lats = trunc(lats, 3)
+
     if (debug):
         print("Lons length:", len(lons))
         print(lons)
@@ -140,6 +143,31 @@ def init_grid(debug=None):
 
 
     return (lons, lats)
+
+
+
+def get_bbox_indices(grid, point1, point2):
+
+    grid_lons = grid[0]
+    grid_lats = grid[1]
+
+    lats = np.array([point1[0], point2[0]])
+    lons = np.array([point1[1], point2[1]])
+
+    min_lon = np.where(grid_lons == np.amin(lons))
+    max_lon = np.where(grid_lons == np.amax(lons))
+
+    min_lat = np.where(grid_lats == np.amin(lats))
+    max_lat = np.where(grid_lats == np.amax(lats))
+
+    indices = {'min_lon': min_lon, 'max_lon': max_lon, 'min_lat': min_lat, 'max_lat': max_lat}
+
+    return indices
+
+
+
+def trunc(vals, decs=0):
+    return np.trunc(vals*10**decs)/(10**decs)
 
 
 
@@ -156,10 +184,16 @@ def main():
     #print(get_files_in_dir(f_path))
     #print(init_grid())
     grid_info(f_abs)
-    #sys.exit(0)
-    grid = init_grid(True)
-    plot_grb(f_abs, grid)
 
+    grid = init_grid()
+    #plot_grb(f_abs, grid)
+
+    point1 = (36.745, -103.365)
+    point2 = (34.125, -99.275)
+    bbox = get_bbox_indices(grid, point1, point2)
+    print(bbox)
+
+    # TODO: slice data & coord arrays to get subset
 
 
 if (__name__ == '__main__'):
