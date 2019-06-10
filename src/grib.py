@@ -9,8 +9,9 @@ import matplotlib.cm as cm
 from cartopy.feature import NaturalEarthFeature
 from os.path import join, isfile
 import sys
-from os import listdir
-from mrmsgribfile import MRMSGribFile
+from os import listdir, walk
+from mrmsgrib import MRMSGrib
+import re
 
 
 def print_keys(fname, keyword=None):
@@ -63,7 +64,7 @@ def get_grb_data(fname, debug=False):
         print('minor axis:', minor_ax)
         print('------------------------------------')
 
-    return MRMSGribFile(val_date, val_time, data, major_ax, minor_ax, fname)
+    return MRMSGrib(val_date, val_time, data, major_ax, minor_ax, fname)
 
 
 
@@ -231,6 +232,78 @@ def subset_data(bbox, data, debug=False):
 
 
 
+def fetch_scans(base_path, time, angles=None):
+    scans = []
+    time_re = re.compile(r'-(\d{4})')
+    scan_re = re.compile(r'_(\d{2}.\d{2})_')
+
+    if (isinstance(time, int)):
+        time = str(time)
+
+    for subdir, dirs, files in walk(base_path):
+        for file in files:
+            time_match = time_re.search(file)
+            if (time_match is not None):
+                found_time = time_match.group(1)
+                if (angles):
+                    angle_match = scan_re.search(file)
+                    if (angle_match is not None and angle_match.group(1) in angles and found_time == time):
+                        scans.append(file)
+                else:
+                    if (found_time == time):
+                        scans.append(file)
+    return sorted(scans)
+
+
+
+def parse_fname(base_path, fname):
+    base_path += '/MergedReflectivityQC_'
+
+    scan_re = re.compile(r'_(\d{2}.\d{2})_')
+    match = scan_re.search(fname)
+
+    if (match is not None):
+        base_path += match.group(1)
+    else:
+        print('Error parsing filename')
+        sys.exit(0)
+
+    abs_path = join(base_path, fname)
+
+    return abs_path
+
+
+
+def get_grib_objs(scans, base_path):
+    grb_files = []
+
+    for file in scans:
+        print('Parsing ', file)
+
+        f_path = parse_fname(base_path, file)
+
+        grid = init_grid()
+
+        grb_file = get_grb_data(f_path)
+
+        point1 = (37.195, -102.185)
+        point2 = (34.565, -99.865)
+
+        bbox = get_bbox_indices(grid, point1, point2)
+        data_subs = subset_data(bbox, grb_file.data)
+
+        grb_file.set_data(data_subs)
+
+        grid_subs = subset_grid(grid, bbox)
+
+        grb_file.set_grid_lons(grid_subs[0])
+        grb_file.set_grid_lats(grid_subs[1])
+
+        grb_files.append(grb_file)
+
+    return grb_files
+
+
 
 def main():
 
@@ -240,6 +313,12 @@ def main():
     f_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905/MergedReflectivityQC_01.50'
     f_name = 'MRMS_MergedReflectivityQC_01.50_20190523-212434.grib2'
     f_abs = join(f_path, f_name)
+
+    #scans = fetch_scans('/media/mnichol3/pmeyers1/MattNicholson/mrms/201905', '2124')
+    #print(scans)
+    print_keys(f_abs)
+    sys.exit(0)
+
 
     grid = init_grid()
 
@@ -260,6 +339,7 @@ def main():
 
     #plot_grb(grb_file)
     grb_file.metadata()
+
 
 
 
