@@ -35,6 +35,8 @@ class MRMSGrib(object):
 
 
     def set_data(self, new_data):
+        del self.data
+        self.data = None
         self.data = new_data
 
 

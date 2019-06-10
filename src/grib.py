@@ -45,8 +45,8 @@ def get_keys(fname, keyword=None):
 
 
 def get_grb_data(fname, debug=False):
-    grb = pygrib.open(fname)
-    grb = grb[1]
+    grb_file = pygrib.open(fname)
+    grb = grb_file[1]
 
     data = grb.values
     major_ax = grb.earthMajorAxis
@@ -54,9 +54,8 @@ def get_grb_data(fname, debug=False):
     val_date = grb.validityDate
     val_time = grb.validityTime
 
-    grb = None
-
-    #data[data <= 0] = float('nan')
+    grb_file.close()
+    grb_file = None
 
     if (debug):
         print('data array shape (y, x):', data.shape)

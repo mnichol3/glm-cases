@@ -5,6 +5,7 @@ from matplotlib.cm import get_cmap
 import cartopy.crs as crs
 from cartopy.feature import NaturalEarthFeature
 from wrf import to_np, getvar, CoordPair, vertcross
+import wrf
 from os.path import join
 
 
@@ -14,11 +15,12 @@ def plot_cross(data, z):
     # Create the start point and end point for the cross section
     start_point = CoordPair(lat=37.195, lon=-102.185)
     end_point = CoordPair(lat=34.565, lon=-99.865)
+    ll_point = CoordPair(lat=34.565, lon=-102.185)
 
     # Compute the vertical cross-section interpolation.  Also, include the
     # lat/lon points along the cross-section.
-    ref_cross = vertcross(data, z, start_point=start_point, projection=crs.PlateCarree()
-                           end_point=end_point, latlon=True, meta=True)
+    ref_cross = vertcross(data, z, projection=wrf.Mercator, start_point=start_point,
+                            end_point=end_point, ll_point=ll_point, latlon=True, meta=True)
 
     # Create the figure
     fig = plt.figure(figsize=(12,6))
