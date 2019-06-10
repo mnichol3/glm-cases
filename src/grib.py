@@ -10,7 +10,7 @@ from cartopy.feature import NaturalEarthFeature
 from os.path import join, isfile
 import sys
 from os import listdir
-from gribobj import GribObj
+from mrmsgribfile import MRMSGribFile
 
 
 def print_keys(fname, keyword=None):
@@ -24,7 +24,6 @@ def print_keys(fname, keyword=None):
     else:
         for key in grb.keys():
             print(key)
-    print('------------------------------------')
 
 
 
@@ -64,77 +63,13 @@ def get_grb_data(fname, debug=False):
         print('minor axis:', minor_ax)
         print('------------------------------------')
 
-    return GribObj(val_date, val_time, data, major_ax, minor_ax)
+    return MRMSGribFile(val_date, val_time, data, major_ax, minor_ax, fname)
 
 
 
-def plot_grb(fname, grid=None):
+def plot_grb(grb):
 
-    grb = pygrib.open(fname)
-    grb = grb[1]
-
-    major_ax = grb.earthMajorAxis
-    minor_ax = grb.earthMinorAxis
-
-    if (grid):
-        lon = grid[0]
-        lat = grid[1]
-    else:
-        lat, lon = grb.latlons()
-
-    data = grb.values
-
-    data[data <= 0] = float('nan')
-
-
-    fig = plt.figure(figsize=(10, 5))
-
-    globe = ccrs.Globe(semimajor_axis=major_ax, semiminor_axis=minor_ax,
-                       flattening=None)
-
-    ax = fig.add_subplot(1, 1, 1, projection=ccrs.Mercator(globe=globe))
-
-    states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='none',
-                             name='admin_1_states_provinces_shp')
-
-    ax.add_feature(states, linewidth=.8, edgecolor='black')
-
-    cmesh = plt.pcolormesh(lon, lat, data, transform=ccrs.PlateCarree(), cmap=cm.gist_ncar)
-
-    lon_ticks = [x for x in range(-180, 181) if x % 2 == 0]
-    lat_ticks = [x for x in range(-90, 91) if x % 2 == 0]
-
-    gl = ax.gridlines(crs=ccrs.PlateCarree(), linewidth=1, color='gray',
-                      alpha=0.5, linestyle='--', draw_labels=True)
-    gl.xlabels_top = False
-    gl.ylabels_right=False
-    gl.xlocator = mticker.FixedLocator(lon_ticks)
-    gl.ylocator = mticker.FixedLocator(lat_ticks)
-    gl.xformatter = LONGITUDE_FORMATTER
-    gl.yformatter = LATITUDE_FORMATTER
-    gl.xlabel_style = {'color': 'red', 'weight': 'bold'}
-    gl.ylabel_style = {'color': 'red', 'weight': 'bold'}
-
-    cbar = plt.colorbar(cmesh,fraction=0.046, pad=0.04)
-
-    # Increase font size of colorbar tick labels
-    plt.title('MRMS Reflectivity ' + str(grb.validityDate) + ' ' + str(grb.validityTime) + 'z')
-    plt.setp(cbar.ax.yaxis.get_ticklabels(), fontsize=12)
-    cbar.set_label('Reflectivity (dbz)', fontsize = 14, labelpad = 20)
-
-    plt.tight_layout()
-
-    fig = plt.gcf()
-    fig.set_size_inches((8.5, 11), forward=False)
-    #fig.savefig(join(out_path, scan_date.strftime('%Y'), scan_date.strftime('%Y%m%d-%H%M')) + '.png', dpi=500)
-
-    plt.show()
-
-
-
-def plot_grb_data(grb):
-
-    fig = plt.figure(figsize=(10, 5))
+    fig = plt.figure(figsize=(8, 6)) #dpi = 200
 
     globe = ccrs.Globe(semimajor_axis=grb.major_axis, semiminor_axis=grb.minor_axis,
                        flattening=None)
@@ -146,10 +81,12 @@ def plot_grb_data(grb):
 
     ax.add_feature(states, linewidth=.8, edgecolor='black')
 
+    ax.set_extent([min(grb.grid_lons), max(grb.grid_lons), min(grb.grid_lats), max(grb.grid_lats)], crs=ccrs.PlateCarree())
+
     cmesh = plt.pcolormesh(grb.grid_lons, grb.grid_lats, grb.data, transform=ccrs.PlateCarree(), cmap=cm.gist_ncar)
 
-    lon_ticks = [x for x in range(-180, 181) if x % 2 == 0]
-    lat_ticks = [x for x in range(-90, 91) if x % 2 == 0]
+    lon_ticks = [x for x in range(-180, 181)]
+    lat_ticks = [x for x in range(-90, 91)]
 
     gl = ax.gridlines(crs=ccrs.PlateCarree(), linewidth=1, color='gray',
                       alpha=0.5, linestyle='--', draw_labels=True)
@@ -302,27 +239,27 @@ def main():
 
     f_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905/MergedReflectivityQC_01.50'
     f_name = 'MRMS_MergedReflectivityQC_01.50_20190523-212434.grib2'
-
     f_abs = join(f_path, f_name)
 
     grid = init_grid()
-    
-    grb_obj = get_grb_data(f_abs)
+
+    grb_file = get_grb_data(f_abs)
 
     point1 = (37.195, -102.185)
     point2 = (34.565, -99.865)
 
     bbox = get_bbox_indices(grid, point1, point2)
-    data_subs = subset_data(bbox, grb_obj.data)
+    data_subs = subset_data(bbox, grb_file.data)
 
-    grb_obj.set_data(data_subs)
+    grb_file.set_data(data_subs)
 
     grid_subs = subset_grid(grid, bbox)
 
-    grb_obj.set_grid_lons(grid_subs[0])
-    grb_obj.set_grid_lats(grid_subs[1])
+    grb_file.set_grid_lons(grid_subs[0])
+    grb_file.set_grid_lats(grid_subs[1])
 
-    plot_grb_data(grb_obj)
+    #plot_grb(grb_file)
+    grb_file.metadata()
 
 
 
