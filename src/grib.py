@@ -54,6 +54,8 @@ def get_grb_data(fname, debug=False):
     val_date = grb.validityDate
     val_time = grb.validityTime
 
+    grb = None
+
     #data[data <= 0] = float('nan')
 
     if (debug):
@@ -304,7 +306,7 @@ def get_grib_objs(scans, base_path):
     return grb_files
 
 
-
+"""
 def main():
 
     #f_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms'
@@ -346,3 +348,4 @@ def main():
 
 if (__name__ == '__main__'):
     main()
+"""

@@ -9,7 +9,7 @@ from os.path import join
 
 
 
-def plot_cross(data):
+def plot_cross(data, z):
 
     # Create the start point and end point for the cross section
     start_point = CoordPair(lat=37.195, lon=-102.185)
@@ -17,7 +17,7 @@ def plot_cross(data):
 
     # Compute the vertical cross-section interpolation.  Also, include the
     # lat/lon points along the cross-section.
-    ref_cross = vertcross(wspd, z, wrfin=ncfile, start_point=start_point,
+    ref_cross = vertcross(data, z, start_point=start_point, projection=crs.PlateCarree()
                            end_point=end_point, latlon=True, meta=True)
 
     # Create the figure
@@ -25,13 +25,13 @@ def plot_cross(data):
     ax = plt.axes()
 
     # Make the contour plot
-    wspd_contours = ax.contourf(to_np(wspd_cross), cmap=get_cmap("jet"))
+    ref_contours = ax.contourf(to_np(ref_cross), cmap=get_cmap("jet"))
 
     # Add the color bar
-    plt.colorbar(wspd_contours, ax=ax)
+    plt.colorbar(ref_contours, ax=ax)
 
     # Set the x-ticks to use latitude and longitude labels.
-    coord_pairs = to_np(wspd_cross.coords["xy_loc"])
+    coord_pairs = to_np(ref_cross.coords["xy_loc"])
     x_ticks = np.arange(coord_pairs.shape[0])
     x_labels = [pair.latlon_str(fmt="{:.2f}, {:.2f}")
                 for pair in to_np(coord_pairs)]
@@ -39,14 +39,14 @@ def plot_cross(data):
     ax.set_xticklabels(x_labels[::20], rotation=45, fontsize=8)
 
     # Set the y-ticks to be height.
-    vert_vals = to_np(wspd_cross.coords["vertical"])
+    #vert_vals = to_np(ref_cross.coords["vertical"])
     v_ticks = np.arange(vert_vals.shape[0])
     ax.set_yticks(v_ticks[::20])
-    ax.set_yticklabels(vert_vals[::20], fontsize=8)
+    #ax.set_yticklabels(vert_vals[::20], fontsize=8)
 
     # Set the x-axis and  y-axis labels
     ax.set_xlabel("Latitude, Longitude", fontsize=12)
-    ax.set_ylabel("Height (m)", fontsize=12)
+    ax.set_ylabel("Scan Angle (deg)", fontsize=12)
 
     plt.title("Vertical Cross Section of Reflectivity (dbz)")
 
@@ -68,6 +68,12 @@ def main():
 
     grib_files = get_grib_objs(scans, base_path)
     print(grib_files)
+
+    data = [x.data for x in grib_files]
+    data_3d = np.stack(data)
+
+    plot_cross(data_3d, 33)
+
 
 
 
