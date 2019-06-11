@@ -15,6 +15,23 @@ import re
 
 
 def print_keys(fname, keyword=None):
+    """
+    Prints the keys in a grib file. If the parameter 'keyword' is specified,
+    it will only print keys that contain the string passed as keyword
+
+    Parameters
+    ----------
+    fname : str
+        Absolute path & filename of a Grib2 MRMS file to open
+    keyword : str, optional
+        String to look through the keys for. If specified, only keys containing
+        keyword will be printed
+
+    Returns
+    -------
+    None
+    """
+
     grb = pygrib.open(fname)
     grb = grb[1]
 
@@ -29,6 +46,22 @@ def print_keys(fname, keyword=None):
 
 
 def get_keys(fname, keyword=None):
+    """
+    Returns the keys in a grib file. If the parameter 'keyword' is specified,
+    it will only return keys that contain the string passed as keyword
+
+    Parameters
+    ----------
+    fname : str
+        Absolute path & filename of a Grib2 MRMS file to open
+    keyword : str, optional
+        String to look through the keys for. If specified, only keys containing
+        keyword will be printed
+
+    Returns
+    -------
+    keys : list of str
+    """
     grb = pygrib.open(fname)
     grb = grb[1]
 
@@ -45,6 +78,20 @@ def get_keys(fname, keyword=None):
 
 
 def get_grb_data(fname, debug=False):
+    """
+    Opens a MRMS Grib2 data file and creates a new MRMSGrib object.
+
+    Parameters
+    ----------
+    fname : str
+        The absolute path of the Grib2 file to open
+    debug : bool, optional
+        If True, the function prints some file metadata
+
+    Returns
+    -------
+    MRMSGrib object
+    """
     grb_file = pygrib.open(fname)
     grb = grb_file[1]
 
@@ -70,6 +117,17 @@ def get_grb_data(fname, debug=False):
 
 
 def plot_grb(grb):
+    """
+    Takes a MRMSGrib object and plots it on a Mercator projection
+
+    Parameters
+    ----------
+    grb : MRMSGrib object
+
+    Returns
+    -------
+    None
+    """
 
     fig = plt.figure(figsize=(8, 6)) #dpi = 200
 
@@ -119,6 +177,19 @@ def plot_grb(grb):
 
 
 def get_files_in_dir(path):
+    """
+    Returns a list of all the files in the specified directory
+
+    Parameters
+    ----------
+    path : str
+        Path of the directory to inspect
+
+    Returns
+    -------
+    files : list of str
+        List of the filenames found in the directory
+    """
     files = [f for f in listdir(path) if isfile(join(path, f))]
 
     return files
@@ -126,6 +197,19 @@ def get_files_in_dir(path):
 
 
 def grid_info(fname):
+    """
+    Opens a MRMS Grib data file and prints various metadata
+
+    Parameters
+    ----------
+    fname : str
+        Absolute path of the MRMS Grib2 file to open
+
+    Returns
+    -------
+    None
+
+    """
     grb = pygrib.open(fname)
     grb = grb[1]
 
@@ -139,6 +223,22 @@ def grid_info(fname):
 
 
 def init_grid(debug=None):
+    """
+    Initialized a CONUS MRMS grid consisting of two lists, the first  holding
+    longitude coordinates and the second holding latitude coordinates
+
+    Parameters
+    ----------
+    debug : bool, optional
+        If True, grid metadata is printed
+
+    Returns
+    -------
+    Tuple of lists of float
+        Tuple containing the list of longitude coordinates and the list of latitude
+        coordinates. Format: (lons, lats)
+
+    """
     inc = 0.01
     lons = np.arange(-129.995, -60.005, inc) # -129.995 to -60.005
     lats = np.arange(54.995, 19.995, inc * -1) # 54.995 to 20.005
@@ -160,6 +260,31 @@ def init_grid(debug=None):
 
 
 def get_bbox_indices(grid, point1, point2, debug=False):
+    """
+    Searches through the grid to find the indices of the gridpoints corresponding
+    to the bounding box formed by point1 and point2
+
+    Parameters
+    ----------
+    grid : tuple of lists of float
+        Format : (lons, lats)
+    point1 : tuple of floats
+        Coordinates of the first point to find.
+        Format: (lon, lat)
+    point2: tuple of floats
+        Coordinates of the second point to find.
+        Format: (lon, lat)
+    debug : bool, optional
+        If True, the found indices corresponding to the points are printed
+
+    Returns
+    -------
+    indices : dict
+        Dictionary containing the min lat, max lat, min lon, & max lon of the
+        bounding box
+        Keys: min_lon, max_lon, min_lat, max_lat
+
+    """
 
     grid_lons = grid[0]
     grid_lats = grid[1]
@@ -187,11 +312,47 @@ def get_bbox_indices(grid, point1, point2, debug=False):
 
 
 def trunc(vals, decs=0):
+    """
+    Truncates a list of floats to 3 decimal places
+
+    Parameters
+    ----------
+    vals : list of float
+        List of values to be truncated
+    decs : int
+        The decimal place to truncate to. Default is 0
+
+    Returns
+    -------
+    List of floats
+
+    """
     return np.trunc(vals*10**decs)/(10**decs)
 
 
 
 def subset_grid(grid, bbox, debug=False):
+    """
+    Creates a subset of the CONUS MRMS grid defined by the bounding box
+
+    Parameters
+    ----------
+    grid : tuple of lists of float
+        Format : (lons, lats)
+    bbox : dict
+        Dictionary containing the min lat, max lat, min lon, & max lon of the
+        bounding box
+        Keys: min_lon, max_lon, min_lat, max_lat
+    debug : bool, optional
+        If True, the length of the new lat & lon coordinate lists are printed
+
+    Returns
+    -------
+    Tuple of lists
+        Tuple containing the new grid latitude & longitude values
+        Format: (lons, lats)
+
+    """
     x_min = bbox['min_lon']
     x_max = bbox['max_lon']
     y_min = bbox['min_lat']
@@ -210,6 +371,31 @@ def subset_grid(grid, bbox, debug=False):
 
 
 def subset_data(bbox, data, missing=0, debug=False):
+    """
+    Extracts a subset of data from the MRMS CONUS data file
+
+    Parameters
+    ----------
+    bbox : dict
+        Dictionary containing the min lat, max lat, min lon, & max lon of the
+        bounding box
+        Keys: min_lon, max_lon, min_lat, max_lat
+    data : numpy 2d array
+        2d array containing CONUS MRMS data for a single scan angle
+    missing : int or str
+        Indicates what to replace missing, or emply, grid cells with. They are
+        natively assigned the value -999. Only excepts 0 or 'nan', otherwise a
+        ValueError is raised. 0 is ideal for cross-sectional analysis, while nan
+        is ideal for plan-view plotting
+    debug : bool, optional
+        If True, metadata pertaining to the new 2d data array is printed
+
+    Returns
+    -------
+    subset : numpy 2d array
+        2d array containing data from the subset defined by the bounding box
+
+    """
 
     x_min = bbox['min_lon']
     x_max = bbox['max_lon']
@@ -239,6 +425,26 @@ def subset_data(bbox, data, missing=0, debug=False):
 
 
 def fetch_scans(base_path, time, angles=None):
+    """
+    Looks through the subdirectories in base_path and returns all the files with
+    the same validity time as the parameter 'time'
+
+    Parameters
+    ----------
+    base_path : str
+        Path to the directory that holds the subdirectories we wish to look through
+    time : str
+        The validity time of the scans
+    angles : list of str, optional
+        Scan angles to limit search results to
+
+    Returns
+    -------
+    scans : list of str
+        Sorted list of filenames found in the subdirectories that have the desired
+        validity time
+
+    """
     scans = []
     time_re = re.compile(r'-(\d{4})')
     scan_re = re.compile(r'_(\d{2}.\d{2})_')
@@ -263,6 +469,22 @@ def fetch_scans(base_path, time, angles=None):
 
 
 def parse_fname(base_path, fname):
+    """
+    Creates an absolute path to an MRMS Grib data file
+
+    Parameters
+    ----------
+    base_path : str
+        The base path that hold the various scan angle subdirectories
+    fname : str
+        Name of the file in the subdirectory
+
+    Returns
+    -------
+    abs_path : str
+        Absolute path of the file
+
+    """
     base_path += '/MergedReflectivityQC_'
 
     scan_re = re.compile(r'_(\d{2}.\d{2})_')
@@ -281,6 +503,22 @@ def parse_fname(base_path, fname):
 
 
 def get_grib_objs(scans, base_path):
+    """
+    Creates and returns a list of new MRMSGrib objects
+
+    Parameters
+    ----------
+    scans : list of str
+        MRMS Grib file names
+    base_path : str
+        Path to the directory that holds the subdirectories of the various scan
+        angles
+
+    Returns
+    -------
+    grb_files : list of MRMSGrib objects
+
+    """
     grb_files = []
 
     for file in scans:

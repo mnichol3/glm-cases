@@ -1,8 +1,25 @@
 import re
 
 class MRMSGrib(object):
+    """
+    Class for the MRMSGrib object
+
+    """
 
     def __init__(self, validity_date, validity_time, data, major_axis, minor_axis, abs_path):
+        """
+        Initializes a new MRMSGrib object
+
+        Parameters
+        ----------
+        validity_date : int or str
+        validity_time : int or str
+        data : numpy 2d array
+        major_axis : int or str
+        minor_axis : int or str
+        abs_path : str
+
+        """
         super(MRMSGrib, self).__init__()
         self.validity_date = validity_date
         self.validity_time = validity_time
@@ -21,11 +38,36 @@ class MRMSGrib(object):
 
 
     def parse_path(self, abs_path):
+        """
+        Parses the path and the filename of the MRMSGrib file object
+
+        Parameters
+        ----------
+        abs_path : str
+
+        Returns
+        -------
+        None, however sets the MRMSGrib object's path & fname attributes
+
+        """
         self.path, self.fname = abs_path.rsplit('/', 1)
 
 
 
     def parse_scan_angle(self, fname):
+        """
+        Parses the MRMSGrib object file's scan angle
+
+        Parameters
+        ----------
+        fname : str
+            Name of the MRMSGrib file
+
+        Returns
+        -------
+        None, sets the MRMSGrib object's scan_angle attribute
+
+        """
         scan_re = re.compile(r'_(\d{2}.\d{2})_')
         match = scan_re.search(fname)
 
@@ -35,6 +77,19 @@ class MRMSGrib(object):
 
 
     def set_data(self, new_data):
+        """
+        Deletes the data currently held by the MRMSGrib object's data field and
+        replaces it
+
+        Parameters
+        ----------
+        new_data : numpy 2d array
+
+        Returns
+        -------
+        None, sets the MRMSGrib object's data attribute
+
+        """
         del self.data
         self.data = None
         self.data = new_data
@@ -42,16 +97,36 @@ class MRMSGrib(object):
 
 
     def set_grid_lons(self, lons):
+        """
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        """
         self.grid_lons = lons
 
 
 
     def set_grid_lats(self, lats):
+        """
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        """
         self.grid_lats = lats
 
 
 
     def metadata(self):
+        """
+        Prints MRMSGrib object metadata
+
+        """
         print('------------------------------------')
         print('validity date:', self.validity_date)
         print('validity_time:', self.validity_time)
