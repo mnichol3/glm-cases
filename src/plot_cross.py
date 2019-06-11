@@ -2,55 +2,68 @@ from grib import *
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.cm import get_cmap
-import cartopy.crs as crs
-from cartopy.feature import NaturalEarthFeature
-from wrf import to_np, getvar, CoordPair, vertcross
-import wrf
 from os.path import join
+import scipy.ndimage
 
 
 
-def plot_cross(data, z):
+def plot_cross_cubic(grb, point1, point2):
 
-    # Create the start point and end point for the cross section
-    start_point = CoordPair(lat=37.195, lon=-102.185)
-    end_point = CoordPair(lat=34.565, lon=-99.865)
-    ll_point = CoordPair(lat=34.565, lon=-102.185)
+    lons = grb.grid_lons
+    lats = grb.grid_lats
 
-    # Compute the vertical cross-section interpolation.  Also, include the
-    # lat/lon points along the cross-section.
-    ref_cross = vertcross(data, z, projection=wrf.Mercator, start_point=start_point,
-                            end_point=end_point, ll_point=ll_point, latlon=True, meta=True)
+    x, y = np.meshgrid(lons, lats)
+    z = grb.data
 
-    # Create the figure
-    fig = plt.figure(figsize=(12,6))
-    ax = plt.axes()
+    # [(x1, y1), (x2, y2)]
+    line = [(point1[0], point1[1]), (point2[0], point2[1])]
 
-    # Make the contour plot
-    ref_contours = ax.contourf(to_np(ref_cross), cmap=get_cmap("jet"))
+    # cubic interpolation
+    x_world, y_world = np.array(list(zip(*line)))
+    col = z.shape[1] * (x_world - x.min()) / x.ptp()
+    row = z.shape[0] * (y.max() - y_world ) / y.ptp()
 
-    # Add the color bar
-    plt.colorbar(ref_contours, ax=ax)
+    num = 1000
+    row, col = [np.linspace(item[0], item[1], num) for item in [row, col]]
 
-    # Set the x-ticks to use latitude and longitude labels.
-    coord_pairs = to_np(ref_cross.coords["xy_loc"])
-    x_ticks = np.arange(coord_pairs.shape[0])
-    x_labels = [pair.latlon_str(fmt="{:.2f}, {:.2f}")
-                for pair in to_np(coord_pairs)]
-    ax.set_xticks(x_ticks[::20])
-    ax.set_xticklabels(x_labels[::20], rotation=45, fontsize=8)
+    # Extract the values along the line, using cubic interpolation
+    zi = scipy.ndimage.map_coordinates(z, np.vstack((row, col)), order=1, mode='nearest')
 
-    # Set the y-ticks to be height.
-    #vert_vals = to_np(ref_cross.coords["vertical"])
-    v_ticks = np.arange(vert_vals.shape[0])
-    ax.set_yticks(v_ticks[::20])
-    #ax.set_yticklabels(vert_vals[::20], fontsize=8)
+    # Plot...
+    fig, axes = plt.subplots(nrows=2)
+    axes[0].pcolormesh(x, y, z)
+    axes[0].plot(x_world, y_world, 'ro-')
+    axes[0].axis('image')
 
-    # Set the x-axis and  y-axis labels
-    ax.set_xlabel("Latitude, Longitude", fontsize=12)
-    ax.set_ylabel("Scan Angle (deg)", fontsize=12)
+    axes[1].plot(zi)
 
-    plt.title("Vertical Cross Section of Reflectivity (dbz)")
+    plt.show()
+
+
+
+def plot_cross_neighbor(grb, point1, point2):
+
+    lons = grb.grid_lons
+    lats = grb.grid_lats
+
+    x, y = np.meshgrid(lons, lats)
+    z = grb.data
+
+    line = [(point1[0], point1[1]), (point2[0], point2[1])]
+    x_world, y_world = np.array(list(zip(*line)))
+    col = z.shape[1] * (x_world - x.min()) / x.ptp()
+    row = z.shape[0] * (y.max() - y_world ) / y.ptp()
+
+    num = 10000
+    row, col = [np.linspace(item[0], item[1], num) for item in [row, col]]
+    zi = z[row.astype(int), col.astype(int)]
+
+    fig, axes = plt.subplots(nrows=2)
+    axes[0].pcolormesh(x, y, z)
+    axes[0].plot(x_world, y_world, 'ro-')
+    axes[0].axis('image')
+
+    axes[1].plot(zi)
 
     plt.show()
 
@@ -65,16 +78,25 @@ def main():
     #f_name = 'MRMS_MergedReflectivityQC_01.50_20190523-212434.grib2'
     #f_abs = join(f_path, f_name)
 
+    """
     scans = fetch_scans(base_path, '2124') # z = 33
-
 
     grib_files = get_grib_objs(scans, base_path)
     print(grib_files)
 
     data = [x.data for x in grib_files]
-    data_3d = np.stack(data)
+    """
 
-    plot_cross(data_3d, 33)
+    files = ['MRMS_MergedReflectivityQC_02.00_20190523-212434.grib2',
+             'MRMS_MergedReflectivityQC_02.25_20190523-212434.grib2']
+
+    #(-101.822, 35.0833), (-100.403, 37.1292)
+    point1 = (-101.618, 35.3263)
+    point2 = (-100.999, 36.2826)
+
+
+    grbs = get_grib_objs(files, base_path)
+    plot_cross_neighbor(grbs[0], point1, point2)
 
 
 

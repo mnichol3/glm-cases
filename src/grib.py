@@ -209,7 +209,7 @@ def subset_grid(grid, bbox, debug=False):
 
 
 
-def subset_data(bbox, data, debug=False):
+def subset_data(bbox, data, missing=0, debug=False):
 
     x_min = bbox['min_lon']
     x_max = bbox['max_lon']
@@ -218,7 +218,12 @@ def subset_data(bbox, data, debug=False):
 
     subset = data[y_max : y_min, x_min : x_max + 1]
 
-    subset[subset <= 0] = float('nan')
+    if (missing == 0):
+        subset[subset < 0] = 0
+    elif (missing == 'nan'):
+        subset[subset < 0] = float(nan)
+    else:
+        raise ValueError('Invalid missing data argument (grib.subset_data)')
 
     if (debug):
         print('min x idx:', x_min)
