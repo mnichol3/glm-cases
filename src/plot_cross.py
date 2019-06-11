@@ -56,7 +56,7 @@ def plot_cross_neighbor(grb, point1, point2):
 
     num = 10000
     row, col = [np.linspace(item[0], item[1], num) for item in [row, col]]
-    zi = z[row.astype(int), col.astype(int)]
+    zi = z[row.astype(int), col.astype(int)] #(10000,)
 
     fig, axes = plt.subplots(nrows=2)
     axes[0].pcolormesh(x, y, z)
@@ -66,6 +66,51 @@ def plot_cross_neighbor(grb, point1, point2):
     axes[1].plot(zi)
 
     plt.show()
+
+
+
+def get_cross_cubic(grb, point1, point2):
+    lons = grb.grid_lons
+    lats = grb.grid_lats
+
+    x, y = np.meshgrid(lons, lats)
+    z = grb.data
+
+    # [(x1, y1), (x2, y2)]
+    line = [(point1[0], point1[1]), (point2[0], point2[1])]
+
+    # cubic interpolation
+    x_world, y_world = np.array(list(zip(*line)))
+    col = z.shape[1] * (x_world - x.min()) / x.ptp()
+    row = z.shape[0] * (y.max() - y_world ) / y.ptp()
+
+    num = 1000
+    row, col = [np.linspace(item[0], item[1], num) for item in [row, col]]
+
+    # Extract the values along the line, using cubic interpolation
+    zi = scipy.ndimage.map_coordinates(z, np.vstack((row, col)), order=1, mode='nearest')
+
+    return zi
+
+
+
+def get_cross_neighbor(grb, point1, point2):
+    lons = grb.grid_lons
+    lats = grb.grid_lats
+
+    x, y = np.meshgrid(lons, lats)
+    z = grb.data
+
+    line = [(point1[0], point1[1]), (point2[0], point2[1])]
+    x_world, y_world = np.array(list(zip(*line)))
+    col = z.shape[1] * (x_world - x.min()) / x.ptp()
+    row = z.shape[0] * (y.max() - y_world ) / y.ptp()
+
+    num = 10000
+    row, col = [np.linspace(item[0], item[1], num) for item in [row, col]]
+    zi = z[row.astype(int), col.astype(int)] #(10000,)
+
+    return zi
 
 
 
