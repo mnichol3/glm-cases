@@ -2,8 +2,10 @@ from grib import *
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.cm import get_cmap
-from os.path import join
+from os.path import join, isdir, isfile
 import scipy.ndimage
+import tracemalloc
+from os import mkdir
 
 
 
@@ -191,14 +193,40 @@ def get_cross_neighbor(grb, point1, point2):
 
 
 
+def to_file(out_path, f_name, data):
+
+    if (not isdir(out_path)):
+        mkdir(out_path)
+
+    abs_path = join(out_path, f_name)
+
+    print("\nWriting", abs_path, "\n")
+
+    np.savetxt(abs_path, data, delimiter=',', newline='\n', fmt='%2.2f')
+
+
+
+def load_data(abs_path):
+    if (not isfile(abs_path)):
+        raise OSError('File not found (plot_cross.load_data)')
+    else:
+        print('Loading MRMS cross_section data from', abs_path)
+        data = np.loadtxt(abs_path, dtype=float, delimiter=',')
+
+        return data
+
+
+
 def main():
 
+    tracemalloc.start()
     #f_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms'
     #f_name = 'MRMS_MergedReflectivityQC_00.50_20190523-212434.grib2'
     base_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
     #f_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905/MergedReflectivityQC_01.50'
     #f_name = 'MRMS_MergedReflectivityQC_01.50_20190523-212434.grib2'
     #f_abs = join(f_path, f_name)
+    f_out = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
 
     """
     scans = fetch_scans(base_path, '2124') # z = 33
@@ -208,19 +236,37 @@ def main():
 
     data = [x.data for x in grib_files]
     """
-
+    """
     files = ['MRMS_MergedReflectivityQC_02.00_20190523-212434.grib2',
              'MRMS_MergedReflectivityQC_02.25_20190523-212434.grib2']
+    """
+
+    cross_sections = np.array([])
 
     #(-101.822, 35.0833), (-100.403, 37.1292)
     point1 = (-101.618, 35.3263)
     point2 = (-100.999, 36.2826)
 
+    scans = fetch_scans(base_path, '2124') # z = 33
 
-    grbs = get_grib_objs(files, base_path)
-    get_cross_neighbor(grbs[0], point1, point2)
+    grbs = get_grib_objs(scans, base_path)
 
+    valid_date = grbs[0].validity_date
+    valid_time = grbs[0].validity_time
 
+    fname = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z.txt'
+
+    cross_sections = np.asarray(get_cross_neighbor(grbs[0], point1, point2))
+
+    for grb in grbs[1:]:
+        cross_sections = np.vstack((cross_sections, get_cross_neighbor(grb, point1, point2)))
+
+    to_file(f_out, fname, cross_sections)
+
+    print("Memory Useage - Current: %d, Peak: %d" % tracemalloc.get_traced_memory())
+
+    data = load_data(join(f_out, fname))
+    print(data.shape)
 
 
 
