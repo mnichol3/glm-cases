@@ -8,7 +8,7 @@ import tracemalloc
 from os import mkdir
 import matplotlib as mpl
 
-
+BASE_PATH_XSECT = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
 
 
 def plot_cross_cubic_single(grb, point1, point2):
@@ -49,6 +49,17 @@ def plot_cross_cubic_single(grb, point1, point2):
 
     num = 1000
     row, col = [np.linspace(item[0], item[1], num) for item in [row, col]]
+
+    valid_date = grb.validity_date
+    valid_time = grb.validity_time
+
+    fname_lons = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lons.txt'
+    fname_lats = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lats.txt'
+
+    d_lons, d_lats = decode_pixel_coords(row, col, x.ptp(), y.ptp(), x.min(), y.max(), num)
+
+    to_file(BASE_PATH_XSECT + '/coords', fname_lons, d_lons)
+    to_file(BASE_PATH_XSECT + '/coords', fname_lats, d_lats)
 
     # Extract the values along the line, using cubic interpolation
     zi = scipy.ndimage.map_coordinates(z, np.vstack((row, col)), order=1, mode='nearest')
@@ -98,6 +109,18 @@ def plot_cross_neighbor_single(grb, point1, point2):
 
     num = 1000
     row, col = [np.linspace(item[0], item[1], num) for item in [row, col]]
+
+    valid_date = grb.validity_date
+    valid_time = grb.validity_time
+
+    fname_lons = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lons.txt'
+    fname_lats = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lats.txt'
+
+    d_lons, d_lats = decode_pixel_coords(row, col, x.ptp(), y.ptp(), x.min(), y.max(), num)
+
+    to_file(BASE_PATH_XSECT + '/coords', fname_lons, d_lons)
+    to_file(BASE_PATH_XSECT + '/coords', fname_lats, d_lats)
+
     zi = z[row.astype(int), col.astype(int)] #(10000,)
 
     fig, axes = plt.subplots(nrows=2)
@@ -148,6 +171,17 @@ def get_cross_cubic(grb, point1, point2):
     num = 100
     row, col = [np.linspace(item[0], item[1], num) for item in [row, col]]
 
+    valid_date = grb.validity_date
+    valid_time = grb.validity_time
+
+    fname_lons = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lons.txt'
+    fname_lats = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lats.txt'
+
+    d_lons, d_lats = decode_pixel_coords(row, col, x.ptp(), y.ptp(), x.min(), y.max(), num)
+
+    to_file(BASE_PATH_XSECT + '/coords', fname_lons, d_lons)
+    to_file(BASE_PATH_XSECT + '/coords', fname_lats, d_lats)
+
     # Extract the values along the line, using cubic interpolation
     zi = scipy.ndimage.map_coordinates(z, np.vstack((row, col)), order=1, mode='nearest')
 
@@ -189,9 +223,28 @@ def get_cross_neighbor(grb, point1, point2):
     num = 1000
     row, col = [np.linspace(item[0], item[1], num) for item in [row, col]]
 
+    valid_date = grb.validity_date
+    valid_time = grb.validity_time
+
+    fname_lons = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lons.txt'
+    fname_lats = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lats.txt'
+
+    d_lons, d_lats = decode_pixel_coords(row, col, x.ptp(), y.ptp(), x.min(), y.max(), num)
+
+    to_file(BASE_PATH_XSECT + '/coords', fname_lons, d_lons)
+    to_file(BASE_PATH_XSECT + '/coords', fname_lats, d_lats)
+
     zi = z[row.astype(int), col.astype(int)] #(10000,)
 
     return zi
+
+
+
+def decode_pixel_coords(rows, cols, x_ptp, y_ptp, x_min, y_max, shape):
+        xs = [(((x * x_ptp) / shape) + x_min) for x in cols]
+        ys = [(((y * y_ptp) / shape) - y_max) * -1 for y in rows]
+
+        return (xs, ys)
 
 
 
@@ -265,7 +318,7 @@ def to_file(out_path, f_name, data):
 
     print("\nWriting", abs_path, "\n")
 
-    np.savetxt(abs_path, data, delimiter=',', newline='\n', fmt='%2.2f')
+    np.savetxt(abs_path, data, delimiter=',', newline='\n', fmt='%2.3f')
 
 
 
@@ -312,10 +365,19 @@ def main():
 
     data = [x.data for x in grib_files]
     """
-    """
+
+
     files = ['MRMS_MergedReflectivityQC_02.00_20190523-212434.grib2',
              'MRMS_MergedReflectivityQC_02.25_20190523-212434.grib2']
-    """
+
+    point1 = (-101.618, 35.3263)
+    point2 = (-100.999, 36.2826)
+
+    grbs = get_grib_objs(files, base_path)
+
+    get_cross_neighbor(grbs[0], point1, point2)
+
+#-------------------------------------------------------------------------------
 
     """
     cross_sections = np.array([])
@@ -342,9 +404,13 @@ def main():
 
     print("Memory Useage - Current: %d, Peak: %d" % tracemalloc.get_traced_memory())
     """
+#-------------------------------------------------------------------------------
+
+    """
     fname = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/mrms-cross-20190523-2124z.txt'
 
     plot_cross_section(abs_path=fname)
+    """
 
 
 
