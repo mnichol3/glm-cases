@@ -6,6 +6,8 @@ from os.path import join, isdir, isfile
 import scipy.ndimage
 import tracemalloc
 from os import mkdir
+import matplotlib as mpl
+
 
 
 
@@ -240,7 +242,11 @@ def main():
     files = ['MRMS_MergedReflectivityQC_02.00_20190523-212434.grib2',
              'MRMS_MergedReflectivityQC_02.25_20190523-212434.grib2']
     """
+    scan_angles = np.array([0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75,
+                            3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9,
+                            10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
 
+    """
     cross_sections = np.array([])
 
     #(-101.822, 35.0833), (-100.403, 37.1292)
@@ -264,9 +270,23 @@ def main():
     to_file(f_out, fname, cross_sections)
 
     print("Memory Useage - Current: %d, Peak: %d" % tracemalloc.get_traced_memory())
+    """
+    fname = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/mrms-cross-20190523-2124z.txt'
 
-    data = load_data(join(f_out, fname))
-    print(data.shape)
+    data = load_data(fname)
+
+    fig = plt.figure()
+    ax = plt.gca()
+
+    xs = np.arange(0, 1000)
+
+    im = ax.pcolormesh(xs, scan_angles, data, cmap=mpl.cm.gist_ncar)
+    fig.colorbar(im, ax=ax)
+    ax.set_title('MRMS Reflectivity Cross Section')
+
+    fig.tight_layout()
+
+    plt.show()
 
 
 
