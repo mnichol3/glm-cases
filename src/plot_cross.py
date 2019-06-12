@@ -11,7 +11,7 @@ import matplotlib as mpl
 
 
 
-def plot_cross_cubic(grb, point1, point2):
+def plot_cross_cubic_single(grb, point1, point2):
     """
     Plots the cross section of a single MRMSGrib object's data from point1 to point2
     using cubic interpolation
@@ -65,7 +65,7 @@ def plot_cross_cubic(grb, point1, point2):
 
 
 
-def plot_cross_neighbor(grb, point1, point2):
+def plot_cross_neighbor_single(grb, point1, point2):
     """
     Plots the cross section of a single MRMSGrib object's data from point1 to point2
     using nearest-neighbor interpolation
@@ -195,7 +195,68 @@ def get_cross_neighbor(grb, point1, point2):
 
 
 
+def plot_cross_section(data=None, abs_path=None):
+    """
+    Plots a cross-section of MRMS reflectivity data from all scan angles. If
+    the 'data' parameter is given, then that data is plotted. If 'abs_path' is
+    given, then data from the text file located at that absolute path is read and
+    plotted
+
+    Parameters
+    ----------
+    data : numpy 2d array, optional
+        2d array of reflectivity data
+    abs_path : str, optional
+        Absolute path of the text file containing the reflectivity cross-section
+        data. Must be given if data is None
+
+    Returns
+    -------
+    None, displays a plot of the reflectivity cross section
+    """
+
+    if (data is None):
+        if (abs_path is None):
+            raise ValueError('data and abs_path parameters cannot both be None')
+        else:
+            data = load_data(abs_path)
+
+    scan_angles = np.array([0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75,
+                            3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9,
+                            10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
+
+    fig = plt.figure()
+    ax = plt.gca()
+
+    xs = np.arange(0, 1000)
+
+    im = ax.pcolormesh(xs, scan_angles, data, cmap=mpl.cm.gist_ncar)
+    fig.colorbar(im, ax=ax)
+    ax.set_title('MRMS Reflectivity Cross Section')
+
+    fig.tight_layout()
+
+    plt.show()
+
+
+
 def to_file(out_path, f_name, data):
+    """
+    Writes a numpy 2d array to a text file
+
+    Parameters
+    ----------
+    out_path : str
+        Path of the directory in which to save the text file
+    f_name : str
+        Desired name of the text file
+    data : numpy 2d array
+        Data to write to the text file
+
+    Returns
+    -------
+    None
+    """
 
     if (not isdir(out_path)):
         mkdir(out_path)
@@ -209,6 +270,19 @@ def to_file(out_path, f_name, data):
 
 
 def load_data(abs_path):
+    """
+    Reads a numpy 2d array from a text file and returns it
+
+    Parameters
+    ----------
+    abs_path : str
+        Absolute path of the text file, including the filename
+
+    Returns
+    -------
+    data : numpy 2d array of float
+        2d array read from the text file
+    """
     if (not isfile(abs_path)):
         raise OSError('File not found (plot_cross.load_data)')
     else:
@@ -242,9 +316,6 @@ def main():
     files = ['MRMS_MergedReflectivityQC_02.00_20190523-212434.grib2',
              'MRMS_MergedReflectivityQC_02.25_20190523-212434.grib2']
     """
-    scan_angles = np.array([0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75,
-                            3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9,
-                            10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
 
     """
     cross_sections = np.array([])
@@ -273,20 +344,8 @@ def main():
     """
     fname = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/mrms-cross-20190523-2124z.txt'
 
-    data = load_data(fname)
+    plot_cross_section(abs_path=fname)
 
-    fig = plt.figure()
-    ax = plt.gca()
-
-    xs = np.arange(0, 1000)
-
-    im = ax.pcolormesh(xs, scan_angles, data, cmap=mpl.cm.gist_ncar)
-    fig.colorbar(im, ax=ax)
-    ax.set_title('MRMS Reflectivity Cross Section')
-
-    fig.tight_layout()
-
-    plt.show()
 
 
 
