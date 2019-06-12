@@ -399,7 +399,8 @@ def plot_cross_section_inset(data=None, inset_data=None, inset_lons=None, inset_
     scan_angles = np.array([0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75,
                             3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9,
                             10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
-
+    if (inset_data is None or inset_lons is None or inset_lats is None or points is None):
+        raise ValueError('Missing inset data')
     if (data is not None):
         if (lons is None or lats is None):
             raise ValueError('lons and/or lats parameters cannot be None')
@@ -417,15 +418,6 @@ def plot_cross_section_inset(data=None, inset_data=None, inset_lons=None, inset_
             coords = []
             for idx, x in enumerate(lons):
                 coords.append(str(x) + ', ' + str(lats[idx]))
-
-    """
-    fig, axes = plt.subplots(nrows=2)
-    axes[0].pcolormesh(x, y, z)
-    axes[0].plot(x_world, y_world, 'ro-')
-    axes[0].axis('image')
-
-    axes[1].plot(zi)
-    """
 
     fig = plt.figure()
     ax = plt.gca()
