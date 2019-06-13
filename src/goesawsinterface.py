@@ -31,11 +31,11 @@ print(years)
 
 class GoesAWSInterface(object):
     """
-    Instantiate an instance of this class to get a connection to the Nexrad AWS bucket. \
-    This class provides methods to query for various metadata of the AWS bucket as well \
+    Instantiate an instance of this class to get a connection to the GOES AWS bucket.
+    This class provides methods to query for various metadata of the AWS bucket as well
     as download files.
-    >>> import nexradaws
-    >>> conn = nexradaws.NexradAwsInterface()
+    >>> import goesaws
+    >>> conn = goesaws.GoesAwsInterface()
     """
     def __init__(self):
         super(GoesAWSInterface, self).__init__()
@@ -52,6 +52,18 @@ class GoesAWSInterface(object):
 
 
     def get_avail_products(self, satellite):
+        """
+        Gets a list of available products (Rad, CMIP, MCMIP) for a satellite
+
+        Parameters
+        ----------
+        satellite : str
+            The satellite to fetch available products for.
+            Available: 'goes16' & 'goes16'
+
+        Returns
+        -------
+        """
         prods = []
 
         resp = self.get_sat_bucket(satellite, '')
@@ -65,8 +77,8 @@ class GoesAWSInterface(object):
 
     def get_avail_years(self, satellite, product):
         years = []
-        prefix = self.build_prefix(product)
 
+        prefix = self.build_prefix(product)
         resp = self.get_sat_bucket(satellite, prefix)
 
         for each in resp.get('CommonPrefixes'):
@@ -79,6 +91,7 @@ class GoesAWSInterface(object):
 
 
     def get_avail_months(self, satellite, product, year):
+
         days = self.get_avail_days(satellite, product, year)
         months = self.decode_julian_day(year, days, 'm')
 
@@ -88,9 +101,10 @@ class GoesAWSInterface(object):
 
     def get_avail_days(self, satellite, product, year):
         days = []
-        prefix = self.build_prefix(product, year)
 
+        prefix = self.build_prefix(product, year)
         resp = self.get_sat_bucket(satellite, prefix)
+
         for each in resp.get('CommonPrefixes'):
             match = self._day_re.search(each['Prefix'])
             if (match is not None):
@@ -288,8 +302,7 @@ class GoesAWSInterface(object):
         elif (satellite == 'goes17'):
             resp = self._bucket_17.meta.client.list_objects_v2(Bucket='noaa-goes17', Prefix=prefix, Delimiter='/')
         else:
-            print('Error: Invalid satellite argument')
-            sys.exit(0)
+            raise ValueError("Invalid satallite parameter. Must be either 'goes16' or 'goes17'")
 
         return resp
 
