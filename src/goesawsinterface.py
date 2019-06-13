@@ -67,7 +67,7 @@ class GoesAWSInterface(object):
         """
         prods = []
 
-        resp = self.get_sat_bucket(satellite, '')
+        resp = self._get_sat_bucket(satellite, '')
 
         for x in resp.get('CommonPrefixes'):
             prods.append(list(x.values())[0][:-1])
@@ -96,8 +96,8 @@ class GoesAWSInterface(object):
         """
         years = []
 
-        prefix = self.build_prefix(product)
-        resp = self.get_sat_bucket(satellite, prefix)
+        prefix = self._build_prefix(product)
+        resp = self._get_sat_bucket(satellite, prefix)
 
         for each in resp.get('CommonPrefixes'):
             match = self._year_re.search(each['Prefix'])
@@ -130,7 +130,7 @@ class GoesAWSInterface(object):
         """
 
         days = self.get_avail_days(satellite, product, year)
-        months = self.decode_julian_day(year, days, 'm')
+        months = self._decode_julian_day(year, days, 'm')
 
         return months
 
@@ -157,8 +157,8 @@ class GoesAWSInterface(object):
         """
         days = []
 
-        prefix = self.build_prefix(product, year)
-        resp = self.get_sat_bucket(satellite, prefix)
+        prefix = self._build_prefix(product, year)
+        resp = self._get_sat_bucket(satellite, prefix)
 
         for each in resp.get('CommonPrefixes'):
             match = self._day_re.search(each['Prefix'])
@@ -194,8 +194,8 @@ class GoesAWSInterface(object):
         year = date[-4:]
         jul_day = datetime.strptime(date, '%m-%d-%Y').timetuple().tm_yday
 
-        prefix = self.build_prefix(product, year, jul_day)
-        resp = self.get_sat_bucket(satellite, prefix)
+        prefix = self._build_prefix(product, year, jul_day)
+        resp = self._get_sat_bucket(satellite, prefix)
 
         for each in resp.get('CommonPrefixes'):
             match = self._hour_re.search(each['Prefix'])
@@ -242,7 +242,7 @@ class GoesAWSInterface(object):
         hour = date.hour
         jul_day = date.timetuple().tm_yday
 
-        prefix = self.build_prefix(product, year, jul_day, hour, sector)
+        prefix = self._build_prefix(product, year, jul_day, hour, sector)
         resp = self.get_sat_bucket(satellite, prefix)
 
         for each in list(resp['Contents']):
@@ -290,12 +290,12 @@ class GoesAWSInterface(object):
         start_dt = datetime.strptime(start, '%m-%d-%Y-%H:%M')
         end_dt = datetime.strptime(end, '%m-%d-%Y-%H:%M')
 
-        for day in self.datetime_range(start_dt, end_dt):
+        for day in self._datetime_range(start_dt, end_dt):
 
             avail_imgs = self.get_avail_images(satellite, product, day, sector, channel)
 
             for img in avail_imgs:
-                if (self.build_channel_format(channel) in img.shortfname and sector in img.shortfname):
+                if (self._build_channel_format(channel) in img.shortfname and sector in img.shortfname):
                     if self._is_within_range(start_dt, end_dt, datetime.strptime(img.scan_time, '%m-%d-%Y-%H:%M')):
                         if (img.shortfname not in added):
                             added.append(img.shortfname)
@@ -358,7 +358,7 @@ class GoesAWSInterface(object):
 
 
 
-    def build_prefix(self, product=None, year=None, julian_day=None, hour=None, sector=None):
+    def _build_prefix(self, product=None, year=None, julian_day=None, hour=None, sector=None):
         """
         Constructs a prefix for the aws bucket
 
@@ -397,7 +397,7 @@ class GoesAWSInterface(object):
 
 
 
-    def build_year_format(self, year):
+    def _build_year_format(self, year):
         """
 
         Parameters
@@ -418,7 +418,7 @@ class GoesAWSInterface(object):
 
 
 
-    def build_day_format(self, jd):
+    def _build_day_format(self, jd):
         """
 
         Parameters
@@ -440,7 +440,7 @@ class GoesAWSInterface(object):
 
 
 
-    def build_hour_format(self, hour):
+    def _build_hour_format(self, hour):
         """
 
         Parameters
@@ -461,7 +461,7 @@ class GoesAWSInterface(object):
 
 
 
-    def build_channel_format(self, channel):
+    def _build_channel_format(self, channel):
         """
 
         Parameters
@@ -480,7 +480,7 @@ class GoesAWSInterface(object):
 
 
 
-    def get_sat_bucket(self, satellite, prefix):
+    def _get_sat_bucket(self, satellite, prefix):
         """
 
         Parameters
@@ -518,7 +518,7 @@ class GoesAWSInterface(object):
 
 
 
-    def datetime_range(self, start, end):
+    def _datetime_range(self, start, end):
 
         diff = (end + timedelta(minutes = 1)) - start
 
@@ -536,7 +536,7 @@ class GoesAWSInterface(object):
 
 
 
-    def parse_partial_fname(self, satellite, product, sector, channel, date):
+    def _parse_partial_fname(self, satellite, product, sector, channel, date):
 
         if (date.year > 2018):
             mode = 'M6'
@@ -557,7 +557,7 @@ class GoesAWSInterface(object):
 
 
 
-    def decode_julian_day(self, year, days, key):
+    def _decode_julian_day(self, year, days, key):
 
         dates = {}
 
