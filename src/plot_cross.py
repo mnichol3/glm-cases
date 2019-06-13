@@ -611,6 +611,20 @@ def process_slice_inset(base_path, slice_time, point1, point2):
     return {'x_sect': f_out, 'f_inset_lons': f_lons, 'f_inset_lats': f_lats, 'f_inset_data': f_inset}
 
 
+
+def run(base_path, slice_time, point1, point2):
+    fname = process_slice(base_path, slice_time, point1, point2, write=True)
+    plot_cross_section(abs_path=fname)
+
+
+
+def run_inset(base_path, slice_time, point1, point2):
+    f_dict = process_slice_inset(base_path, '2124', point1, point2)
+    plot_cross_section_inset(inset_data=f_dict['f_inset_data'], inset_lons=f_dict['f_inset_lons'],
+                             inset_lats=f_dict['f_inset_lats'], abs_path=f_dict['x_sect'], points=(point1, point2))
+
+
+
 def main():
 
     tracemalloc.start()
@@ -621,20 +635,14 @@ def main():
     point1 = (-101.618, 35.3263)
     point2 = (-100.999, 36.2826)
 
-    """
-    fname = process_slice(base_path, '2124', point1, point2, write=True)
-    plot_cross_section(abs_path=fname)
-    """
+    # Plot cross section without inset
+    # run(base_path, '2124', point1, point2)
 
-
-    """
-    f_dict = process_slice_inset(base_path, '2124', point1, point2)
-    plot_cross_section_inset(inset_data=f_dict['f_inset_data'], inset_lons=f_dict['f_inset_lons'],
-                             inset_lats=f_dict['f_inset_lats'], abs_path=f_dict['x_sect'], points=(point1, point2))
-    """
-
+    # Plot cross section with inset
+    #run_inset(base_path, '2124', point1, point2)
 
     print("Memory Useage - Current: %d, Peak: %d" % tracemalloc.get_traced_memory())
+
 
 
 if (__name__ == '__main__'):
