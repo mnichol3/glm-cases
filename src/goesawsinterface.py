@@ -42,8 +42,8 @@ class GoesAWSInterface(object):
         self._year_re = re.compile(r'/(\d{4})/')
         self._day_re = re.compile(r'/\d{4}/(\d{3})/')
         self._hour_re = re.compile(r'/\d{4}/\d{3}/(\d{2})/')
-        self._scan_m_re = re.compile(r'(\w{4}M\d-M\dC\d{2})_G\d{2}_s\d{7}(\d{4})\d{3}')
-        self._scan_c_re = re.compile(r'(\w{5}-M\dC\d{2})_G\d{2}_s\d{7}(\d{4})\d{3}')
+        self._scan_m_re = re.compile(r'(\w{3,4}M\d-M\dC\d{2})_G\d{2}_s\d{7}(\d{4})\d{3}')
+        self._scan_c_re = re.compile(r'(\w{4,5}-M\dC\d{2})_G\d{2}_s\d{7}(\d{4})\d{3}')
         self._s3conn = boto3.resource('s3')
         self._s3conn.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
         self._bucket_16 = self._s3conn.Bucket('noaa-goes16')
@@ -133,7 +133,7 @@ class GoesAWSInterface(object):
         hour = date.hour
         jul_day = date.timetuple().tm_yday
 
-        prefix = self.build_prefix(product, year, jul_day, hour)
+        prefix = self.build_prefix(product, year, jul_day, hour, sector)
         resp = self.get_sat_bucket(satellite, prefix)
 
         for each in list(resp['Contents']):
@@ -208,7 +208,7 @@ class GoesAWSInterface(object):
 
 
 
-    def build_prefix(self, product=None, year=None, julian_day=None, hour=None):
+    def build_prefix(self, product=None, year=None, julian_day=None, hour=None, sector=None):
         prefix = ''
 
         if product is not None:
@@ -220,6 +220,13 @@ class GoesAWSInterface(object):
             prefix += self.build_day_format(julian_day)
         if hour is not None:
             prefix += self.build_hour_format(hour)
+        if product is not None:
+            prefix += 'OR_' + product
+        if sector is not None:
+            if ('M' in sector):
+                prefix += sector[-1]
+            else:
+                prefix += sector
 
         return prefix
 
@@ -264,12 +271,22 @@ class GoesAWSInterface(object):
 
 
     def get_sat_bucket(self, satellite, prefix):
+        """
+        Important to note that list_objects() & list_objects_v2 only return up
+        to 1000 keys. V2 returns a ContinuationToken that can be used to get
+        the rest of the keys.
+
+        See: https://alexwlchan.net/2017/07/listing-s3-keys
+
+        https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html#S3.Client.list_objects
+        https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html#S3.Client.list_objects_v2
+        """
         resp = None
 
         if (satellite == 'goes16'):
-            resp = self._bucket_16.meta.client.list_objects(Bucket='noaa-goes16', Prefix=prefix, Delimiter='/')
+            resp = self._bucket_16.meta.client.list_objects_v2(Bucket='noaa-goes16', Prefix=prefix, Delimiter='/')
         elif (satellite == 'goes17'):
-            resp = self._bucket_17.meta.client.list_objects(Bucket='noaa-goes17', Prefix=prefix, Delimiter='/')
+            resp = self._bucket_17.meta.client.list_objects_v2(Bucket='noaa-goes17', Prefix=prefix, Delimiter='/')
         else:
             print('Error: Invalid satellite argument')
             sys.exit(0)
