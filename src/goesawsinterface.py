@@ -59,10 +59,12 @@ class GoesAWSInterface(object):
         ----------
         satellite : str
             The satellite to fetch available products for.
-            Available: 'goes16' & 'goes16'
+            Valid: 'goes16' & 'goes17'
 
         Returns
         -------
+        prods : list of str
+            List of available products
         """
         prods = []
 
@@ -76,6 +78,23 @@ class GoesAWSInterface(object):
 
 
     def get_avail_years(self, satellite, product):
+        """
+        Gets the years for which data is available for a given satellite & product
+
+        Parameters
+        ----------
+        satellite : str
+            The satellite to fetch available products for.
+            Valid: 'goes16' & 'goes17'
+        product : str
+            Imagery product to retrieve available data for
+
+        Returns
+        -------
+        years : list of str
+            List containing the years for which data is available for the given
+            satellite and product
+        """
         years = []
 
         prefix = self.build_prefix(product)
@@ -91,6 +110,25 @@ class GoesAWSInterface(object):
 
 
     def get_avail_months(self, satellite, product, year):
+        """
+        Gets the months for which data is available for a given satellite, product,
+        and year
+
+        Parameters
+        ----------
+        satellite : str
+            The satellite to fetch available products for.
+            Valid: 'goes16' & 'goes17'
+        product : str
+            Imagery product to retrieve available data for
+        year : str or int
+            Year to fetch the available months for
+
+        Returns
+        -------
+        months : list of int
+            List of months for which data is available
+        """
 
         days = self.get_avail_days(satellite, product, year)
         months = self.decode_julian_day(year, days, 'm')
@@ -100,6 +138,24 @@ class GoesAWSInterface(object):
 
 
     def get_avail_days(self, satellite, product, year):
+        """
+        Retrieves the days of the given year for which data is available for the
+        given satellite and product
+
+        Parameters
+        ----------
+        satellite : str
+            The satellite to fetch available products for.
+            Valid: 'goes16' & 'goes17'
+        product : str
+            Imagery product to retrieve available data for
+        year : str or int
+            Year to fetch the available months for
+
+        Returns
+        -------
+        days : list of str
+        """
         days = []
 
         prefix = self.build_prefix(product, year)
@@ -115,6 +171,25 @@ class GoesAWSInterface(object):
 
 
     def get_avail_hours(self, satellite, product, date):
+        """
+        Gets the hours that data is available for a given satellite, product,
+        and date
+
+        Parameters
+        ----------
+        satellite : str
+            The satellite to fetch available products for.
+            Valid: 'goes16' & 'goes17'
+        product : str
+            Imagery product to retrieve available data for
+        date : str
+            Date of the data. Format: MM-DD-YYYY
+
+        Returns
+        -------
+        hours : list of int
+            Hours for which data is available, in UTC format
+        """
         hours = []
 
         year = date[-4:]
@@ -133,6 +208,27 @@ class GoesAWSInterface(object):
 
 
     def get_avail_images(self, satellite, product, date, sector, channel):
+        """
+
+        Parameters
+        ----------
+        satellite : str
+            The satellite to fetch available products for.
+            Valid: 'goes16' & 'goes17'
+        product : str
+            Imagery product to retrieve available data for
+        date : str
+            Date & time of the data. Format: MM-DD-YYYY-HH
+        sector : str
+            Satellite scan sector. M1 = mesoscale 1, M2 = mesoscale 2, C = CONUS
+        channel : int
+            ABI channel
+
+        Returns
+        -------
+        images : list of AwsGoesFile objects
+            AwsGoesFile objects representing available data files
+        """
         images = []
 
         if (sector == 'C'):
@@ -164,13 +260,31 @@ class GoesAWSInterface(object):
 
 
 
-    """
-    start : str
-        format: 'MM-DD-YYYY-HHMM'
-    end : str
-        format: 'MM-DD-YYYY-HHMM'
-    """
     def get_avail_images_in_range(self, satellite, product, start, end, sector, channel):
+        """
+
+        Parameters
+        ----------
+        satellite : str
+            The satellite to fetch available products for.
+            Valid: 'goes16' & 'goes17'
+        product : str
+            Imagery product to retrieve available data for
+        start : str
+            Start date & time of the data. Format: MM-DD-YYYY-HHMM
+        end : str
+            End date & time of the data. Format: MM-DD-YYYY-HHMM
+        sector : str
+            Satellite scan sector. M1 = mesoscale 1, M2 = mesoscale 2, C = CONUS
+        channel : int
+            ABI channel
+
+        Returns
+        -------
+        images : list of AwsGoesFile objects
+            AwsGoesFile objects representing available data files between the start
+            and end date & times, inclusive
+        """
         images = []
         added = []
 
@@ -193,6 +307,29 @@ class GoesAWSInterface(object):
 
 
     def download(self, satellite, awsgoesfiles, basepath, keep_aws_folders=False, threads=6):
+        """
+        Downloads GOES data files from the AWS bucket
+
+        Parameters
+        ----------
+        satellite : str
+            The satellite to fetch available products for.
+            Valid: 'goes16' & 'goes17'
+        awsgoesfiles : list of AwsGoesFile objects
+            AwsGoesFile objects to download
+        basepath : str
+            Path to download the data files to
+        keep_aws_folders : bool, optional
+            If True, the AWS bucket file structure will be implemented within
+            the 'basepath' directory. Default is False
+        threads : int, optional
+            Number of threads used to download the files. Default is 6
+
+        Returns
+        -------
+        downloadresults : list of LocalGoesFile objects
+            List of LocalGoesFile objects that have been downloaded
+        """
 
         if type(awsgoesfiles) == AwsGoesFile:
             awsgoesfiles = [awsgoesfiles]
@@ -212,7 +349,7 @@ class GoesAWSInterface(object):
                     error = future.exception()
                     errors.append(error.awsgoesfile)
 
-        # Sort returned list of GoesLocalFile objects by the scan_time
+        # Sort returned list of LocalGoesFile objects by the scan_time
         localfiles.sort(key=lambda x:x.scan_time)
         downloadresults = DownloadResults(localfiles,errors)
         six.print_('{} out of {} files downloaded...{} errors'.format(downloadresults.success_count,
@@ -223,6 +360,21 @@ class GoesAWSInterface(object):
 
 
     def build_prefix(self, product=None, year=None, julian_day=None, hour=None, sector=None):
+        """
+        Constructs a prefix for the aws bucket
+
+        Parameters
+        ----------
+        product : str, optional
+        year : str or int, optional
+        julian_day : str or int, optional
+        hour : str or int, optional
+        sector : str, optional
+
+        Returns
+        -------
+        prefix : str
+        """
         prefix = ''
 
         if product is not None:
@@ -247,6 +399,17 @@ class GoesAWSInterface(object):
 
 
     def build_year_format(self, year):
+        """
+
+        Parameters
+        ----------
+        year : int or str
+
+        Returns
+        -------
+        year : str
+            Includes trailing '/'
+        """
         if (isinstance(year, int)):
             return '{:04}/'.format(year)
         elif (isinstance(year, str)):
@@ -257,16 +420,39 @@ class GoesAWSInterface(object):
 
 
     def build_day_format(self, jd):
+        """
+
+        Parameters
+        ----------
+        jd : int or str
+
+        Returns
+        -------
+        jd : str
+            Includes trailing '/'
+
+        """
         if isinstance(jd, int):
             return '{:03}/'.format(jd)
         elif isinstance(jd, str):
-            return '{}/'.format(m_or_d)
+            return '{}/'.format(jd)
         else:
             raise TypeError('Month must be int or str type')
 
 
 
     def build_hour_format(self, hour):
+        """
+
+        Parameters
+        ----------
+        hour : str or int
+
+        Returns
+        -------
+        hour : str
+            Includes trailing '/'
+        """
         if isinstance(hour, int):
             return '{:02}/'.format(hour)
         elif isinstance(hour, str):
@@ -277,6 +463,17 @@ class GoesAWSInterface(object):
 
 
     def build_channel_format(self, channel):
+        """
+
+        Parameters
+        ----------
+        channel : str
+
+        Returns
+        -------
+        channel : str
+            Format: C<channel w/ padding 0 if applicable>
+        """
         if not isinstance(channel, str):
             channel = str(channel)
 
@@ -286,6 +483,20 @@ class GoesAWSInterface(object):
 
     def get_sat_bucket(self, satellite, prefix):
         """
+
+        Parameters
+        ----------
+        satellite : str
+            Valid: 'goes16' & 'goes17'
+        prefix : str
+
+        Returns
+        -------
+        resp : dict
+            boto3 bucket response
+
+        Notes
+        -----
         Important to note that list_objects() & list_objects_v2 only return up
         to 1000 keys. V2 returns a ContinuationToken that can be used to get
         the rest of the keys.
@@ -309,6 +520,7 @@ class GoesAWSInterface(object):
 
 
     def datetime_range(self, start, end):
+
         diff = (end + timedelta(minutes = 1)) - start
 
         for x in range(int(diff.total_seconds() / 60)):
@@ -317,6 +529,7 @@ class GoesAWSInterface(object):
 
 
     def _is_within_range(self, start, end, value):
+
         if value >= start and value <= end:
             return True
         else:
@@ -346,6 +559,7 @@ class GoesAWSInterface(object):
 
 
     def decode_julian_day(self, year, days, key):
+
         dates = {}
 
         if not isinstance(year, str):
@@ -367,6 +581,7 @@ class GoesAWSInterface(object):
 
 
     def _download(self, awsgoesfile, basepath, keep_aws_folders, satellite):
+        
         dirpath, filepath = awsgoesfile.create_filepath(basepath, keep_aws_folders)
 
         try:
