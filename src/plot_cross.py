@@ -414,6 +414,9 @@ def plot_cross_section_inset(data=None, inset_data=None, inset_lons=None, inset_
             f_lon, f_lat = parse_coord_fnames(abs_path)
             lons = load_coordinates(f_lon)
             lats = load_coordinates(f_lat)
+            inset_data = load_data(inset_data)
+            inset_lons = load_data(inset_lons)
+            inset_lats = load_data(inset_lats)
 
             coords = []
             for idx, x in enumerate(lons):
@@ -468,7 +471,8 @@ def to_file(out_path, f_name, data):
 
     Returns
     -------
-    None
+    abs_path : str
+        Absolute path of the text file
     """
 
     if (not isdir(out_path)):
@@ -479,6 +483,8 @@ def to_file(out_path, f_name, data):
     print("\nWriting", abs_path, "\n")
 
     np.savetxt(abs_path, data, delimiter=',', newline='\n', fmt='%2.3f')
+
+    return abs_path
 
 
 
@@ -544,46 +550,40 @@ def parse_coord_fnames(abs_path):
 
 
 
-def main():
-
-    tracemalloc.start()
-    #f_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms'
-    #f_name = 'MRMS_MergedReflectivityQC_00.50_20190523-212434.grib2'
-    base_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
-    #f_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905/MergedReflectivityQC_01.50'
-    #f_name = 'MRMS_MergedReflectivityQC_01.50_20190523-212434.grib2'
-    #f_abs = join(f_path, f_name)
-    f_out = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
-
-    """
-    scans = fetch_scans(base_path, '2124') # z = 33
-
-    grib_files = get_grib_objs(scans, base_path)
-    print(grib_files)
-
-    data = [x.data for x in grib_files]
-    """
-
-    """
-    files = ['MRMS_MergedReflectivityQC_02.00_20190523-212434.grib2',
-             'MRMS_MergedReflectivityQC_02.25_20190523-212434.grib2']
-
-    point1 = (-101.618, 35.3263)
-    point2 = (-100.999, 36.2826)
-
-    grbs = get_grib_objs(files, base_path)
-
-    get_cross_neighbor(grbs[0], point1, point2)
-    """
-
-#-------------------------------------------------------------------------------
-    """
-
+def process_slice(base_path, slice_time, point1, point2, write=False):
     cross_sections = np.array([])
 
-    #(-101.822, 35.0833), (-100.403, 37.1292)
-    point1 = (-101.618, 35.3263)
-    point2 = (-100.999, 36.2826)
+    scans = fetch_scans(BASE_PATH, slice_time) # z = 33
+
+    grbs = get_grib_objs(scans, BASE_PATH)
+
+    valid_date = grbs[0].validity_date
+    valid_time = grbs[0].validity_time
+
+    fname = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z.txt'
+
+    cross_sections = np.asarray(get_cross_neighbor(grbs[0], point1, point2))
+
+    for grb in grbs[1:]:
+        cross_sections = np.vstack((cross_sections, get_cross_neighbor(grb, point1, point2)))
+
+    if (write):
+        f_out = to_file(BASE_PATH_XSECT, fname, cross_sections)
+        return f_out
+    else:
+        return cross_sections
+
+
+
+def process_slice_inset(base_path, slice_time, point1, point2):
+    """
+    ex:
+        dict = process_slice2(base_path, slice_time, point1, point2)
+        plot_cross_section_inset(inset_data=dict['f_inset_data'], inset_lons=dict['f_inset_lons'],
+            inset_lats=dict['f_inset_lats'], abs_path=fname, points=(point1, point2))
+    """
+    tracemalloc.start()
+    cross_sections = np.array([])
 
     scans = fetch_scans(base_path, '2124') # z = 33
 
@@ -596,39 +596,45 @@ def main():
 
     cross_sections = np.asarray(get_cross_neighbor(grbs[0], point1, point2))
 
-
     for grb in grbs[1:]:
         cross_sections = np.vstack((cross_sections, get_cross_neighbor(grb, point1, point2)))
 
-    fname2 = 'mrms-ang2-20190523-2124z.txt'
-    fname2_lon = 'mrms-ang2-20190523-2124z-lons.txt'
-    fname2_lat = 'mrms-ang2-20190523-2124z-lats.txt'
+    ang2 = 'mrms-ang2-' + str(valid_date) + '-' + str(valid_time) + 'z.txt'
+    f_ang2_lons = 'mrms-ang2-' + str(valid_date) + '-' + str(valid_time) + 'z-lons.txt'
+    f_ang2_lats = 'mrms-ang2-' + str(valid_date) + '-' + str(valid_time) + 'z-lats.txt'
 
-    to_file(f_out, fname2_lon, grbs[6].grid_lons)
-    to_file(f_out, fname2_lat, grbs[6].grid_lats)
-    to_file(f_out, fname2, grbs[6].data)
-    to_file(f_out, fname, cross_sections)
+    f_out = to_file(BASE_PATH_XSECT, fname, cross_sections)
+    f_lons = to_file(BASE_PATH_XSECT_COORDS, f_ang2_lons, grbs[6].grid_lons)
+    f_lats = to_file(BASE_PATH_XSECT_COORDS, f_ang2_lats, grbs[6].grid_lats)
+    f_inset = to_file(BASE_PATH_XSECT, ang2, grbs[6].data)
 
-    print("Memory Useage - Current: %d, Peak: %d" % tracemalloc.get_traced_memory())
-    """
+    return {'x_sect': f_out, 'f_inset_lons': f_lons, 'f_inset_lats': f_lats, 'f_inset_data': f_inset}
 
-#-------------------------------------------------------------------------------
 
-    fname = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/mrms-cross-20190523-2124z.txt'
+def main():
 
-    ang2 = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/mrms-ang2-20190523-2124z.txt'
-    f_ang2_lons = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/mrms-ang2-20190523-2124z-lons.txt'
-    f_ang2_lats = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/mrms-ang2-20190523-2124z-lats.txt'
+    tracemalloc.start()
+    base_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
+    f_out = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
 
-    ang2_data = load_data(ang2)
-    ang2_lons = load_data(f_ang2_lons)
-    ang2_lats = load_data(f_ang2_lats)
+
     point1 = (-101.618, 35.3263)
     point2 = (-100.999, 36.2826)
 
-    #plot_cross_section(abs_path=fname)
-    plot_cross_section_inset(inset_data=ang2_data, inset_lons=ang2_lons, inset_lats=ang2_lats, abs_path=fname, points=(point1, point2))
+    """
+    fname = process_slice(base_path, '2124', point1, point2, write=True)
+    plot_cross_section(abs_path=fname)
+    """
 
+
+    """
+    f_dict = process_slice_inset(base_path, '2124', point1, point2)
+    plot_cross_section_inset(inset_data=f_dict['f_inset_data'], inset_lons=f_dict['f_inset_lons'],
+                             inset_lats=f_dict['f_inset_lats'], abs_path=f_dict['x_sect'], points=(point1, point2))
+    """
+
+
+    print("Memory Useage - Current: %d, Peak: %d" % tracemalloc.get_traced_memory())
 
 
 if (__name__ == '__main__'):
