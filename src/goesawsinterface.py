@@ -16,17 +16,16 @@ from localgoesfile import LocalGoesFile
 
 
 """
+Ex:
+
 import goesawsinterface
 
 conn = goesawsinterface.GoesAWSInterface()
 
-
-years = conn.get_avail_products('goes16')
-print(years)
-
-
 years = conn.get_avail_years('goes16', 'ABI-L1b-RadC')
-print(years)
+
+imgs = conn.get_avail_images('goes16', 'ABI-L1b-RadM', '5-23-2019-21', 'M2', '13')
+
 """
 
 class GoesAWSInterface(object):
@@ -581,7 +580,7 @@ class GoesAWSInterface(object):
 
 
     def _download(self, awsgoesfile, basepath, keep_aws_folders, satellite):
-        
+
         dirpath, filepath = awsgoesfile.create_filepath(basepath, keep_aws_folders)
 
         try:
