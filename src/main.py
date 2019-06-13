@@ -28,14 +28,9 @@ basepath = '/media/mnichol3/pmeyers1/MattNicholson/goes/'
 
 conn = goesawsinterface.GoesAWSInterface()
 
-#days = conn.get_avail_days('goes16', 'ABI-L2-CMIPM', 2018)
-#print(days)
-#print(conn.decode_julian_day('2018', days))
-#print(conn.get_avail_images('goes16', 'ABI-L2-CMIPM', '6-6-2019-12', 'M1', '13'))
-
 #prods = conn.get_avail_products('goes16')
 #print(conn.get_avail_years('goes16', 'ABI-L1b-RadM'))
-imgs = conn.get_avail_images('goes16', 'ABI-L1b-RadM', '5-23-2019-16', 'M2', '13')
+imgs = conn.get_avail_images('goes16', 'ABI-L1b-RadM', '5-23-2019-21', 'M2', '13')
 for img in imgs:
     print(img)
 
