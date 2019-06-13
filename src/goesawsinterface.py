@@ -198,7 +198,7 @@ class GoesAWSInterface(object):
                     error = future.exception()
                     errors.append(error.awsgoesfile)
 
-        # Sort returned list of NexradLocalFile objects by the scan_time
+        # Sort returned list of GoesLocalFile objects by the scan_time
         localfiles.sort(key=lambda x:x.scan_time)
         downloadresults = DownloadResults(localfiles,errors)
         six.print_('{} out of {} files downloaded...{} errors'.format(downloadresults.success_count,
