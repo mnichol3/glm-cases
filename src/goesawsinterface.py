@@ -270,9 +270,9 @@ class GoesAWSInterface(object):
         product : str
             Imagery product to retrieve available data for
         start : str
-            Start date & time of the data. Format: MM-DD-YYYY-HHMM
+            Start date & time of the data. Format: MM-DD-YYYY-HH:MM
         end : str
-            End date & time of the data. Format: MM-DD-YYYY-HHMM
+            End date & time of the data. Format: MM-DD-YYYY-HH:MM
         sector : str
             Satellite scan sector. M1 = mesoscale 1, M2 = mesoscale 2, C = CONUS
         channel : int
