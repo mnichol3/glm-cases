@@ -521,6 +521,9 @@ def get_grib_objs(scans, base_path):
     """
     grb_files = []
 
+    if (not isinstance(scans, (list,))):
+        scans = [scans]
+
     for file in scans:
         print('Parsing ', file)
 
