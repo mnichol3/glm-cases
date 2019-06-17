@@ -171,15 +171,13 @@ def georeference(x, y, data, sat_lon, sat_height, sat_sweep):
 
 
 fname = '/media/mnichol3/pmeyers1/MattNicholson/glm/glm20190523/IXTR99_KNES_232122_14654.2019052322'
-#print_variable(fname, 'goes_imager_projection')
-
-
-meta = read_file(fname, meta=True)
+print_variable(fname, 'x')
 
 """
+meta = read_file(fname, meta=True)
 lons, lats = georeference(meta['x'], meta['y'], meta['data'], meta['lon_0'], meta['height'], meta['sweep_ang_axis'])
-
 plt.figure(figsize=[15,12])
-plt.pcolormesh(lats, lons, meta['data'])
+#plt.pcolormesh(meta['x'], meta['y'], meta['data']) # Works in geos projection
+plt.pcolormesh(lons, lats, meta['data'])
 plt.show()
 """
