@@ -288,7 +288,8 @@ def main():
     #plt.plot(lons.flatten(), lats.flatten(), c='r')
     plt.show()
     """
-    plot_mercator(data, (point1, point2))
+    cmesh = plot_mercator(data, (point1, point2))
+
 
 
 
