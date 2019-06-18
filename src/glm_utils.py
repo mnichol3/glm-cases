@@ -5,6 +5,9 @@ import numpy as np
 from math import pi
 import matplotlib.pyplot as plt
 from sys import exit
+import cartopy.crs as ccrs
+from cartopy.feature import NaturalEarthFeature
+import matplotlib.cm as cm
 
 from grib import trunc
 
@@ -226,19 +229,44 @@ def create_bbox(lats, lons, point1, point2):
 
 
 
+def plot_mercator(data_dict, extent_coords):
+
+    globe = ccrs.Globe(semimajor_axis=data_dict['semi_major_axis'], semiminor_axis=data_dict['semi_minor_axis'],
+                       flattening=None, inverse_flattening=data_dict['inv_flattening'])
+
+    ext_lats = [extent_coords[0][0], extent_coords[1][0]]
+    ext_lons = [extent_coords[0][1], extent_coords[1][1]]
+
+    Xs, Ys = georeference(data_dict['x'], data_dict['y'], data_dict['lon_0'], data_dict['height'],
+                          data_dict['sweep_ang_axis'])
+
+    fig = plt.figure(figsize=(10, 5))
+
+    ax = fig.add_subplot(1, 1, 1, projection=ccrs.Mercator(globe=globe))
+
+    states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='none',
+                             name='admin_1_states_provinces_shp')
+
+    ax.add_feature(states, linewidth=.8, edgecolor='black')
+
+    ax.set_extent([min(ext_lons), max(ext_lons), min(ext_lats), max(ext_lats)], crs=ccrs.PlateCarree())
+
+    cmesh = plt.pcolormesh(Xs, Ys, data_dict['data'], transform=ccrs.PlateCarree(), cmap=cm.jet)
+    cbar = plt.colorbar(cmesh,fraction=0.046, pad=0.04)
+
+    plt.tight_layout()
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.show()
+
+
+
 def main():
     fname = '/media/mnichol3/pmeyers1/MattNicholson/glm/glm20190523/IXTR99_KNES_232122_14654.2019052322'
     #fname = '/media/mnichol3/pmeyers1/MattNicholson/abi/ABI-L2-CMIPF_2019_143_21_OR_ABI-L2-CMIPF-M6C06_G16_s20191432130383_e20191432140097_c20191432140168.nc'
 
-    meta = read_file(fname, meta=True)
+    data = read_file(fname, meta=True)
 
-    lons, lats = georeference(meta['x'], meta['y'], meta['lon_0'], meta['height'], meta['sweep_ang_axis'])
-
-    #lats[lats == 1e+30] = np.nan
-    #lons[lons == 1e+30] = np.nan
-
-    #lons = trunc(lons, decs=3)
-    #lats = trunc(lats, decs=3)
+    #lons, lats = georeference(meta['x'], meta['y'], meta['lon_0'], meta['height'], meta['sweep_ang_axis'])
 
     point1 = (37.195, -102.185)
     point2 = (34.565, -99.865)
@@ -252,13 +280,15 @@ def main():
     """
 
 
+    """
     plt.figure(figsize=[15,12])
     plt.axis([-102.185, -99.865, 34.656, 37.195])
     mesh = plt.pcolormesh(lons, lats, meta['data'])
     plt.gca().set_aspect('equal', adjustable='box')
-    #plt.scatter(lons.flatten(), lats.flatten(), c='r')
+    #plt.plot(lons.flatten(), lats.flatten(), c='r')
     plt.show()
-
+    """
+    plot_mercator(data, (point1, point2))
 
 
 
