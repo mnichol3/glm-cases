@@ -37,26 +37,6 @@ def trim_header(abs_path):
 
 
 
-def get_axis_range(coords):
-    maxs = []
-    mins = []
-    for x in coords:
-        maxs.append(max(x))
-        mins.append(min(x))
-
-    while (1e+30 in maxs):
-        maxs.remove(1e+30)
-
-    while (1e+30 in mins):
-        mins.remove(1e+30)
-
-    abs_min = min(mins)
-    abs_max = max(maxs)
-
-    return (abs_min, abs_max)
-
-
-
 def print_file_format(abs_path):
     f_path = trim_header(abs_path)
 
