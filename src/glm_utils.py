@@ -268,8 +268,6 @@ def main():
     fname = '/media/mnichol3/pmeyers1/MattNicholson/glm/glm20190523/IXTR99_KNES_232122_14654.2019052322'
     #fname = '/media/mnichol3/pmeyers1/MattNicholson/abi/OR_ABI-L2-CMIPC-M3C04_G16_s20190591817134_e20190591819507_c20190591819574.nc'
 
-    #lons, lats = georeference(meta['x'], meta['y'], meta['lon_0'], meta['height'], meta['sweep_ang_axis'])
-
     point1 = (37.195, -102.185)
     point2 = (34.565, -99.865)
 
