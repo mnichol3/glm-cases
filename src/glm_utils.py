@@ -8,8 +8,10 @@ from sys import exit
 import cartopy.crs as ccrs
 from cartopy.feature import NaturalEarthFeature
 import matplotlib.cm as cm
+from math import degrees, radians, atan, cos, sqrt
 
 from grib import trunc
+from proj_utils import scan_to_geod, geod_to_scan
 
 def trim_header(abs_path):
     if (not isfile(abs_path)):
@@ -180,8 +182,8 @@ def georeference(x, y, sat_lon, sat_height, sat_sweep):
     """
 
     # Multiplying by sat height might not be necessary here
-    Xs = x * sat_height # (1000,)
-    Ys = y * sat_height # (1000,)
+    Xs = x * sat_height
+    Ys = y * sat_height
 
     p = pyproj.Proj(proj='geos', h=sat_height, lon_0=sat_lon, sweep=sat_sweep)
 
@@ -193,9 +195,10 @@ def georeference(x, y, sat_lon, sat_height, sat_sweep):
 
 
 def idx_of_nearest(coords, val):
-    X = np.abs(coords-val)
+    X = np.abs(coords.flatten()-val)
     idx = np.where(X == X.min())
-    return (idx, coords[idx][0])
+    idx = idx[0][0]
+    return coords.flatten()[idx]
 
 
 
@@ -260,36 +263,61 @@ def plot_mercator(data_dict, extent_coords):
 
 
 
+
 def main():
     fname = '/media/mnichol3/pmeyers1/MattNicholson/glm/glm20190523/IXTR99_KNES_232122_14654.2019052322'
-    #fname = '/media/mnichol3/pmeyers1/MattNicholson/abi/ABI-L2-CMIPF_2019_143_21_OR_ABI-L2-CMIPF-M6C06_G16_s20191432130383_e20191432140097_c20191432140168.nc'
-
-    data = read_file(fname, meta=True)
+    #fname = '/media/mnichol3/pmeyers1/MattNicholson/abi/OR_ABI-L2-CMIPC-M3C04_G16_s20190591817134_e20190591819507_c20190591819574.nc'
 
     #lons, lats = georeference(meta['x'], meta['y'], meta['lon_0'], meta['height'], meta['sweep_ang_axis'])
 
     point1 = (37.195, -102.185)
     point2 = (34.565, -99.865)
 
-    """
-    bbox = create_bbox(lats, lons, point1, point2)
-    print(bbox)
-    print(lons.shape)
-    lons_sub = lons[890:1403, 560:570]
-    lats_sub = lats[509:554, 263:1847]
-    """
+
+    #data = read_file(fname, meta=True)
+    #plot_mercator(data, (point1, point2))
 
 
-    """
-    plt.figure(figsize=[15,12])
-    plt.axis([-102.185, -99.865, 34.656, 37.195])
-    mesh = plt.pcolormesh(lons, lats, meta['data'])
+    data = read_file(fname, meta=True)
+
+    y1, x1 = geod_to_scan(point1[0], point1[1])
+    y2, x2 = geod_to_scan(point2[0], point2[1])
+
+    xs = np.asarray(data['x'])
+    ix_1 = (np.abs(xs - x1)).argmin()
+    ix_2 = (np.abs(xs - x2)).argmin()
+    x_subs = xs[min(ix_1, ix_2) : max(ix_1, ix_2)]
+    #print(ix_1, ix_2)
+
+    ys = np.asarray(data['y'])
+    iy_1 = (np.abs(ys - y1)).argmin()
+    iy_2 = (np.abs(ys - y2)).argmin()
+    y_subs = ys[min(iy_1, iy_2):max(iy_1, iy_2)]
+    #print(iy_1, iy_2)
+
+
+    globe = ccrs.Globe(semimajor_axis=data['semi_major_axis'], semiminor_axis=data['semi_minor_axis'],
+                       flattening=None, inverse_flattening=data['inv_flattening'])
+    lons, lats = georeference(x_subs, y_subs, data['lon_0'], data['height'], data['sweep_ang_axis'])
+    data_subs = data['data'][476:576, 715:760]
+
+    fig = plt.figure(figsize=(10, 5))
+
+    ax = fig.add_subplot(1, 1, 1, projection=ccrs.Mercator(globe=globe))
+
+    states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='none',
+                             name='admin_1_states_provinces_shp')
+
+    ax.add_feature(states, linewidth=.8, edgecolor='black')
+
+    ax.set_extent([-102.185, -99.865, 34.565, 37.195], crs=ccrs.PlateCarree())
+
+    cmesh = plt.pcolormesh(lons, lats, data_subs, transform=ccrs.PlateCarree(), cmap=cm.jet)
+    cbar = plt.colorbar(cmesh,fraction=0.046, pad=0.04)
+
+    plt.tight_layout()
     plt.gca().set_aspect('equal', adjustable='box')
-    #plt.plot(lons.flatten(), lats.flatten(), c='r')
     plt.show()
-    """
-    cmesh = plot_mercator(data, (point1, point2))
-
 
 
 
