@@ -1,3 +1,8 @@
+"""
+https://www.goes-r.gov/users/docs/PUG-L1b-vol3.pdf
+pg. 56-60
+"""
+
 from math import degrees, radians, atan, sin, cos, sqrt, tan
 
 def scan_to_geod(y, x):
