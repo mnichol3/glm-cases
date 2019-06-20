@@ -234,7 +234,7 @@ def plot_mercator(data_dict, extent_coords):
 
     ax.set_extent([min(ext_lons), max(ext_lons), min(ext_lats), max(ext_lats)], crs=ccrs.PlateCarree())
 
-    cmesh = plt.pcolormesh(Xs, Ys, data_dict['data'], transform=ccrs.PlateCarree(), cmap=cm.jet)
+    cmesh = plt.pcolormesh(Xs, Ys, data_dict['data'], vmin=0, vmax=350, transform=ccrs.PlateCarree(), cmap=cm.jet)
     cbar = plt.colorbar(cmesh,fraction=0.046, pad=0.04)
 
     plt.tight_layout()
@@ -290,7 +290,7 @@ def main():
 
     ax.set_extent([-102.185, -99.865, 34.565, 37.195], crs=ccrs.PlateCarree())
 
-    cmesh = plt.pcolormesh(lons, lats, data_subs, transform=ccrs.PlateCarree(), cmap=cm.jet)
+    cmesh = plt.pcolormesh(lons, lats, data_subs, vmin=0, vmax=350, transform=ccrs.PlateCarree(), cmap=cm.jet)
     cbar = plt.colorbar(cmesh,fraction=0.046, pad=0.04)
 
     plt.tight_layout()
