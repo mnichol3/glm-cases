@@ -113,7 +113,7 @@ def get_sat_metadata(abs_path):
 
 
 
-def read_file(abs_path, meta=False):
+def read_file(abs_path, window=False, meta=False):
     data_dict = {}
     f_path = trim_header(abs_path)
 
@@ -131,7 +131,11 @@ def read_file(abs_path, meta=False):
 
     data_dict['x'] = fh.variables['x'][:]
     data_dict['y'] = fh.variables['y'][:]
-    data_dict['data'] = fh.variables['Flash_extent_density'][:]
+
+    if (window):
+        data_dict['data'] = fh.variables['Flash_extent_density_window'][:]
+    else:
+        data_dict['data'] = fh.variables['Flash_extent_density'][:]
 
     fh.close()
     fh = None
@@ -245,9 +249,10 @@ def plot_mercator(data_dict, extent_coords):
 
 
 def main():
+
     fname = '/media/mnichol3/pmeyers1/MattNicholson/glm/glm20190523/IXTR99_KNES_232122_14654.2019052322'
     #fname = '/media/mnichol3/pmeyers1/MattNicholson/abi/OR_ABI-L2-CMIPC-M3C04_G16_s20190591817134_e20190591819507_c20190591819574.nc'
-
+    #print_variable(fname, 'Flash_extent_density_window')
     point1 = (37.195, -102.185)
     point2 = (34.565, -99.865)
 
@@ -256,7 +261,8 @@ def main():
     #plot_mercator(data, (point1, point2))
 
 
-    data = read_file(fname, meta=True)
+    data = read_file(fname, window=True, meta=True)
+    print('Size of data (bytes):', data['data'].nbytes)
 
     y1, x1 = geod_to_scan(point1[0], point1[1])
     y2, x2 = geod_to_scan(point2[0], point2[1])
@@ -278,7 +284,7 @@ def main():
                        flattening=None, inverse_flattening=data['inv_flattening'])
     lons, lats = georeference(x_subs, y_subs, data['lon_0'], data['height'], data['sweep_ang_axis'])
     data_subs = data['data'][476:576, 715:760]
-
+    print('Size of data_subs (bytes):', data_subs.nbytes)
     fig = plt.figure(figsize=(10, 5))
 
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.Mercator(globe=globe))
