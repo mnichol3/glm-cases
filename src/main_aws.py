@@ -11,11 +11,13 @@ conn = goesawsinterface.GoesAWSInterface()
 #print(conn.get_avail_years('goes16', 'ABI-L1b-RadM'))
 #imgs = conn.get_avail_images('goes16', 'ABI-L1b-RadM', '5-23-2019-21', 'M2', '13')
 
-"""
-imgs = conn.get_avail_images_in_range('goes16', 'ABI-L2-CMIPM', '5-23-2019-20:00', '5-23-2019-21:00', 'M1', '13')
-for img in imgs:
-    print(img)
-"""
+
+#imgs = conn.get_avail_images_in_range('goes16', 'ABI-L2-CMIPM', '5-23-2019-20:00', '5-23-2019-21:00', 'M1', '13')
+imgs = conn.get_avail_images('goes16', 'ABI-L1b-RadM', '5-23-2019-21', 'M2', '13')
+print(imgs[0].shortfname)
+#for img in imgs:
+#    print(img)
+
 
 #imgs = conn.get_avail_images_in_range('goes16', 'ABI-L2-CMIPM', '5-23-2019-20:00', '5-23-2019-21:00', 'M1', '13')
 #localfiles = conn.download('goes16', imgs, basepath)
