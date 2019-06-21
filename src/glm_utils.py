@@ -13,6 +13,8 @@ from math import degrees, radians, atan, cos, sqrt
 from grib import trunc
 from proj_utils import scan_to_geod, geod_to_scan
 
+
+
 def trim_header(abs_path):
     if (not isfile(abs_path)):
         raise OSError('File does not exist:', abs_path)
