@@ -1,6 +1,4 @@
-from aws_dl import abi_dl
-import boto3
-from botocore.handlers import disable_signing
+
 import goesawsinterface
 import sys
 import six
