@@ -1,3 +1,8 @@
+"""
+Author: Matt Nicholson
+
+Functions to read & manipulate Multi-Radar/Multi-Sensor System (MRMS) GRIB files
+"""
 import numpy as np
 import pygrib
 import matplotlib.pyplot as plt

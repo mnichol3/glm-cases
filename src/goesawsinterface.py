@@ -1,3 +1,9 @@
+"""
+Author: Matt Nicholson
+
+A class to interface NOAA's GOES-16 & GOES-17 Amazon Web Services S3 bucket.
+Based on Aaron Anderson's nexradaws module, found here: https://github.com/aarande/nexradaws
+"""
 import os
 import re
 import sys
