@@ -1,3 +1,8 @@
+"""
+Author: Matt Nicholson
+
+Functions to open and manipulate GOES-16 GLM netCDF files
+"""
 from os.path import isfile
 from netCDF4 import Dataset
 import pyproj

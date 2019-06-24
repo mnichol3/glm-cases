@@ -1,3 +1,8 @@
+"""
+Author: Matt Nicholson
+
+A simple class for local GOES-16 Geostationary Lightning Mapper (GLM) netCDF files
+"""
 import os
 import re
 

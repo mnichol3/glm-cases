@@ -1,3 +1,8 @@
+"""
+Author: Matt Nicholson
+
+A simple class for local GOES-16 ABI netCDF files
+"""
 import os
 from netCDF4 import Dataset
 

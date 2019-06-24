@@ -1,3 +1,8 @@
+"""
+Author: Matt Nicholson
+
+A class for local Multi-Radar/Multi-Sensor System (MRMS) GRIB files
+"""
 import re
 
 class MRMSGrib(object):

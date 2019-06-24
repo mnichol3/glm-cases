@@ -1,3 +1,8 @@
+"""
+Author: Matt Nicholson
+
+Based on Aaron Anderson's nexradaws module, found here: https://github.com/aarande/nexradaws 
+"""
 class DownloadResults(object):
     """
     This class contains the results of the download call as well as methods for accessing \

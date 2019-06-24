@@ -1,3 +1,8 @@
+"""
+Author: Matt Nicholson
+
+Functions to handle LocalGLMFile objects
+"""
 from localglmfile import LocalGLMFile
 
 from os import listdir
