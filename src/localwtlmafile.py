@@ -1,3 +1,8 @@
+"""
+Author: Matt Nicholson
+
+A simple class for local West Texas LMA (WTLMA) files
+"""
 from os.path import join, isfile, split
 from os import listdir, walk
 import sys
