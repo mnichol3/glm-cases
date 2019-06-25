@@ -32,7 +32,7 @@ def trim_header(abs_path):
             f_in.close()
             f_in = None
 
-        with open(out_path, 'wb') as f_out:
+        with open(abs_path + '.nc', 'wb') as f_out:
             f_out.write(data)
             f_out.close()
             f_out = None
