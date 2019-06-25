@@ -10,7 +10,8 @@ import matplotlib.cm as cm
 from glm_utils import georeference
 
 
-def plot_mercator_dual(data_dict, extent_coords, wtlma_df):
+def plot_mercator_dual(data_dict, extent_coords, wtlma_obj):
+
 
     globe = ccrs.Globe(semimajor_axis=data_dict['semi_major_axis'], semiminor_axis=data_dict['semi_minor_axis'],
                        flattening=None, inverse_flattening=data_dict['inv_flattening'])
@@ -35,7 +36,7 @@ def plot_mercator_dual(data_dict, extent_coords, wtlma_df):
     cmesh = plt.pcolormesh(Xs, Ys, data_dict['data'], vmin=0, vmax=350, transform=ccrs.PlateCarree(), cmap=cm.jet)
     cbar = plt.colorbar(cmesh,fraction=0.046, pad=0.04)
 
-    scat = plt.scatter(wtlma_df['lon'], wtlma_df['lat'], c=wtlma_df['P'], marker="2", cmap=cm.gist_ncar_r, vmin=20, vmax=120, transform=ccrs.PlateCarree())
+    scat = plt.scatter(wtlma_obj.data['lon'], wtlma_obj.data['lat'], c=wtlma_obj.data['P'], marker="2", cmap=cm.gist_ncar_r, vmin=-20, vmax=100, transform=ccrs.PlateCarree())
 
     plt.tight_layout()
     plt.gca().set_aspect('equal', adjustable='box')
