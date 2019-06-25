@@ -24,7 +24,7 @@ def parse_file(abs_path):
     max_diameter = None
 
 
-    abs_path = join(BASE_PATH, fname)
+    #abs_path = join(BASE_PATH, fname)
 
     with open(abs_path) as f:
         head = [next(f).rstrip() for x in range(46)]    # rstrip() removes trailing \n
@@ -46,12 +46,13 @@ def parse_file(abs_path):
 
 
     active_stations = head[12].rsplit(' ', 1)[-1]
-
-    data_pd = pd.read_csv(abs_path, sep=r'\s{1,7}', header=45, skiprows=49, engine='python')
+    col_names = ['time', 'lat', 'lon', 'alt', 'r chi2', 'P', 'mask']
+    data_df = pd.read_csv(abs_path, sep=r'\s{1,7}', names=col_names, skiprows=49, engine='python')
+    data_df['time'] = data_df['time'].apply(_sec_to_datetime)
 
     new_file_obj = LocalWtlmaFile(abs_path, start_time, coord_center, max_diameter, active_stations)
 
-    new_file_obj._set_data(data_pd)
+    new_file_obj._set_data(data_df)
 
     return new_file_obj
 
@@ -228,11 +229,18 @@ def _round_down(num, divisor):
 
 
 
+def _sec_to_datetime(secs):
+    secs = int(secs)
+    return timedelta(seconds=secs)
+
+
 
 def main():
-    base_path2 = '/media/mnichol3/pmeyers1/MattNicholson/wtlma/2019/05/20'
+    base_path2 = '/media/mnichol3/pmeyers1/MattNicholson/wtlma/2019/05/21'
     base_path = '/media/mnichol3/pmeyers1/MattNicholson/wtlma'
-
+    abs_path = join(base_path2, 'LYLOUT_190521_232000_0600.dat')
+    df = parse_file(abs_path)
+    print(df.data)
     #print(get_files_day(base_path, '05-20-2019-21'))
     #print(_parse_abs_path(base_path, 'LYLOUT_190521_184000_0600.dat'))
     #print(get_files_in_range(base_path, '5-20-2019-21:15', '5-21-2019-22:15', write=True))
