@@ -15,8 +15,9 @@ from cartopy.feature import NaturalEarthFeature
 from os.path import join, isfile
 import sys
 from os import listdir, walk
-from mrmsgrib import MRMSGrib
 import re
+
+from mrmsgrib import MRMSGrib
 
 
 def print_keys(fname, keyword=None):
