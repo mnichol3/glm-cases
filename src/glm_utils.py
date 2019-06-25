@@ -17,6 +17,7 @@ from math import degrees, radians, atan, cos, sqrt
 
 from grib import trunc
 from proj_utils import scan_to_geod, geod_to_scan
+from localglmfile import LocalGLMFile
 
 
 
@@ -147,7 +148,10 @@ def read_file(abs_path, window=False, meta=False):
     fh.close()
     fh = None
 
-    return data_dict
+    glm_obj = LocalGLMFile(f_path)
+    glm_obj.set_data(data_dict)
+
+    return glm_obj
 
 
 

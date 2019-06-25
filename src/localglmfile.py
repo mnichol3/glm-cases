@@ -25,7 +25,7 @@ class LocalGLMFile(object):
 
 
 
-    def _set_data(self, new_data):
+    def set_data(self, new_data):
         self.data = new_data
 
 
