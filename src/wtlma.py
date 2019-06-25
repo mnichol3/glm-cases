@@ -3,6 +3,17 @@ Author: Matt Nicholson
 
 This file contains functions to read and analyze data files from the West Texas
 LMA
+
+Examples:
+
+base_path = '/media/mnichol3/pmeyers1/MattNicholson/wtlma'
+abs_path = join(base_path2, 'LYLOUT_190521_232000_0600.dat')
+df = parse_file(abs_path)
+
+get_files_day(base_path, '05-20-2019-21')
+
+get_files_in_range(base_path, '5-20-2019-21:15', '5-21-2019-22:15', write=True)
+
 """
 import pandas as pd
 import numpy as np
@@ -17,6 +28,18 @@ from localwtlmafile import LocalWtlmaFile
 
 
 def parse_file(abs_path):
+    """
+    Opens and reads a WTLMA data file into a LocalWtlmaFile object
+
+    Parameters
+    ----------
+    abs_path : str
+        Absolute path, including filename, of the file to open
+
+    Returns
+    -------
+    new_file_obj : LocalWtlmaFile object
+    """
     center_lat_re = re.compile(r'\s(\d{2}\.\d{5,10})')
     center_lon_re = re.compile(r'\s(\D\d{3}\.\d{5,10})')
     center_alt_re = re.compile(r'\s(\d{1,3}.{1,3})$')   # can also be used as the range re
@@ -61,6 +84,21 @@ def parse_file(abs_path):
 
 
 def get_avail_months(base_path, year):
+    """
+    Gets the months for which WTLMA data is stored locally
+
+    Parameters
+    ----------
+    base_path : str
+        Path to the parent WTLMA file directory
+    year : str
+        Year to query
+
+    Returns
+    -------
+    list of str
+        List of strings representing the months for which data is available
+    """
     year = _year_formatter(year)
 
     abs_path = join(base_path, year)
@@ -70,6 +108,24 @@ def get_avail_months(base_path, year):
 
 
 def get_avail_days(base_path, year, month):
+    """
+    Gets the days of a specified month & year that local WTLMA data is available
+
+    Parameters
+    ----------
+    base_path : str
+        Path to the parent WTLMA file directory
+    year : str
+        Year to query
+    month : str
+        Month to query, zero padded
+
+    Returns
+    -------
+    list of str
+        List of strings representing the days for which local WTLMA data is available
+        for the given month & year
+    """
     year = _year_formatter(year)
     month = _month_formatter(month)
 
@@ -80,6 +136,26 @@ def get_avail_days(base_path, year, month):
 
 
 def get_avail_hours(base_path, year, month, day):
+    """
+    Gets the hours for which data is available for the given year, month, and day
+
+    Parameters
+    ----------
+    base_path : str
+        Path to the parent WTLMA file directory
+    year : str
+        Year to query
+    month : str
+        Month to query, zero padded
+    day : str
+        Day to query, zero padded
+
+    Returns
+    -------
+    list of str
+        List of strings representing the hours for which local WTLMA data is
+        available for the given year, month, and day
+    """
     hours = []
     year = _year_formatter(year)
     month = _month_formatter(month)
@@ -101,7 +177,21 @@ def get_avail_hours(base_path, year, month, day):
 
 def get_files_day(base_path, date):
     """
-    Time format: MM-DD-YYYY-HH:MM
+    Returns a list of local WTLMA filenames for the given date. If an hour is
+    included in the date, only data files corresponding to that hour will be returned
+
+    Parameters
+    ----------
+    base_path : str
+        Path to the parent WTLMA file directory
+    date : str
+        Date of the desired data files.
+        Format: MM-DD-YYYY or MM-DD-YYYY-HH
+
+    Returns
+    -------
+    files : list of str
+        List of local WTLMA filenames corresponding to the given date
     """
     hour = None
 
@@ -131,7 +221,27 @@ def get_files_day(base_path, date):
 
 def get_files_in_range(base_path, start, end, write=False):
     """
-    Time format: MM-DD-YYYY-HH:MM
+    Returns a list of local WTLMA filenames for a given timespan. If write is True,
+    the list of filenames will be written to a text file and saved to the local parent
+    WTLMA directory
+
+    Parameters
+    ----------
+    base_path : str
+        Path to the parent WTLMA file directory
+    start : str
+        Start date & time
+        Format: MM-DD-YYYY-HH:MM
+    end : str
+        End date & time
+        Format: MM-DD-YYYY-HH:MM
+    write : bool, optional
+        If True, filenames get written to text file
+
+    Returns
+    -------
+    result : list of str
+        List of WTLMA filenames for the timespan defined by start & end
     """
     result = []
 
@@ -241,19 +351,3 @@ def _sec_to_datetime_str(secs):
         d[key] = '{0:02d}'.format(val)
 
     return d['hours'] + ':' + d['mins'] + ':' + d['secs']
-
-
-
-def main():
-    base_path2 = '/media/mnichol3/pmeyers1/MattNicholson/wtlma/2019/05/21'
-    base_path = '/media/mnichol3/pmeyers1/MattNicholson/wtlma'
-    abs_path = join(base_path2, 'LYLOUT_190521_232000_0600.dat')
-    df = parse_file(abs_path)
-    print(df.data)
-    #print(get_files_day(base_path, '05-20-2019-21'))
-    #print(_parse_abs_path(base_path, 'LYLOUT_190521_184000_0600.dat'))
-    #print(get_files_in_range(base_path, '5-20-2019-21:15', '5-21-2019-22:15', write=True))
-
-
-if (__name__ == '__main__'):
-    main()
