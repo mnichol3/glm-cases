@@ -17,10 +17,16 @@ class LocalGLMFile(object):
         self.filename = None
         self.scan_date = None
         self.scan_time = None
+        self.data = None
         if (abs_path is not None):
             self._parse_fname(abs_path)
             self._parse_scan_date()
             self._parse_scan_time()
+
+
+
+    def _set_data(self, new_data):
+        self.data = new_data
 
 
 
