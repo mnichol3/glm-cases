@@ -172,7 +172,6 @@ def georeference(x, y, sat_lon, sat_height, sat_sweep):
         data latitude coordinates
     """
 
-    # Multiplying by sat height might not be necessary here
     Xs = x * sat_height
     Ys = y * sat_height
 
