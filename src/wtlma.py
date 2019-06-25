@@ -27,7 +27,7 @@ from localwtlmafile import LocalWtlmaFile
 
 
 
-def parse_file(abs_path):
+def parse_file(abs_path, sub_t=None):
     """
     Opens and reads a WTLMA data file into a LocalWtlmaFile object
 
@@ -35,6 +35,7 @@ def parse_file(abs_path):
     ----------
     abs_path : str
         Absolute path, including filename, of the file to open
+
 
     Returns
     -------
@@ -45,7 +46,6 @@ def parse_file(abs_path):
     center_alt_re = re.compile(r'\s(\d{1,3}.{1,3})$')   # can also be used as the range re
     coord_center = None
     max_diameter = None
-
 
     #abs_path = join(BASE_PATH, fname)
 
@@ -77,7 +77,14 @@ def parse_file(abs_path):
 
     new_file_obj = LocalWtlmaFile(abs_path, start_time, coord_center, max_diameter, active_stations)
 
-    new_file_obj._set_data(data_df)
+    if (sub_t):
+        if (len(sub_t) != 5):
+            raise ValueError('Invalid time subset argument')
+        else:
+            subs_df = data_df.loc[lambda data_df: data_df['time'] == sub_t]
+            new_file_obj._set_data(subs_df)
+    else:
+        new_file_obj._set_data(data_df)
 
     return new_file_obj
 
@@ -350,4 +357,4 @@ def _sec_to_datetime_str(secs):
     for key, val in d.items():
         d[key] = '{0:02d}'.format(val)
 
-    return d['hours'] + ':' + d['mins'] + ':' + d['secs']
+    return d['hours'] + ':' + d['mins'] #+ ':' + d['secs']
