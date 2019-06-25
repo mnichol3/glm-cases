@@ -84,11 +84,3 @@ def _is_within_range(start, end, value):
         return True
     else:
         return False
-
-
-
-
-scans = get_files_in_range('/media/mnichol3/pmeyers1/MattNicholson/glm/glm20190523', '5-23-2019-20:00', '5-23-2019-21:00')
-for x in scans:
-    print(x)
-#print(len(scans))
