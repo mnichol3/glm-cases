@@ -48,7 +48,9 @@ def parse_file(abs_path):
     active_stations = head[12].rsplit(' ', 1)[-1]
     col_names = ['time', 'lat', 'lon', 'alt', 'r chi2', 'P', 'mask']
     data_df = pd.read_csv(abs_path, sep=r'\s{1,7}', names=col_names, skiprows=49, engine='python')
-    data_df['time'] = data_df['time'].apply(_sec_to_datetime)
+
+    # Convert event times from seconds of day to HH:MM:SS
+    data_df['time'] = data_df['time'].apply(_sec_to_datetime_str)
 
     new_file_obj = LocalWtlmaFile(abs_path, start_time, coord_center, max_diameter, active_stations)
 
@@ -229,9 +231,16 @@ def _round_down(num, divisor):
 
 
 
-def _sec_to_datetime(secs):
-    secs = int(secs)
-    return timedelta(seconds=secs)
+def _sec_to_datetime_str(secs):
+    td = timedelta(seconds=int(secs))
+    d = {'days': td.days}
+    d['hours'], rem = divmod(td.seconds, 3600)
+    d['mins'], d['secs'] = divmod(rem, 60)
+
+    for key, val in d.items():
+        d[key] = '{0:02d}'.format(val)
+
+    return d['hours'] + ':' + d['mins'] + ':' + d['secs']
 
 
 
