@@ -24,7 +24,7 @@ def plot_mercator_dual(glm_obj, extent_coords, wtlma_obj):
 
     fig = plt.figure(figsize=(10, 5))
 
-    ax = fig.add_subplot(1, 1, 1, projection=ccrs.Mercator(globe=globe))
+    ax = fig.add_subplot(111, projection=ccrs.Mercator(globe=globe))
 
     states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='black',
                              name='admin_1_states_provinces_shp', zorder=0)

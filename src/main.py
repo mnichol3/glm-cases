@@ -27,6 +27,7 @@ def main():
 
     wtlma_data = wtlma.parse_file(abs_path_wtlma, sub_t='21:21')
     glm_data = glm_utils.read_file(abs_path_glm, meta=True)
+    #glm_data = glm_utils.read_file(abs_path_glm, meta=True, window=True)
 
     plotting_funcs.plot_mercator_dual(glm_data, (point1, point2), wtlma_data)
 
