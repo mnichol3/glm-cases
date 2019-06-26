@@ -6,6 +6,7 @@ import numpy as np
 import cartopy.crs as ccrs
 from cartopy.feature import NaturalEarthFeature
 import matplotlib.cm as cm
+import matplotlib.colors as colors
 
 from glm_utils import georeference
 
@@ -32,12 +33,17 @@ def plot_mercator_dual(glm_obj, extent_coords, wtlma_obj):
 
     ax.set_extent([min(ext_lons), max(ext_lons), min(ext_lats), max(ext_lats)], crs=ccrs.PlateCarree())
 
-    cmesh = plt.pcolormesh(Xs, Ys, glm_obj.data['data'], vmin=0, vmax=350, transform=ccrs.PlateCarree(), cmap=cm.jet, zorder=2)
-    cbar1 = plt.colorbar(cmesh,fraction=0.046, pad=0.04)
+    bounds = [5, 10, 20, 50, 100, 150, 200, 300, 400]
+    glm_norm = colors.LogNorm(vmin=1, vmax=max(bounds))
+
+    cmesh = plt.pcolormesh(Xs, Ys, glm_obj.data['data'], norm=glm_norm, transform=ccrs.PlateCarree(), cmap=cm.jet, zorder=2)
+
+    cbar1 = plt.colorbar(cmesh, norm=glm_norm, ticks=bounds, spacing='proportional', fraction=0.046, pad=0.04)
+    cbar1.ax.set_yticklabels([str(x) for x in bounds])
     cbar1.set_label('GLM Flash Extent Density')
 
     scat = plt.scatter(wtlma_obj.data['lon'], wtlma_obj.data['lat'], c=wtlma_obj.data['P'],
-                       marker="2", s=120, cmap=cm.gist_ncar_r, vmin=-20, vmax=100, zorder=3, transform=ccrs.PlateCarree())
+                       marker="2", s=150, cmap=cm.gist_ncar_r, vmin=-20, vmax=100, zorder=3, transform=ccrs.PlateCarree())
     cbar2 = plt.colorbar(scat, fraction=0.046, pad=0.04)
     cbar2.set_label('WTLMA Flash Power (dBW)')
 
