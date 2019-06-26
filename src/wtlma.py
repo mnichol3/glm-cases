@@ -83,6 +83,7 @@ def parse_file(abs_path, sub_t=None):
         else:
             subs_df = data_df.loc[lambda data_df: data_df['time'] == sub_t]
             new_file_obj._set_data(subs_df)
+            new_file_obj.start_time = new_file_obj.start_time.split('-')[0] + '-' + sub_t[:2] + sub_t[3:]
     else:
         new_file_obj._set_data(data_df)
 
