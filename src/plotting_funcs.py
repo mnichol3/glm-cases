@@ -12,7 +12,6 @@ from glm_utils import georeference
 
 def plot_mercator_dual(glm_obj, extent_coords, wtlma_obj):
 
-
     globe = ccrs.Globe(semimajor_axis=glm_obj.data['semi_major_axis'], semiminor_axis=glm_obj.data['semi_minor_axis'],
                        flattening=None, inverse_flattening=glm_obj.data['inv_flattening'])
 
