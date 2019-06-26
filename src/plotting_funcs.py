@@ -10,17 +10,17 @@ import matplotlib.cm as cm
 from glm_utils import georeference
 
 
-def plot_mercator_dual(data_dict, extent_coords, wtlma_obj):
+def plot_mercator_dual(glm_obj, extent_coords, wtlma_obj):
 
 
-    globe = ccrs.Globe(semimajor_axis=data_dict['semi_major_axis'], semiminor_axis=data_dict['semi_minor_axis'],
-                       flattening=None, inverse_flattening=data_dict['inv_flattening'])
+    globe = ccrs.Globe(semimajor_axis=glm_obj.data['semi_major_axis'], semiminor_axis=glm_obj.data['semi_minor_axis'],
+                       flattening=None, inverse_flattening=glm_obj.data['inv_flattening'])
 
     ext_lats = [extent_coords[0][0], extent_coords[1][0]]
     ext_lons = [extent_coords[0][1], extent_coords[1][1]]
 
-    Xs, Ys = georeference(data_dict['x'], data_dict['y'], data_dict['lon_0'], data_dict['height'],
-                          data_dict['sweep_ang_axis'])
+    Xs, Ys = georeference(glm_obj.data['x'], glm_obj.data['y'], glm_obj.data['lon_0'], glm_obj.data['height'],
+                          glm_obj.data['sweep_ang_axis'])
 
     fig = plt.figure(figsize=(10, 5))
 
@@ -33,11 +33,15 @@ def plot_mercator_dual(data_dict, extent_coords, wtlma_obj):
 
     ax.set_extent([min(ext_lons), max(ext_lons), min(ext_lats), max(ext_lats)], crs=ccrs.PlateCarree())
 
-    cmesh = plt.pcolormesh(Xs, Ys, data_dict['data'], vmin=0, vmax=350, transform=ccrs.PlateCarree(), cmap=cm.jet)
-    cbar = plt.colorbar(cmesh,fraction=0.046, pad=0.04)
+    cmesh = plt.pcolormesh(Xs, Ys, glm_obj.data['data'], vmin=0, vmax=350, transform=ccrs.PlateCarree(), cmap=cm.jet)
+    cbar1 = plt.colorbar(cmesh,fraction=0.046, pad=0.04)
+    cbar1.set_label('GLM Flash Extent Density')
 
     scat = plt.scatter(wtlma_obj.data['lon'], wtlma_obj.data['lat'], c=wtlma_obj.data['P'], marker="2", cmap=cm.gist_ncar_r, vmin=-20, vmax=100, transform=ccrs.PlateCarree())
+    cbar2 = plt.colorbar(scat, fraction=0.046, pad=0.04)
+    cbar2.set_label('WTLMA Flash Power (dBW)')
 
+    plt.title('GLM FED {} {}\n WTLMA Flashes {}'.format(glm_obj.scan_date, glm_obj.scan_time, wtlma_obj._start_time_pp()), loc='right')
     plt.tight_layout()
     plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
