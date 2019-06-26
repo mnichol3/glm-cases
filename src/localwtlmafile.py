@@ -36,5 +36,16 @@ class LocalWtlmaFile(object):
 
 
 
+    def _start_time_pp(self):
+        date, time = self.start_time.split('-')
+        time = time[:2] + ':' + time[2:]
+        year = date[:4]
+        month = date[4:6]
+        day = date[-2:]
+        pp = month + '-' + day + '-' + year + ' ' + time
+        return pp
+
+
+
     def __repr__(self):
         return '<LocalWtlmaFile object - {}>'.format(self.start_time)
