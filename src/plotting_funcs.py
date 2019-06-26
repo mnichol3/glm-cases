@@ -26,19 +26,19 @@ def plot_mercator_dual(glm_obj, extent_coords, wtlma_obj):
 
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.Mercator(globe=globe))
 
-    states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='none',
-                             name='admin_1_states_provinces_shp')
+    states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='black',
+                             name='admin_1_states_provinces_shp', zorder=0)
 
-    ax.add_feature(states, linewidth=.8, edgecolor='black')
+    ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=1)
 
     ax.set_extent([min(ext_lons), max(ext_lons), min(ext_lats), max(ext_lats)], crs=ccrs.PlateCarree())
 
-    cmesh = plt.pcolormesh(Xs, Ys, glm_obj.data['data'], vmin=0, vmax=350, transform=ccrs.PlateCarree(), cmap=cm.jet)
+    cmesh = plt.pcolormesh(Xs, Ys, glm_obj.data['data'], vmin=0, vmax=350, transform=ccrs.PlateCarree(), cmap=cm.jet, zorder=2)
     cbar1 = plt.colorbar(cmesh,fraction=0.046, pad=0.04)
     cbar1.set_label('GLM Flash Extent Density')
 
     scat = plt.scatter(wtlma_obj.data['lon'], wtlma_obj.data['lat'], c=wtlma_obj.data['P'],
-                       marker="2", s=100., cmap=cm.gist_ncar_r, vmin=-20, vmax=100, transform=ccrs.PlateCarree())
+                       marker="2", s=120, cmap=cm.gist_ncar_r, vmin=-20, vmax=100, zorder=3, transform=ccrs.PlateCarree())
     cbar2 = plt.colorbar(scat, fraction=0.046, pad=0.04)
     cbar2.set_label('WTLMA Flash Power (dBW)')
 
