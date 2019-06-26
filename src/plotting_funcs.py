@@ -37,7 +37,8 @@ def plot_mercator_dual(glm_obj, extent_coords, wtlma_obj):
     cbar1 = plt.colorbar(cmesh,fraction=0.046, pad=0.04)
     cbar1.set_label('GLM Flash Extent Density')
 
-    scat = plt.scatter(wtlma_obj.data['lon'], wtlma_obj.data['lat'], c=wtlma_obj.data['P'], marker="2", cmap=cm.gist_ncar_r, vmin=-20, vmax=100, transform=ccrs.PlateCarree())
+    scat = plt.scatter(wtlma_obj.data['lon'], wtlma_obj.data['lat'], c=wtlma_obj.data['P'],
+                       marker="2", s=100., cmap=cm.gist_ncar_r, vmin=-20, vmax=100, transform=ccrs.PlateCarree())
     cbar2 = plt.colorbar(scat, fraction=0.046, pad=0.04)
     cbar2.set_label('WTLMA Flash Power (dBW)')
 
