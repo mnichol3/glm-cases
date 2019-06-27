@@ -29,8 +29,8 @@ def main():
     glm_data = glm_utils.read_file(abs_path_glm, meta=True)
     #glm_data = glm_utils.read_file(abs_path_glm, meta=True, window=True)
 
-    plotting_funcs.plot_mercator_dual(glm_data, (point1, point2), wtlma_data)
-
+    #plotting_funcs.plot_mercator_dual(glm_data, (point1, point2), wtlma_data)
+    plotting_funcs.plot_mercator_dual_2(glm_data, (point1, point2), wtlma_data)
     """
     conn = goesawsinterface.GoesAWSInterface()
     imgs = conn.get_avail_images_in_range('goes16', 'ABI-L2-CMIPM', '5-23-2019-20:00', '5-23-2019-21:00', 'M1', '13')

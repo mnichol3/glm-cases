@@ -43,9 +43,68 @@ def plot_mercator_dual(glm_obj, extent_coords, wtlma_obj):
     cbar1.set_label('GLM Flash Extent Density')
 
     scat = plt.scatter(wtlma_obj.data['lon'], wtlma_obj.data['lat'], c=wtlma_obj.data['P'],
-                       marker="2", s=150, cmap=cm.gist_ncar_r, vmin=-20, vmax=100, zorder=3, transform=ccrs.PlateCarree())
+                       marker='o', s=100, cmap=cm.gist_ncar_r, vmin=-20, vmax=100, zorder=3, transform=ccrs.PlateCarree())
     cbar2 = plt.colorbar(scat, fraction=0.046, pad=0.04)
     cbar2.set_label('WTLMA Flash Power (dBW)')
+
+    plt.title('GLM FED {} {}\n WTLMA Flashes {}'.format(glm_obj.scan_date, glm_obj.scan_time, wtlma_obj._start_time_pp()), loc='right')
+    plt.tight_layout()
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.show()
+
+
+
+def plot_mercator_dual_2(glm_obj, extent_coords, wtlma_obj):
+    """
+    Same as plot_mercator_dual(), except it plots the wtlma strokes as
+    power densities
+    """
+    globe = ccrs.Globe(semimajor_axis=glm_obj.data['semi_major_axis'], semiminor_axis=glm_obj.data['semi_minor_axis'],
+                       flattening=None, inverse_flattening=glm_obj.data['inv_flattening'])
+
+    ext_lats = [extent_coords[0][0], extent_coords[1][0]]
+    ext_lons = [extent_coords[0][1], extent_coords[1][1]]
+
+    Xs, Ys = georeference(glm_obj.data['x'], glm_obj.data['y'], glm_obj.data['lon_0'], glm_obj.data['height'],
+                          glm_obj.data['sweep_ang_axis'])
+
+    fig = plt.figure(figsize=(10, 5))
+
+    ax = fig.add_subplot(111, projection=ccrs.Mercator(globe=globe))
+
+    states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='black',
+                             name='admin_1_states_provinces_shp', zorder=0)
+
+    ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=1)
+
+    ax.set_extent([min(ext_lons), max(ext_lons), min(ext_lats), max(ext_lats)], crs=ccrs.PlateCarree())
+
+
+    bounds = [5, 10, 20, 50, 100, 150, 200, 300, 400]
+    glm_norm = colors.LogNorm(vmin=1, vmax=max(bounds))
+
+    cmesh = plt.pcolormesh(Xs, Ys, glm_obj.data['data'], norm=glm_norm, transform=ccrs.PlateCarree(), cmap=cm.jet, zorder=3, alpha=0.5)
+
+    cbar1 = plt.colorbar(cmesh, norm=glm_norm, ticks=bounds, spacing='proportional', fraction=0.046, pad=0.04)
+    cbar1.ax.set_yticklabels([str(x) for x in bounds])
+    cbar1.set_label('GLM Flash Extent Density')
+
+
+    grid_lons = np.arange(min(ext_lons), max(ext_lons), 0.01)
+    grid_lats = np.arange(min(ext_lats), max(ext_lats), 0.01)
+
+    lma_norm = colors.LogNorm(vmin=1, vmax=150)
+
+    H, X_edges, Y_edges = np.histogram2d(wtlma_obj.data['lon'], wtlma_obj.data['lat'],
+                          bins=250, range=[[min(ext_lons), max(ext_lons)], [min(ext_lats), max(ext_lats)]],
+                          weights=wtlma_obj.data['P']) # bins=[len(grid_lons), len(grid_lats)]
+
+    lma_mesh = plt.pcolormesh(X_edges, Y_edges, H.T, norm=lma_norm, transform=ccrs.PlateCarree(), cmap=cm.inferno, zorder=2)
+
+    lma_bounds = [5, 10, 15, 20, 25, 50, 100, 150]
+    cbar2 = plt.colorbar(lma_mesh, ticks=lma_bounds, spacing='proportional',fraction=0.046, pad=0.04)
+    cbar2.ax.set_yticklabels([str(x) for x in lma_bounds])
+    cbar2.set_label('WTLMA Flash Power Density (dBW)')
 
     plt.title('GLM FED {} {}\n WTLMA Flashes {}'.format(glm_obj.scan_date, glm_obj.scan_time, wtlma_obj._start_time_pp()), loc='right')
     plt.tight_layout()
