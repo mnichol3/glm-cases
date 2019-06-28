@@ -10,7 +10,7 @@ class MRMSGrib(object):
     Class for the MRMSGrib object
     """
 
-    def __init__(self, validity_date, validity_time, data, major_axis, minor_axis, abs_path):
+    def __init__(self, validity_date, validity_time, data, major_axis, minor_axis, abs_path, grid_lons=None, grid_lats=None):
         """
         Initializes a new MRMSGrib object
 
@@ -53,8 +53,8 @@ class MRMSGrib(object):
         self.data = data
         self.major_axis = major_axis
         self.minor_axis = minor_axis
-        self.grid_lons = None
-        self.grid_lats = None
+        self.grid_lons = grid_lons
+        self.grid_lats = grid_lats
         self.path = None
         self.fname = None
         self.scan_angle = None
