@@ -83,7 +83,7 @@ def get_keys(fname, keyword=None):
 
 
 
-def get_grb_data(fname, debug=False):
+def get_grb_data(fname, point1, point2, missing, debug=False):
     """
     Opens a MRMS Grib2 data file and creates a new MRMSGrib object.
 
@@ -98,10 +98,22 @@ def get_grb_data(fname, debug=False):
     -------
     MRMSGrib object
     """
+    grid = init_grid()
+    min_lat, max_lat, min_lon, max_lon = get_bbox_indices(grid, point1, point2)
+    grid_lons, grid_lats = subset_grid(grid, [min_lat, max_lat, min_lon, max_lon]) # (lons, lats)
+
     grb_file = pygrib.open(fname)
     grb = grb_file[1]
 
-    data = grb.values
+    data = grb.values[max_lat : min_lat, min_lon : max_lon + 1] # Can by up to ~200 mb in size
+    
+    if (missing == 0):
+        data[data < 0] = 0
+    elif (missing == 'nan'):
+        data[data < 0] = float(nan)
+    else:
+        raise ValueError('Invalid missing data argument (grib.subset_data)')
+
     major_ax = grb.earthMajorAxis
     minor_ax = grb.earthMinorAxis
     val_date = grb.validityDate
@@ -118,7 +130,7 @@ def get_grb_data(fname, debug=False):
         print('minor axis:', minor_ax)
         print('------------------------------------')
 
-    return MRMSGrib(val_date, val_time, data, major_ax, minor_ax, fname)
+    return MRMSGrib(val_date, val_time, data, major_ax, minor_ax, fname, grid_lons=grid_lons, grid_lats=grid_lats)
 
 
 
@@ -298,13 +310,13 @@ def get_bbox_indices(grid, point1, point2, debug=False):
     lats = np.array([point1[0], point2[0]])
     lons = np.array([point1[1], point2[1]])
 
-    min_lon = np.where(grid_lons == np.amin(lons))
-    max_lon = np.where(grid_lons == np.amax(lons))
+    min_lon = np.where(grid_lons == np.amin(lons))[0][0]
+    max_lon = np.where(grid_lons == np.amax(lons))[0][0]
 
-    min_lat = np.where(grid_lats == np.amin(lats))
-    max_lat = np.where(grid_lats == np.amax(lats))
+    min_lat = np.where(grid_lats == np.amin(lats))[0][0]
+    max_lat = np.where(grid_lats == np.amax(lats))[0][0]
 
-    indices = {'min_lon': min_lon[0][0], 'max_lon': max_lon[0][0], 'min_lat': min_lat[0][0], 'max_lat': max_lat[0][0]}
+    #indices = {'min_lon': min_lon[0][0], 'max_lon': max_lon[0][0], 'min_lat': min_lat[0][0], 'max_lat': max_lat[0][0]}
 
     if (debug):
         print('min lon idx:', indices['min_lon'])
@@ -313,7 +325,8 @@ def get_bbox_indices(grid, point1, point2, debug=False):
         print('max lat idx:', indices['max_lat'])
         print('------------------------------------')
 
-    return indices
+    #return indices
+    return (min_lat, max_lat, min_lon, max_lon)
 
 
 
@@ -359,10 +372,10 @@ def subset_grid(grid, bbox, debug=False):
         Format: (lons, lats)
 
     """
-    x_min = bbox['min_lon']
-    x_max = bbox['max_lon']
-    y_min = bbox['min_lat']
-    y_max = bbox['max_lat']
+    x_min = bbox[2]
+    x_max = bbox[3]
+    y_min = bbox[0]
+    y_max = bbox[1]
 
     lons = grid[0][x_min : x_max + 1]
     lats = grid[1][y_max : y_min]
@@ -508,7 +521,7 @@ def parse_fname(base_path, fname):
 
 
 
-def get_grib_objs(scans, base_path):
+def get_grib_objs(scans, base_path, point1, point2):
     """
     Creates and returns a list of new MRMSGrib objects
 
@@ -539,64 +552,17 @@ def get_grib_objs(scans, base_path):
 
         grb_file = get_grb_data(f_path)
 
-        point1 = (37.195, -102.185)
-        point2 = (34.565, -99.865)
-
-        bbox = get_bbox_indices(grid, point1, point2)
-        data_subs = subset_data(bbox, grb_file.data)
-
-        grb_file.set_data(data_subs)
-
-        grid_subs = subset_grid(grid, bbox)
-
-        grb_file.set_grid_lons(grid_subs[0])
-        grb_file.set_grid_lats(grid_subs[1])
-
         grb_files.append(grb_file)
 
     return grb_files
 
 
-"""
-def main():
 
-    #f_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms'
-    #f_name = 'MRMS_MergedReflectivityQC_00.50_20190523-212434.grib2'
-
+if (__name__ == '__main__'):
     f_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905/MergedReflectivityQC_01.50'
     f_name = 'MRMS_MergedReflectivityQC_01.50_20190523-212434.grib2'
     f_abs = join(f_path, f_name)
-
-    #scans = fetch_scans('/media/mnichol3/pmeyers1/MattNicholson/mrms/201905', '2124')
-    #print(scans)
-    print_keys(f_abs)
-    sys.exit(0)
-
-
-    grid = init_grid()
-
-    grb_file = get_grb_data(f_abs)
-
     point1 = (37.195, -102.185)
     point2 = (34.565, -99.865)
 
-    bbox = get_bbox_indices(grid, point1, point2)
-    data_subs = subset_data(bbox, grb_file.data)
-
-    grb_file.set_data(data_subs)
-
-    grid_subs = subset_grid(grid, bbox)
-
-    grb_file.set_grid_lons(grid_subs[0])
-    grb_file.set_grid_lats(grid_subs[1])
-
-    #plot_grb(grb_file)
-    grb_file.metadata()
-
-
-
-
-
-if (__name__ == '__main__'):
-    main()
-"""
+    grb_file = get_grb_data(f_abs, point1, point2, missing=0)
