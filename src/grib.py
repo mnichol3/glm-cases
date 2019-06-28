@@ -83,7 +83,7 @@ def get_keys(fname, keyword=None):
 
 
 
-def get_grb_data(fname, point1, point2, missing, debug=False):
+def get_grb_data(fname, point1, point2, missing=0, debug=False):
     """
     Opens a MRMS Grib2 data file and creates a new MRMSGrib object.
 
@@ -550,7 +550,7 @@ def get_grib_objs(scans, base_path, point1, point2):
 
         grid = init_grid()
 
-        grb_file = get_grb_data(f_path)
+        grb_file = get_grb_data(f_path, point1, point2)
 
         grb_files.append(grb_file)
 
@@ -561,8 +561,18 @@ def get_grib_objs(scans, base_path, point1, point2):
 if (__name__ == '__main__'):
     f_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905/MergedReflectivityQC_01.50'
     f_name = 'MRMS_MergedReflectivityQC_01.50_20190523-212434.grib2'
+    base_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
     f_abs = join(f_path, f_name)
     point1 = (37.195, -102.185)
     point2 = (34.565, -99.865)
+    slice_time = '2124'
 
-    grb_file = get_grb_data(f_abs, point1, point2, missing=0)
+    t_bytes = 0
+
+    scans = fetch_scans(base_path, slice_time)
+    files = get_grib_objs(scans, base_path, point1, point2)
+    for f in files:
+        t_bytes += f.data.nbytes
+    print(t_bytes)
+    
+    #grb_file = get_grb_data(f_abs, point1, point2, missing=0)
