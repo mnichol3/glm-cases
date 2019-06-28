@@ -12,8 +12,7 @@ import re
 
 from glm_utils import georeference
 import grib
-from plotting_utils import to_file, load_data, load_coordinates, parse_coord_fnames,
-                           process_slice, process_slice_inset, 
+from plotting_utils import to_file, load_data, load_coordinates, parse_coord_fnames, process_slice, process_slice_inset
 
 
 
@@ -580,15 +579,20 @@ def plot_mrms_cross_section_inset(data=None, inset_data=None, inset_lons=None, i
     plt.show()
 
 
-"""
-def run(base_path, slice_time, point1, point2):
+
+def run_mrms_xsect(base_path, slice_time, point1, point2):
+    base_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
+    f_out = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
+
     fname = process_slice(base_path, slice_time, point1, point2, write=True)
     plot_cross_section(abs_path=fname)
 
 
 
-def run_inset(base_path, slice_time, point1, point2):
+def run_mrms_xsect_inset(base_path, slice_time, point1, point2):
+    base_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
+    f_out = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
+
     f_dict = process_slice_inset(base_path, '2124', point1, point2)
     plot_cross_section_inset(inset_data=f_dict['f_inset_data'], inset_lons=f_dict['f_inset_lons'],
                              inset_lats=f_dict['f_inset_lats'], abs_path=f_dict['x_sect'], points=(point1, point2))
-"""

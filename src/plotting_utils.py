@@ -3,6 +3,7 @@ from os.path import join, isdir, isfile
 from os import mkdir
 import re
 
+from grib import fetch_scans, get_grib_objs
 
 def to_file(out_path, f_name, data):
     """
@@ -101,9 +102,9 @@ def parse_coord_fnames(abs_path):
 def process_slice(base_path, slice_time, point1, point2, write=False):
     cross_sections = np.array([])
 
-    scans = fetch_scans(BASE_PATH, slice_time) # z = 33
+    scans = fetch_scans(base_path, slice_time) # z = 33
 
-    grbs = get_grib_objs(scans, BASE_PATH)
+    grbs = get_grib_objs(scans, base_path)
 
     valid_date = grbs[0].validity_date
     valid_time = grbs[0].validity_time

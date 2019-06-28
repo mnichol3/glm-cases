@@ -22,15 +22,22 @@ def main():
     abs_path_glm = '/media/mnichol3/pmeyers1/MattNicholson/glm/glm20190523/IXTR99_KNES_232121_40312.2019052321'
     abs_path_wtlma = '/media/mnichol3/pmeyers1/MattNicholson/wtlma/2019/05/23/LYLOUT_190523_212000_0600.dat'
 
+
+    # 2120
     point1 = (37.195, -102.185)
     point2 = (34.565, -99.865)
 
+    """
     wtlma_data = wtlma.parse_file(abs_path_wtlma, sub_t='21:21')
-    glm_data = glm_utils.read_file(abs_path_glm, meta=True)
+    glm_data = glm_utils.read_file(abs_path_glm, meta=True, window=True)
     #glm_data = glm_utils.read_file(abs_path_glm, meta=True, window=True)
 
     #plotting_funcs.plot_mercator_dual(glm_data, (point1, point2), wtlma_data)
     plotting_funcs.plot_mercator_dual_2(glm_data, (point1, point2), wtlma_data)
+    """
+
+    base_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
+    plotting_funcs.run_mrms_xsect(base_path, '2124', point1, point2)
     """
     conn = goesawsinterface.GoesAWSInterface()
     imgs = conn.get_avail_images_in_range('goes16', 'ABI-L2-CMIPM', '5-23-2019-20:00', '5-23-2019-21:00', 'M1', '13')

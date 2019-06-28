@@ -38,7 +38,9 @@ def plot_cross_cubic_single(grb, point1, point2, first=False):
     None, displays a plot of the cross section
 
     """
-
+    BASE_PATH = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
+    BASE_PATH_XSECT = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
+    BASE_PATH_XSECT_COORDS = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/coords'
 
     lons = grb.grid_lons
     lats = grb.grid_lats
@@ -107,6 +109,9 @@ def plot_cross_neighbor_single(grb, point1, point2, first=False):
     -------
     None, displays a plot of the cross section
     """
+    BASE_PATH = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
+    BASE_PATH_XSECT = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
+    BASE_PATH_XSECT_COORDS = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/coords'
 
     lons = grb.grid_lons
     lats = grb.grid_lats
@@ -171,6 +176,9 @@ def get_cross_cubic(grb, point1, point2, first=False):
     zi : numpy nd array
         Array containing cross-section reflectivity
     """
+    BASE_PATH = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
+    BASE_PATH_XSECT = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
+    BASE_PATH_XSECT_COORDS = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/coords'
     lons = grb.grid_lons
     lats = grb.grid_lats
 
@@ -231,6 +239,9 @@ def get_cross_neighbor(grb, point1, point2, first=False):
     zi : numpy nd array
         Array containing cross-section reflectivity
     """
+    BASE_PATH = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
+    BASE_PATH_XSECT = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
+    BASE_PATH_XSECT_COORDS = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/coords'
     lons = grb.grid_lons
     lats = grb.grid_lats
 
@@ -624,7 +635,7 @@ def run_inset(base_path, slice_time, point1, point2):
                              inset_lats=f_dict['f_inset_lats'], abs_path=f_dict['x_sect'], points=(point1, point2))
 
 
-
+"""
 def main():
 
     tracemalloc.start()
@@ -647,3 +658,4 @@ def main():
 
 if (__name__ == '__main__'):
     main()
+"""
