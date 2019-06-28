@@ -2,6 +2,8 @@ import numpy as np
 from os.path import join, isdir, isfile
 from os import mkdir
 import re
+from pyproj import Geod
+from math import sin, cos, sqrt, atan2, radians
 
 from grib import fetch_scans, get_grib_objs
 
@@ -157,3 +159,117 @@ def process_slice_inset(base_path, slice_time, point1, point2):
     f_inset = to_file(BASE_PATH_XSECT, ang2, grbs[6].data)
 
     return {'x_sect': f_out, 'f_inset_lons': f_lons, 'f_inset_lats': f_lats, 'f_inset_data': f_inset}
+
+
+
+def calc_geod_pts(point1, point2, num_pts):
+    """
+    Calculates a number of points, num_pts, along a line defined by point1 & point2
+
+    Parameters
+    ----------
+    point1 : tuple of floats
+        First geographic coordinate pair
+        Format: (lat, lon)
+    point2 : tuple of floats
+        Second geographic coordinate pair
+        Format: (lat, lon)
+    num_pts : int
+        Number of coordinate pairs to calculate
+
+    Returns
+    -------
+    Yields a tuple of floats
+    Format: (lon, lat)
+    """
+    geod = Geod("+ellps=WGS84")
+    points = geod.npts(lon1=point1[1], lat1=point1[0], lon2=point2[1],
+                   lat2=point2[0], npts=num_pts)
+
+    for pt in points:
+        yield pt
+
+
+
+def calc_dist(point1, point2, units='km'):
+    """
+    Calculates the distance between two geographic coordinates in either km,
+    the default, or in meters
+
+    Parameters
+    ----------
+    point1 : tuple of floats
+        First point
+        Format: (lat, lon)
+    point2 : tuple of floats
+        Second point
+        Format: (lat, lon)
+    units : str, optional
+        If units = m, the distance will be returned in meters instead of kilometers
+    """
+    R = 6373.0  # Approx. radius of Earth, in km
+
+    lat1 = radians(point1[0])
+    lon1 = radians(point1[1])
+    lat2 = radians(point2[0])
+    lon2 = radians(point2[1])
+
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+
+    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+    distance = R * c
+
+    if (units == 'm'):
+        distance = distance * 1000
+
+    return distance
+
+
+
+def filter_by_dist(lma_df, dist, start_point, end_point, num_pts):
+    """
+    Filters the WTLMA dataframe to only include events that are within a certain
+    distance of the line that defines the MRMS cross-section
+
+    Parameters
+    ----------
+    lma_dt : Pandas DataFrame
+        DataFrame containing the WTLMA data.
+        Columns: 'time', 'lat', 'lon', 'alt', 'r chi2', 'P', 'mask'
+    dist: int
+        Distance threshold
+    start_point : tuple of floats
+        Coordinates of the point defining the beginning of the cross-section.
+        Format: (lat, lon)
+    end_point : tuple of floats
+        Coordinates of the point defining the end of the cross-section.
+        Format: (lat, lon)
+    num_pts : int
+        Number of geographic coordinate pairs to calculate between start_point &
+        end_point
+
+    Returns
+    -------
+    subs_df : Pandas DataFrame
+        DataFrame containing the filtered WTLMA events
+    """
+    s_lat = start_point[0]
+    s_lon = start_point[1]
+    e_lat = end_point[0]
+    e_lon = end_point[1]
+
+    idxs = []
+
+    for pt1 in calc_geod_pts(start_point, end_point, num_pts=num_pts):
+        for idx, pt2 in enumerate(list(zip(lma_df['lat'].tolist(), lma_dt['lon'].tolist()))):
+            # reverse the order of pt1 since the function returns the coordinates
+            # as (lon, lat) and calc_dist wants (lat, lon)
+            if (calc_dist((pt1[1], pt1[0]), pt2, units='m') <= 300):
+                idxs.append(idx)
+
+    subs_df = lma_df.iloc[idxs]
+
+    return subs_df
