@@ -106,7 +106,7 @@ def get_grb_data(fname, point1, point2, missing, debug=False):
     grb = grb_file[1]
 
     data = grb.values[max_lat : min_lat, min_lon : max_lon + 1] # Can by up to ~200 mb in size
-    
+
     if (missing == 0):
         data[data < 0] = 0
     elif (missing == 'nan'):
