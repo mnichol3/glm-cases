@@ -4,6 +4,7 @@ from os import mkdir
 import re
 from pyproj import Geod
 from math import sin, cos, sqrt, atan2, radians
+from sys import exit
 
 from grib import fetch_scans, get_grib_objs
 
@@ -256,6 +257,9 @@ def filter_by_dist(lma_df, dist, start_point, end_point, num_pts):
     subs_df : Pandas DataFrame
         DataFrame containing the filtered WTLMA events
     """
+    if (not isinstance(dist, int)):
+        raise TypeError('dist must be of type int')
+
     s_lat = start_point[0]
     s_lon = start_point[1]
     e_lat = end_point[0]
@@ -264,12 +268,14 @@ def filter_by_dist(lma_df, dist, start_point, end_point, num_pts):
     idxs = []
 
     for pt1 in calc_geod_pts(start_point, end_point, num_pts=num_pts):
-        for idx, pt2 in enumerate(list(zip(lma_df['lat'].tolist(), lma_dt['lon'].tolist()))):
+        for idx, pt2 in enumerate(list(zip(lma_df['lat'].tolist(), lma_df['lon'].tolist()))):
             # reverse the order of pt1 since the function returns the coordinates
             # as (lon, lat) and calc_dist wants (lat, lon)
-            if (calc_dist((pt1[1], pt1[0]), pt2, units='m') <= 300):
+            if (calc_dist((pt1[1], pt1[0]), pt2, units='m') <= dist):
                 idxs.append(idx)
-
+    # Remove repeat indexes from list
+    # MUCH faster to use a set than another conditional inside the nested loops
+    idxs = list(set(idxs))
     subs_df = lma_df.iloc[idxs]
 
     return subs_df

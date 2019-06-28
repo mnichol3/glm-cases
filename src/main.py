@@ -11,6 +11,7 @@ import grib
 import localglminterface
 import glm_utils
 import plotting_funcs
+import plotting_utils
 
 
 
@@ -27,17 +28,21 @@ def main():
     point1 = (37.195, -102.185)
     point2 = (34.565, -99.865)
 
-    """
     wtlma_data = wtlma.parse_file(abs_path_wtlma, sub_t='21:21')
-    glm_data = glm_utils.read_file(abs_path_glm, meta=True, window=True)
+    wtlma_data._set_data(plotting_utils.filter_by_dist(wtlma_data.data, 3000, point1, point2, 100))
+    print(wtlma_data.data)
+    #glm_data = glm_utils.read_file(abs_path_glm, meta=True, window=True)
     #glm_data = glm_utils.read_file(abs_path_glm, meta=True, window=True)
 
     #plotting_funcs.plot_mercator_dual(glm_data, (point1, point2), wtlma_data)
-    plotting_funcs.plot_mercator_dual_2(glm_data, (point1, point2), wtlma_data)
-    """
+    #plotting_funcs.plot_mercator_dual_2(glm_data, (point1, point2), wtlma_data)
 
+
+    """
     base_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
     plotting_funcs.run_mrms_xsect(base_path, '2124', point1, point2)
+    """
+
     """
     conn = goesawsinterface.GoesAWSInterface()
     imgs = conn.get_avail_images_in_range('goes16', 'ABI-L2-CMIPM', '5-23-2019-20:00', '5-23-2019-21:00', 'M1', '13')
