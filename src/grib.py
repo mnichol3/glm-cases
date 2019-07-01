@@ -84,13 +84,13 @@ def get_keys(fname, keyword=None):
 
 
 
-def get_grb_data(fname, point1, point2, missing=0, debug=False):
+def get_grb_data(abs_path, point1, point2, missing=0, debug=False):
     """
     Opens a MRMS Grib2 data file and creates a new MRMSGrib object.
 
     Parameters
     ----------
-    fname : str
+    abs_path : str
         The absolute path of the Grib2 file to open
     debug : bool, optional
         If True, the function prints some file metadata
@@ -99,12 +99,14 @@ def get_grb_data(fname, point1, point2, missing=0, debug=False):
     -------
     MRMSGrib object
     """
+    memmap_path = '/media/mnichol3/pmeyers1/MattNicholson/data'
+
     grid = init_grid()
     point1, point2 = _augment_coords(point1, point2)
     min_lat, max_lat, min_lon, max_lon = get_bbox_indices(grid, point1, point2)
     grid_lons, grid_lats = subset_grid(grid, [min_lat, max_lat, min_lon, max_lon]) # (lons, lats)
 
-    grb_file = pygrib.open(fname)
+    grb_file = pygrib.open(abs_path)
     grb = grb_file[1]
 
     data = grb.values[max_lat : min_lat, min_lon : max_lon + 1] # changed from max_lon + 1
@@ -116,10 +118,19 @@ def get_grb_data(fname, point1, point2, missing=0, debug=False):
     else:
         raise ValueError('Invalid missing data argument (grib.subset_data)')
 
+    path, fname = abs_path.rsplit('/', 1)
+    data_shape = data.shape
+
+    fp = np.memmap(join(memmap_path, fname.replace('grib2', 'txt')), dtype='float32', mode='w+', shape=data_shape)
+    fp[:] = data[:]
+    del fp
+
     major_ax = grb.earthMajorAxis
     minor_ax = grb.earthMinorAxis
     val_date = grb.validityDate
     val_time = grb.validityTime
+
+    del grb
 
     grb_file.close()
     grb_file = None
@@ -132,7 +143,7 @@ def get_grb_data(fname, point1, point2, missing=0, debug=False):
         print('minor axis:', minor_ax)
         print('------------------------------------')
 
-    return MRMSGrib(val_date, val_time, data, major_ax, minor_ax, fname, grid_lons=grid_lons, grid_lats=grid_lats)
+    return MRMSGrib(val_date, val_time, major_ax, minor_ax, path, fname, data_shape, grid_lons=grid_lons, grid_lats=grid_lats)
 
 
 
