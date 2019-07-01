@@ -150,6 +150,11 @@ class MRMSGrib(object):
 
 
 
+    def get_data_path(self):
+        return self.data_path
+
+
+
     def metadata(self):
         """
         Prints MRMSGrib object metadata
