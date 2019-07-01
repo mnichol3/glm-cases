@@ -15,7 +15,6 @@ import grib
 from plotting_utils import to_file, load_data, load_coordinates, parse_coord_fnames, process_slice, process_slice_inset
 
 
-
 def plot_mercator_dual(glm_obj, extent_coords, wtlma_obj):
 
     globe = ccrs.Globe(semimajor_axis=glm_obj.data['semi_major_axis'], semiminor_axis=glm_obj.data['semi_minor_axis'],
@@ -333,7 +332,11 @@ def plot_mrms_cross_section(data=None, abs_path=None, lons=None, lats=None):
         if (lons is None or lats is None):
             raise ValueError('lons and/or lats parameters cannot be None')
         else:
-            coords = list(zip(lons, lats))
+            lats = grib.trunc(lats, 2)
+            lons = grib.trunc(lons, 2)
+            coords = []
+            for idx, x in enumerate(lons):
+                coords.append('(' + str(x) + ', ' + str(lats[idx]) + ')')
     else:
         if (abs_path is None):
             raise ValueError('data and abs_path parameters cannot both be None')
@@ -406,14 +409,12 @@ def plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtl
         if (abs_path is None):
             raise ValueError('data and abs_path parameters cannot both be None')
         else:
-            data = load_data(abs_path)
-            f_lon, f_lat = parse_coord_fnames(abs_path)
-            lons = load_coordinates(f_lon)
-            lats = load_coordinates(f_lat)
-
+            lats = grib.trunc(lats, 2)
+            lons = grib.trunc(lons, 2)
             coords = []
             for idx, x in enumerate(lons):
-                coords.append(str(x) + ', ' + str(lats[idx]))
+                coords.append('(' + str(x) + ', ' + str(lats[idx]) + ')')
+                
     if (wtlma_df is None):
         raise ValueError('Missing wtlma_df param')
 
@@ -539,8 +540,8 @@ def run_mrms_xsect(base_path, slice_time, point1, point2):
     base_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
     f_out = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
 
-    fname = process_slice(base_path, slice_time, point1, point2, write=True)
-    plot_cross_section(abs_path=fname)
+    cross_data, lats, lons = process_slice(base_path, slice_time, point1, point2)
+    plot_mrms_cross_section(data=cross_data, lons=lons, lats=lats)
 
 
 
