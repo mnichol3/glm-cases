@@ -607,24 +607,3 @@ def _augment_coords(point1, point2):
         point1[1] += 1
 
     return (point1, point2)
-
-
-
-if (__name__ == '__main__'):
-    f_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905/MergedReflectivityQC_01.50'
-    f_name = 'MRMS_MergedReflectivityQC_01.50_20190523-212434.grib2'
-    base_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
-    f_abs = join(f_path, f_name)
-    point1 = (37.195, -102.185)
-    point2 = (34.565, -99.865)
-    slice_time = '2124'
-
-    t_bytes = 0
-
-    scans = fetch_scans(base_path, slice_time)
-    files = get_grib_objs(scans, base_path, point1, point2)
-    for f in files:
-        t_bytes += f.data.nbytes
-    print(t_bytes)
-
-    #grb_file = get_grb_data(f_abs, point1, point2, missing=0)

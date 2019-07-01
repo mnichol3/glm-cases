@@ -19,6 +19,8 @@ def main():
     local_abi_path = '/media/mnichol3/pmeyers1/MattNicholson/goes'
     local_wtlma_path = '/media/mnichol3/pmeyers1/MattNicholson/wtlma'
     local_glm_path = '/media/mnichol3/pmeyers1/MattNicholson/glm'
+    local_mrms_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
+    memmap_path = '/media/mnichol3/pmeyers1/MattNicholson/data'
 
     abs_path_glm = '/media/mnichol3/pmeyers1/MattNicholson/glm/glm20190523/IXTR99_KNES_232121_40312.2019052321'
     abs_path_wtlma = '/media/mnichol3/pmeyers1/MattNicholson/wtlma/2019/05/23/LYLOUT_190523_212000_0600.dat'
@@ -28,9 +30,18 @@ def main():
     point1 = (37.195, -102.185)
     point2 = (34.565, -99.865)
 
+    """
     wtlma_data = wtlma.parse_file(abs_path_wtlma, sub_t='21:21')
     wtlma_data._set_data(plotting_utils.filter_by_dist(wtlma_data.data, 3000, point1, point2, 100))
     print(wtlma_data.data)
+    """
+
+    #scans = grib.fetch_scans(local_mrms_path, '2121')
+    #grbs = grib.get_grib_objs(scans, local_mrms_path, point1, point2)
+    plotting_funcs.run_mrms_xsect(local_mrms_path, '2121', point1, point2)
+
+
+    #plotting_funcs.plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtlma_df=None)
     #glm_data = glm_utils.read_file(abs_path_glm, meta=True, window=True)
     #glm_data = glm_utils.read_file(abs_path_glm, meta=True, window=True)
 
