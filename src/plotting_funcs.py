@@ -299,128 +299,6 @@ def plot_cross_neighbor_single(grb, point1, point2, first=False):
 
 
 
-def get_cross_cubic(grb, point1, point2, first=False):
-    """
-    Calculates the cross section of a single MRMSGrib object's data from point1 to point2
-    using cubic interpolation
-
-    Parameters
-    ----------
-    grb : MRMSGrib object
-    point1 : tuple of float
-        Coordinates of the first point that defined the cross section
-        Format: (lon, lat)
-    point2 : tuple of float
-        Coordinates of the second point that defined the cross section
-        Format: (lon, lat)
-    first : bool, optional
-        If True, the cross section latitude & longitude coordinates will be calculated
-        and written to text files
-
-    Returns
-    -------
-    zi : numpy nd array
-        Array containing cross-section reflectivity
-    """
-    BASE_PATH = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
-    BASE_PATH_XSECT = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
-    BASE_PATH_XSECT_COORDS = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/coords'
-    lons = grb.grid_lons
-    lats = grb.grid_lats
-
-    x, y = np.meshgrid(lons, lats)
-    z = grb.data
-
-    # [(x1, y1), (x2, y2)]
-    line = [(point1[0], point1[1]), (point2[0], point2[1])]
-
-    # cubic interpolation
-    x_world, y_world = np.array(list(zip(*line)))
-    col = z.shape[1] * (x_world - x.min()) / x.ptp()
-    row = z.shape[0] * (y.max() - y_world ) / y.ptp()
-
-    num = 100
-    row, col = [np.linspace(item[0], item[1], num) for item in [row, col]]
-
-    valid_date = grb.validity_date
-    valid_time = grb.validity_time
-
-    if (first):
-
-        fname_lons = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lons.txt'
-        fname_lats = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lats.txt'
-
-        d_lons, d_lats = calc_coords(point1, point2, num)
-
-        to_file(BASE_PATH_XSECT + '/coords', fname_lons, d_lons)
-        to_file(BASE_PATH_XSECT + '/coords', fname_lats, d_lats)
-
-    # Extract the values along the line, using cubic interpolation
-    zi = scipy.ndimage.map_coordinates(z, np.vstack((row, col)), order=1, mode='nearest')
-
-    return zi
-
-
-
-def get_cross_neighbor(grb, point1, point2, first=False):
-    """
-    Calculates the cross section of a single MRMSGrib object's data from point1 to point2
-    using nearest-neighbor interpolation
-
-    Parameters
-    ----------
-    grb : MRMSGrib object
-    point1 : tuple of float
-        Coordinates of the first point that defined the cross section
-        Format: (lon, lat)
-    point2 : tuple of float
-        Coordinates of the second point that defined the cross section
-        Format: (lon, lat)
-    first : bool, optional
-        If True, the cross section latitude & longitude coordinates will be calculated
-        and written to text files
-
-    Returns
-    -------
-    zi : numpy nd array
-        Array containing cross-section reflectivity
-    """
-    BASE_PATH = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
-    BASE_PATH_XSECT = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
-    BASE_PATH_XSECT_COORDS = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/coords'
-    lons = grb.grid_lons
-    lats = grb.grid_lats
-
-    x, y = np.meshgrid(lons, lats)
-    z = grb.data
-
-    line = [(point1[0], point1[1]), (point2[0], point2[1])]
-    x_world, y_world = np.array(list(zip(*line)))
-    col = z.shape[1] * (x_world - x.min()) / x.ptp()
-    row = z.shape[0] * (y.max() - y_world ) / y.ptp()
-
-    num = 1000
-    row, col = [np.linspace(item[0], item[1], num) for item in [row, col]]
-
-    valid_date = grb.validity_date
-    valid_time = grb.validity_time
-
-    if (first):
-
-        fname_lons = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lons.txt'
-        fname_lats = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lats.txt'
-
-        d_lons, d_lats = calc_coords(point1, point2, num)
-
-        to_file(BASE_PATH_XSECT + '/coords', fname_lons, d_lons)
-        to_file(BASE_PATH_XSECT + '/coords', fname_lats, d_lats)
-
-    zi = z[row.astype(int), col.astype(int)]
-
-    return zi
-
-
-
 def plot_mrms_cross_section(data=None, abs_path=None, lons=None, lats=None):
     """
     Plots a cross-section of MRMS reflectivity data from all scan angles. If
@@ -478,6 +356,83 @@ def plot_mrms_cross_section(data=None, abs_path=None, lons=None, lats=None):
     im = ax.pcolormesh(coords, scan_angles, data, cmap=mpl.cm.gist_ncar)
     cbar = fig.colorbar(im, ax=ax)
     cbar.set_label('Reflectivity (dbz)', rotation=90)
+    ax.set_title('MRMS Reflectivity Cross Section')
+    ax.xaxis.set_major_locator(plt.MaxNLocator(10))
+    ax.set_ylabel('Scan Angle (Deg)')
+    ax.set_xlabel('Lon, Lat')
+
+    fig.tight_layout()
+
+    plt.show()
+
+
+
+def plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtlma_df=None):
+    """
+    Plots a cross-section of MRMS reflectivity data from all scan angles, with WTLMA
+    events overlayed. If the 'data' parameter is given, then that data is plotted.
+    If 'abs_path' is given, then data from the text file located at that absolute
+    path is read and plotted
+
+    Parameters
+    ----------
+    data : numpy 2d array, optional
+        2d array of reflectivity data
+    abs_path : str, optional
+        Absolute path of the text file containing the reflectivity cross-section
+        data. Must be given if data is None
+    lons : list of float, optional
+        List of longitude coordinates from the vertical slice. Must be given if
+        cross section data is passed in through the data parameter
+    lats : list of float, optional
+        List of latitude coordinates from the vertical slice. Must be given if
+        cross section data is passed in through the data parameter
+
+    Returns
+    -------
+    None, displays a plot of the reflectivity cross section
+    """
+
+    scan_angles = np.array([0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75,
+                            3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9,
+                            10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
+
+    if (data is not None):
+        if (lons is None or lats is None):
+            raise ValueError('lons and/or lats parameters cannot be None')
+        else:
+            coords = list(zip(lons, lats))
+    else:
+        if (abs_path is None):
+            raise ValueError('data and abs_path parameters cannot both be None')
+        else:
+            data = load_data(abs_path)
+            f_lon, f_lat = parse_coord_fnames(abs_path)
+            lons = load_coordinates(f_lon)
+            lats = load_coordinates(f_lat)
+
+            coords = []
+            for idx, x in enumerate(lons):
+                coords.append(str(x) + ', ' + str(lats[idx]))
+    if (wtlma_df is None):
+        raise ValueError('Missing wtlma_df param')
+
+    fig = plt.figure()
+    ax = plt.gca()
+
+    xs = np.arange(0, 1000)
+
+    #im = ax.pcolormesh(xs, scan_angles, data, cmap=mpl.cm.gist_ncar)
+    im = ax.pcolormesh(coords, scan_angles, data, cmap=mpl.cm.gist_ncar)
+    cbar = fig.colorbar(im, ax=ax)
+    cbar.set_label('Reflectivity (dbz)', rotation=90)
+
+    l_norm = colors.Normalize(vmin=0, vmax=25)
+
+    scatt = ax.scatter(wtlma_df['lon'], wtlma_df['atl'], c=mpl.cm.jet, norm=l_norm)
+    cbar2 = fig.colorbar(scatt, ax=ax)
+    cbar.set_label('WTLMA Stroke Power (dBW)', rotation=90)
+
     ax.set_title('MRMS Reflectivity Cross Section')
     ax.xaxis.set_major_locator(plt.MaxNLocator(10))
     ax.set_ylabel('Scan Angle (Deg)')
