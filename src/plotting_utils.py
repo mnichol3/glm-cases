@@ -153,7 +153,7 @@ def get_cross_cubic(grb, point1, point2, first=False):
         fname_lons = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lons.txt'
         fname_lats = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lats.txt'
 
-        d_lons, d_lats = calc_coords(point1, point2, num)
+        d_lats, d_lons = calc_coords(point1, point2, num)
 
         to_file(BASE_PATH_XSECT + '/coords', fname_lons, d_lons)
         to_file(BASE_PATH_XSECT + '/coords', fname_lats, d_lats)
@@ -196,7 +196,7 @@ def get_cross_neighbor(grb, point1, point2, first=False):
 
     x, y = np.meshgrid(lons, lats)
     #z = grb.data
-    z = np.memmap(grb.get_data_path(). dtype='float32', mode='r', shape=grb.shape)
+    z = np.memmap(grb.get_data_path(), dtype='float32', mode='r', shape=grb.shape)
 
     line = [(point1[0], point1[1]), (point2[0], point2[1])]
 
@@ -211,25 +211,20 @@ def get_cross_neighbor(grb, point1, point2, first=False):
     valid_date = grb.validity_date
     valid_time = grb.validity_time
 
-    if (first):
-
-        fname_lons = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lons.txt'
-        fname_lats = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lats.txt'
-
-        d_lons, d_lats = calc_coords(point1, point2, num)
-
-        to_file(BASE_PATH_XSECT + '/coords', fname_lons, d_lons)
-        to_file(BASE_PATH_XSECT + '/coords', fname_lats, d_lats)
+    d_lats, d_lons = calc_coords(point1, point2, num)
 
     zi = z[row.astype(int), col.astype(int)]
 
     del z
 
-    return zi
+    return (zi, d_lats, d_lons)
 
 
 
 def process_slice(base_path, slice_time, point1, point2, write=False):
+    BASE_PATH_XSECT = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
+    BASE_PATH_XSECT_COORDS = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/coords'
+
     cross_sections = np.array([])
 
     scans = fetch_scans(base_path, slice_time) # z = 33
@@ -241,16 +236,17 @@ def process_slice(base_path, slice_time, point1, point2, write=False):
 
     fname = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z.txt'
 
-    cross_sections = np.asarray(get_cross_neighbor(grbs[0], point1, point2))
+    cross_sections, lats, lons = np.asarray(get_cross_neighbor(grbs[0], point1, point2))
 
     for grb in grbs[1:]:
-        cross_sections = np.vstack((cross_sections, get_cross_neighbor(grb, point1, point2)))
+        x_sect, _, _ = get_cross_neighbor(grb, point1, point2)
+        cross_sections = np.vstack((cross_sections, x_sect))
 
     if (write):
         f_out = to_file(BASE_PATH_XSECT, fname, cross_sections)
         return f_out
     else:
-        return cross_sections
+        return (cross_sections, lats, lons)
 
 
 
@@ -261,6 +257,9 @@ def process_slice_inset(base_path, slice_time, point1, point2):
         plot_cross_section_inset(inset_data=dict['f_inset_data'], inset_lons=dict['f_inset_lons'],
             inset_lats=dict['f_inset_lats'], abs_path=fname, points=(point1, point2))
     """
+    BASE_PATH_XSECT = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
+    BASE_PATH_XSECT_COORDS = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/coords'
+
     cross_sections = np.array([])
 
     scans = fetch_scans(base_path, '2124') # z = 33
@@ -406,3 +405,14 @@ def filter_by_dist(lma_df, dist, start_point, end_point, num_pts):
     subs_df = lma_df.iloc[idxs]
 
     return subs_df
+
+
+
+def calc_coords(point1, point2, num):
+    xs = [point1[1], point2[1]]
+    ys = [point1[0], point2[0]]
+
+    lons = np.linspace(min(xs), max(xs), num)
+    lats = np.linspace(min(ys), max(ys), num)
+
+    return (lats, lons)
