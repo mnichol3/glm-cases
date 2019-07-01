@@ -171,10 +171,10 @@ def plot_cross_cubic_single(grb, point1, point2, first=False):
     grb : MRMSGrib object
     point1 : tuple of float
         Coordinates of the first point that defined the cross section
-        Format: (lon, lat)
+        Format: (lat, lon)
     point2 : tuple of float
         Coordinates of the second point that defined the cross section
-        Format: (lon, lat)
+        Format: (lat, lon)
     first : bool, optional
         If True, the cross section latitude & longitude coordinates will be calculated
         and written to text files
@@ -198,7 +198,7 @@ def plot_cross_cubic_single(grb, point1, point2, first=False):
     line = [(point1[0], point1[1]), (point2[0], point2[1])]
 
     # cubic interpolation
-    x_world, y_world = np.array(list(zip(*line)))
+    y_world, x_world = np.array(list(zip(*line)))
     col = z.shape[1] * (x_world - x.min()) / x.ptp()
     row = z.shape[0] * (y.max() - y_world ) / y.ptp()
 
@@ -243,10 +243,10 @@ def plot_cross_neighbor_single(grb, point1, point2, first=False):
     grb : MRMSGrib object
     point1 : tuple of float
         Coordinates of the first point that defined the cross section
-        Format: (lon, lat)
+        Format: (lat, lon)
     point2 : tuple of float
         Coordinates of the second point that defined the cross section
-        Format: (lon, lat)
+        Format: (lat, lon)
     first : bool, optional
         If True, the cross section latitude & longitude coordinates will be calculated
         and written to text files
@@ -266,7 +266,7 @@ def plot_cross_neighbor_single(grb, point1, point2, first=False):
     z = grb.data
 
     line = [(point1[0], point1[1]), (point2[0], point2[1])]
-    x_world, y_world = np.array(list(zip(*line)))
+    y_world, x_world = np.array(list(zip(*line)))
     col = z.shape[1] * (x_world - x.min()) / x.ptp()
     row = z.shape[0] * (y.max() - y_world ) / y.ptp()
 

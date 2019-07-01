@@ -102,12 +102,136 @@ def parse_coord_fnames(abs_path):
 
 
 
+def get_cross_cubic(grb, point1, point2, first=False):
+    """
+    Calculates the cross section of a single MRMSGrib object's data from point1 to point2
+    using cubic interpolation
+
+    Parameters
+    ----------
+    grb : MRMSGrib object
+    point1 : tuple of float
+        Coordinates of the first point that defined the cross section
+        Format: (lat, lon)
+    point2 : tuple of float
+        Coordinates of the second point that defined the cross section
+        Format: (lat, lon)
+    first : bool, optional
+        If True, the cross section latitude & longitude coordinates will be calculated
+        and written to text files
+
+    Returns
+    -------
+    zi : numpy nd array
+        Array containing cross-section reflectivity
+    """
+    BASE_PATH = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
+    BASE_PATH_XSECT = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
+    BASE_PATH_XSECT_COORDS = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/coords'
+    lons = grb.grid_lons
+    lats = grb.grid_lats
+
+    x, y = np.meshgrid(lons, lats)
+    z = grb.data
+
+    # [(x1, y1), (x2, y2)]
+    line = [(point1[0], point1[1]), (point2[0], point2[1])]
+
+    # cubic interpolation
+    y_world, x_world = np.array(list(zip(*line)))
+    col = z.shape[1] * (x_world - x.min()) / x.ptp()
+    row = z.shape[0] * (y.max() - y_world ) / y.ptp()
+
+    num = 100
+    row, col = [np.linspace(item[0], item[1], num) for item in [row, col]]
+
+    valid_date = grb.validity_date
+    valid_time = grb.validity_time
+
+    if (first):
+
+        fname_lons = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lons.txt'
+        fname_lats = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lats.txt'
+
+        d_lons, d_lats = calc_coords(point1, point2, num)
+
+        to_file(BASE_PATH_XSECT + '/coords', fname_lons, d_lons)
+        to_file(BASE_PATH_XSECT + '/coords', fname_lats, d_lats)
+
+    # Extract the values along the line, using cubic interpolation
+    zi = scipy.ndimage.map_coordinates(z, np.vstack((row, col)), order=1, mode='nearest')
+
+    return zi
+
+
+
+def get_cross_neighbor(grb, point1, point2, first=False):
+    """
+    Calculates the cross section of a single MRMSGrib object's data from point1 to point2
+    using nearest-neighbor interpolation
+
+    Parameters
+    ----------
+    grb : MRMSGrib object
+    point1 : tuple of float
+        Coordinates of the first point that defined the cross section
+        Format: (lat, lon)
+    point2 : tuple of float
+        Coordinates of the second point that defined the cross section
+        Format: (lat, lon)
+    first : bool, optional
+        If True, the cross section latitude & longitude coordinates will be calculated
+        and written to text files
+
+    Returns
+    -------
+    zi : numpy nd array
+        Array containing cross-section reflectivity
+    """
+    BASE_PATH = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
+    BASE_PATH_XSECT = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
+    BASE_PATH_XSECT_COORDS = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/coords'
+    lons = grb.grid_lons
+    lats = grb.grid_lats
+
+    x, y = np.meshgrid(lons, lats)
+    z = grb.data
+
+    line = [(point1[0], point1[1]), (point2[0], point2[1])]
+
+    y_world, x_world = np.array(list(zip(*line)))
+
+    col = z.shape[1] * (x_world - x.min()) / x.ptp()
+    row = z.shape[0] * (y.max() - y_world ) / y.ptp()
+
+    num = 1000
+    row, col = [np.linspace(item[0], item[1], num) for item in [row, col]]
+
+    valid_date = grb.validity_date
+    valid_time = grb.validity_time
+
+    if (first):
+
+        fname_lons = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lons.txt'
+        fname_lats = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lats.txt'
+
+        d_lons, d_lats = calc_coords(point1, point2, num)
+
+        to_file(BASE_PATH_XSECT + '/coords', fname_lons, d_lons)
+        to_file(BASE_PATH_XSECT + '/coords', fname_lats, d_lats)
+
+    zi = z[row.astype(int), col.astype(int)]
+
+    return zi
+
+
+
 def process_slice(base_path, slice_time, point1, point2, write=False):
     cross_sections = np.array([])
 
     scans = fetch_scans(base_path, slice_time) # z = 33
 
-    grbs = get_grib_objs(scans, base_path)
+    grbs = get_grib_objs(scans, base_path, point1, point2)
 
     valid_date = grbs[0].validity_date
     valid_time = grbs[0].validity_time
@@ -138,7 +262,7 @@ def process_slice_inset(base_path, slice_time, point1, point2):
 
     scans = fetch_scans(base_path, '2124') # z = 33
 
-    grbs = get_grib_objs(scans, base_path)
+    grbs = get_grib_objs(scans, base_path, point1, point2)
 
     valid_date = grbs[0].validity_date
     valid_time = grbs[0].validity_time
