@@ -196,7 +196,7 @@ def get_cross_neighbor(grb, point1, point2, first=False):
 
     x, y = np.meshgrid(lons, lats)
     #z = grb.data
-    z = n.memmap(grb.get_data_path(). dtype='float32', mode='r', shape=grb.shape)
+    z = np.memmap(grb.get_data_path(). dtype='float32', mode='r', shape=grb.shape)
 
     line = [(point1[0], point1[1]), (point2[0], point2[1])]
 
