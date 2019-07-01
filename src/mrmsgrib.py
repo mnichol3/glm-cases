@@ -4,13 +4,14 @@ Author: Matt Nicholson
 A class for local Multi-Radar/Multi-Sensor System (MRMS) GRIB files
 """
 import re
+from os.path import join
 
 class MRMSGrib(object):
     """
     Class for the MRMSGrib object
     """
 
-    def __init__(self, validity_date, validity_time, data, major_axis, minor_axis, abs_path, grid_lons=None, grid_lats=None):
+    def __init__(self, validity_date, validity_time, major_axis, minor_axis, path, fname, grid_lons=None, grid_lats=None):
         """
         Initializes a new MRMSGrib object
 
@@ -47,20 +48,20 @@ class MRMSGrib(object):
             Scan angle of the MRMS reflectivity data
 
         """
+        memmap_path = '/media/mnichol3/pmeyers1/MattNicholson/data'
+
         super(MRMSGrib, self).__init__()
         self.validity_date = validity_date
         self.validity_time = validity_time
-        self.data = data
         self.major_axis = major_axis
         self.minor_axis = minor_axis
+        self.data_path = join(memmap_path, fname)
+        self.path = path
+        self.fname = fname
         self.grid_lons = grid_lons
         self.grid_lats = grid_lats
-        self.path = None
-        self.fname = None
         self.scan_angle = None
-        if abs_path is not None:
-            self.parse_path(abs_path)
-        self.parse_scan_angle(self.fname)
+        self.parse_scan_angle(join(self.path, self.fname))
 
 
 
