@@ -11,7 +11,7 @@ class MRMSGrib(object):
     Class for the MRMSGrib object
     """
 
-    def __init__(self, validity_date, validity_time, major_axis, minor_axis, path, fname, grid_lons=None, grid_lats=None):
+    def __init__(self, validity_date, validity_time, major_axis, minor_axis, path, fname, shape, grid_lons=None, grid_lats=None):
         """
         Initializes a new MRMSGrib object
 
@@ -58,6 +58,7 @@ class MRMSGrib(object):
         self.data_path = join(memmap_path, fname.replace('grib2', 'txt'))
         self.path = path
         self.fname = fname
+        self.shape = shape
         self.grid_lons = grid_lons
         self.grid_lats = grid_lats
         self.scan_angle = None
