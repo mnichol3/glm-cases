@@ -55,7 +55,7 @@ class MRMSGrib(object):
         self.validity_time = validity_time
         self.major_axis = major_axis
         self.minor_axis = minor_axis
-        self.data_path = join(memmap_path, fname)
+        self.data_path = join(memmap_path, fname.replace('grib2', 'txt'))
         self.path = path
         self.fname = fname
         self.grid_lons = grid_lons
