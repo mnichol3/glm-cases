@@ -404,17 +404,24 @@ def plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtl
         if (lons is None or lats is None):
             raise ValueError('lons and/or lats parameters cannot be None')
         else:
-            coords = list(zip(lons, lats))
-    else:
-        if (abs_path is None):
-            raise ValueError('data and abs_path parameters cannot both be None')
-        else:
             lats = grib.trunc(lats, 2)
             lons = grib.trunc(lons, 2)
             coords = []
             for idx, x in enumerate(lons):
                 coords.append('(' + str(x) + ', ' + str(lats[idx]) + ')')
-                
+    else:
+        if (abs_path is None):
+            raise ValueError('data and abs_path parameters cannot both be None')
+        else:
+            data = load_data(abs_path)
+            f_lon, f_lat = parse_coord_fnames(abs_path)
+            lons = load_coordinates(f_lon)
+            lats = load_coordinates(f_lat)
+
+            coords = []
+            for idx, x in enumerate(lons):
+                coords.append(str(x) + ', ' + str(lats[idx]))
+
     if (wtlma_df is None):
         raise ValueError('Missing wtlma_df param')
 
@@ -424,19 +431,21 @@ def plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtl
     xs = np.arange(0, 1000)
 
     #im = ax.pcolormesh(xs, scan_angles, data, cmap=mpl.cm.gist_ncar)
-    im = ax.pcolormesh(coords, scan_angles, data, cmap=mpl.cm.gist_ncar)
+    im = ax.pcolormesh(coords, scan_angles*1000, data, cmap=mpl.cm.gist_ncar)
     cbar = fig.colorbar(im, ax=ax)
     cbar.set_label('Reflectivity (dbz)', rotation=90)
 
     l_norm = colors.Normalize(vmin=0, vmax=25)
 
-    scatt = ax.scatter(wtlma_df['lon'], wtlma_df['atl'], c=mpl.cm.jet, norm=l_norm)
+    scatt = ax.scatter(wtlma_df['lon'], wtlma_df['alt'], c=wtlma_df['P'],
+                       marker='o', s=100, cmap=mpl.cm.jet, vmin=-20, vmax=100, zorder=2)
+
     cbar2 = fig.colorbar(scatt, ax=ax)
-    cbar.set_label('WTLMA Stroke Power (dBW)', rotation=90)
+    cbar2.set_label('WTLMA Stroke Power (dBW)', rotation=90)
 
     ax.set_title('MRMS Reflectivity Cross Section')
     ax.xaxis.set_major_locator(plt.MaxNLocator(10))
-    ax.set_ylabel('Scan Angle (Deg)')
+    ax.set_ylabel('Altitude (m)')
     ax.set_xlabel('Lon, Lat')
 
     fig.tight_layout()
