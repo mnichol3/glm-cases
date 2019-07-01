@@ -16,6 +16,7 @@ from os.path import join, isfile
 import sys
 from os import listdir, walk
 import re
+from datetime import datetime
 
 from mrmsgrib import MRMSGrib
 
@@ -99,13 +100,14 @@ def get_grb_data(fname, point1, point2, missing=0, debug=False):
     MRMSGrib object
     """
     grid = init_grid()
+    point1, point2 = _augment_coords(point1, point2)
     min_lat, max_lat, min_lon, max_lon = get_bbox_indices(grid, point1, point2)
     grid_lons, grid_lats = subset_grid(grid, [min_lat, max_lat, min_lon, max_lon]) # (lons, lats)
 
     grb_file = pygrib.open(fname)
     grb = grb_file[1]
 
-    data = grb.values[max_lat : min_lat, min_lon : max_lon + 1] # Can by up to ~200 mb in size
+    data = grb.values[max_lat : min_lat, min_lon : max_lon + 1] # changed from max_lon + 1
 
     if (missing == 0):
         data[data < 0] = 0
@@ -454,6 +456,7 @@ def fetch_scans(base_path, time, angles=None):
         Path to the directory that holds the subdirectories we wish to look through
     time : str
         The validity time of the scans
+        Format: HHMM or HH:MM
     angles : list of str, optional
         Scan angles to limit search results to
 
@@ -470,8 +473,14 @@ def fetch_scans(base_path, time, angles=None):
 
     if (isinstance(time, int)):
         time = str(time)
+    else:
+        if (':' in time):
+            hours, mins = time.split(':')
+            time = hours + mins
 
     for subdir, dirs, files in walk(base_path):
+        curr_fname = None
+        curr_tdelta = 100000
         for file in files:
             time_match = time_re.search(file)
             if (time_match is not None):
@@ -483,6 +492,16 @@ def fetch_scans(base_path, time, angles=None):
                 else:
                     if (found_time == time):
                         scans.append(file)
+                    else:
+                        FMT = '%H%M'
+                        tdelta = (datetime.strptime(found_time, FMT) - datetime.strptime(time, FMT)).total_seconds()
+                        tdelta = abs(tdelta)
+                        if (tdelta < abs(curr_tdelta)):
+                            curr_tdelta = tdelta
+                            curr_fname = file
+        if (curr_fname):
+            scans.append(curr_fname)
+
     return sorted(scans)
 
 
@@ -558,6 +577,28 @@ def get_grib_objs(scans, base_path, point1, point2):
 
 
 
+def _augment_coords(point1, point2):
+    point1 = list(point1)
+    point2 = list(point2)
+
+    if (point1[0] < point2[0]):
+        point1[0] -= 1
+        point2[0] += 1
+    else:
+        point2[0] -= 1
+        point1[0] += 1
+
+    if (point1[1] < point2[1]):
+        point1[1] -= 1
+        point2[1] += 1
+    else:
+        point2[1] -= 1
+        point1[1] += 1
+
+    return (point1, point2)
+
+
+
 if (__name__ == '__main__'):
     f_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905/MergedReflectivityQC_01.50'
     f_name = 'MRMS_MergedReflectivityQC_01.50_20190523-212434.grib2'
@@ -574,5 +615,5 @@ if (__name__ == '__main__'):
     for f in files:
         t_bytes += f.data.nbytes
     print(t_bytes)
-    
+
     #grb_file = get_grb_data(f_abs, point1, point2, missing=0)
