@@ -51,6 +51,8 @@ def get_files_in_range(base_path, start, end):
     start_dt = datetime.strptime(start, '%m-%d-%Y-%H:%M')
     end_dt = datetime.strptime(end, '%m-%d-%Y-%H:%M')
 
+    base_path = _parse_path(base_path, start)
+
     avail_scans = get_files(base_path)
 
     for day in _datetime_range(start_dt, end_dt):
@@ -59,7 +61,7 @@ def get_files_in_range(base_path, start, end):
             date = scan.scan_date
             time = scan.scan_time
             if _is_within_range(start_dt, end_dt, datetime.strptime(date + '-' + time, '%m-%d-%Y-%H:%M')):
-                if (scan.filename not in added):
+                if (scan.filename not in added and '.nc' not in scan.filename):
                     scans.append(scan)
                     added.append(scan.filename)
 
@@ -84,3 +86,10 @@ def _is_within_range(start, end, value):
         return True
     else:
         return False
+
+
+
+def _parse_path(base_path, date):
+    splits = date.split('-')
+    base_path = base_path + '/glm' + splits[2] + splits[0] + splits[1]
+    return base_path
