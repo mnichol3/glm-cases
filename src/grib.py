@@ -359,7 +359,8 @@ def trunc(vals, decs=0):
     List of floats
 
     """
-    return np.trunc(vals*10**decs)/(10**decs)
+    trunc_vals = [np.trunc(x*10**decs)/(10**decs) for x in vals]
+    return trunc_vals
 
 
 
