@@ -425,7 +425,7 @@ def plot_mrms_cross_section(data=None, abs_path=None, lons=None, lats=None):
 
 
 
-def plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtlma_df=None):
+def plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtlma_obj=None, wtlma_coords=None):
     """
     Plots a cross-section of MRMS reflectivity data from all scan angles, with WTLMA
     events overlayed. If the 'data' parameter is given, then that data is plotted.
@@ -477,8 +477,8 @@ def plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtl
             for idx, x in enumerate(lons):
                 coords.append(str(x) + ', ' + str(lats[idx]))
 
-    if (wtlma_df is None):
-        raise ValueError('Missing wtlma_df param')
+    if (wtlma_obj is None):
+        raise ValueError('Missing wtlma_obj param')
 
     fig = plt.figure()
     ax = plt.gca()
@@ -492,13 +492,24 @@ def plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtl
 
     l_norm = colors.Normalize(vmin=0, vmax=25)
 
-    scatt = ax.scatter(wtlma_df['lon'], wtlma_df['alt'], c=wtlma_df['P'],
+    wtlma_lats, wtlma_lons = list(zip(*wtlma_coords))
+
+    wtlma_lats = list(wtlma_lats)
+    wtlma_lons = list(wtlma_lons)
+    wtlma_lats = grib.trunc(wtlma_lats, 2)
+    wtlma_lons = grib.trunc(wtlma_lons, 2)
+
+    wtlma_coords = []
+    for idx, x in enumerate(wtlma_lons):
+        wtlma_coords.append('(' + str(x) + ', ' + str(wtlma_lats[idx]) + ')')
+
+    scatt = ax.scatter(wtlma_coords, wtlma_obj.data['alt'], c=wtlma_obj.data['P'],
                        marker='o', s=100, cmap=mpl.cm.jet, vmin=-20, vmax=100, zorder=2)
 
     cbar2 = fig.colorbar(scatt, ax=ax)
     cbar2.set_label('WTLMA Stroke Power (dBW)', rotation=90)
 
-    ax.set_title('MRMS Reflectivity Cross Section')
+    ax.set_title('MRMS Reflectivity Cross Section with WTLMA Sources < 19000m AGL\n{}'.format(wtlma_obj._start_time_pp()), loc='left')
     ax.xaxis.set_major_locator(plt.MaxNLocator(10))
     ax.set_ylabel('Altitude (m)')
     ax.set_xlabel('Lon, Lat')
@@ -680,6 +691,12 @@ def run_mrms_xsect(base_path, slice_time, point1, point2):
 
     cross_data, lats, lons = process_slice(base_path, slice_time, point1, point2)
     plot_mrms_cross_section(data=cross_data, lons=lons, lats=lats)
+
+
+
+def run_mrms_xsect2(base_path, slice_time, point1, point2, wtlma_obj, wtlma_coords):
+    cross_data, lats, lons = process_slice(base_path, slice_time, point1, point2)
+    plot_mrms_cross_section2(data=cross_data, lons=lons, lats=lats, wtlma_obj=wtlma_obj, wtlma_coords=wtlma_coords)
 
 
 

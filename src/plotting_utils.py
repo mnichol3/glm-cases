@@ -396,19 +396,23 @@ def filter_by_dist(lma_df, dist, start_point, end_point, num_pts):
     e_lon = end_point[1]
 
     idxs = []
+    coords = []
+    alts = lma_df['alt'].tolist()
 
     for pt1 in calc_geod_pts(start_point, end_point, num_pts=num_pts):
         for idx, pt2 in enumerate(list(zip(lma_df['lat'].tolist(), lma_df['lon'].tolist()))):
             # reverse the order of pt1 since the function returns the coordinates
             # as (lon, lat) and calc_dist wants (lat, lon)
-            if (calc_dist((pt1[1], pt1[0]), pt2, units='m') <= dist):
+            if (calc_dist((pt1[1], pt1[0]), pt2, units='m') <= dist and idx not in idxs and alts[idx] < 19000):
                 idxs.append(idx)
+                coords.append([pt1[1], pt1[0]])
+
     # Remove repeat indexes from list
     # MUCH faster to use a set than another conditional inside the nested loops
-    idxs = list(set(idxs))
+    #idxs = list(set(idxs))
     subs_df = lma_df.iloc[idxs]
 
-    return subs_df
+    return subs_df, coords
 
 
 
