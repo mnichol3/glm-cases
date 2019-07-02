@@ -9,10 +9,12 @@ import matplotlib.cm as cm
 import matplotlib.colors as colors
 import scipy.ndimage
 import re
+from matplotlib.patches import Polygon
 
 from glm_utils import georeference
 import grib
 from plotting_utils import to_file, load_data, load_coordinates, parse_coord_fnames, process_slice, process_slice_inset
+from plotting_utils import geodesic_point_buffer
 
 
 def plot_mercator_dual(glm_obj, extent_coords, wtlma_obj):
@@ -541,6 +543,76 @@ def plot_mrms_cross_section_inset(data=None, inset_data=None, inset_lons=None, i
     sub_ax.plot(xs, ys, 'ro-', transform=ccrs.PlateCarree())
     fig.tight_layout()
 
+    plt.show()
+
+
+
+def plot_wtlma(wtlma_obj_list, grid_extent=None, nbins=1000):
+
+    if (not isinstance(wtlma_obj_list, list)):
+        wtlma_obj_list = [wtlma_obj_list]
+
+    cent_lat = float(wtlma_obj_list[0].coord_center[0])
+    cent_lon = float(wtlma_obj_list[0].coord_center[1])
+
+    wtlma_data = wtlma_obj_list[0].data
+
+    for obj in wtlma_obj_list[1:]:
+        wtlma_data = wtlma_data.append(obj.data)
+
+    fig = plt.figure(figsize=(10, 5))
+
+    ax = fig.add_subplot(111, projection=ccrs.Mercator())
+
+    states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='black',
+                             name='admin_1_states_provinces_shp', zorder=0)
+
+    ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=1)
+
+    if (grid_extent is None):
+        bounds = geodesic_point_buffer(cent_lat, cent_lon, 300)
+        lats = [float(x[1]) for x in bounds.coords[:]]
+        lons = [float(x[0]) for x in bounds.coords[:]]
+        extent = {'min_lon': min(lons), 'max_lon': max(lons), 'min_lat': min(lats), 'max_lat': max(lats)}
+        del lats
+        del lons
+    else:
+        extent = grid_extent
+
+    ax.set_extent([extent['min_lon'], extent['max_lon'], extent['min_lat'], extent['max_lat']], crs=ccrs.PlateCarree())
+
+    grid_lons = np.arange(extent['min_lon'], extent['max_lon'], 0.01)
+    grid_lats = np.arange(extent['min_lat'], extent['max_lat'], 0.01)
+
+    lma_norm = colors.LogNorm(vmin=1, vmax=150)
+
+    H, X_edges, Y_edges = np.histogram2d(wtlma_data['lon'], wtlma_data['lat'],
+                          bins=nbins, range=[[extent['min_lon'], extent['max_lon']], [extent['min_lat'], extent['max_lat']]])
+
+    lma_mesh = ax.pcolormesh(X_edges, Y_edges, H.T, norm=lma_norm, transform=ccrs.PlateCarree(), cmap=cm.inferno, zorder=3)
+    lma_bounds = [5, 10, 15, 20, 25, 50, 100, 150]
+    cbar = plt.colorbar(lma_mesh, ticks=lma_bounds, spacing='proportional',fraction=0.046, pad=0.04)
+    cbar.ax.set_yticklabels([str(x) for x in lma_bounds])
+    cbar.set_label('WTLMA Source Density')
+
+    for x in [100, 250]:
+        coord_list = geodesic_point_buffer(cent_lat, cent_lon, x)
+        lats = [float(x[1]) for x in coord_list.coords[:]]
+        max_lat = max(lats)
+
+        # https://stackoverflow.com/questions/27574897/plotting-disconnected-entities-with-shapely-descartes-and-matplotlib
+        mpl_poly = Polygon(np.array(coord_list), ec="r", fc="none", transform=ccrs.PlateCarree(),
+                           linewidth=1.25, zorder=2)
+        ax.add_patch(mpl_poly)
+        plt.text(cent_lon, max_lat + 0.05, str(x) + " km", color = "r", horizontalalignment="center", transform=ccrs.PlateCarree(),
+                 fontsize = 15)
+
+    if (len(wtlma_obj_list) == 1):
+        plt.title('WTLMA Flashes {}'.format(wtlma_obj_list[0]._start_time_pp()), loc='right')
+    else:
+        plt.title('WTLMA Flashes {} to {}'.format(wtlma_obj_list[0]._data_start_pp(), wtlma_obj_list[-1]._data_end_pp()), loc='right')
+    #plt.tight_layout()
+    #plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
 
 
