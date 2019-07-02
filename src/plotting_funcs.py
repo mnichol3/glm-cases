@@ -17,13 +17,10 @@ from plotting_utils import to_file, load_data, load_coordinates, parse_coord_fna
 from plotting_utils import geodesic_point_buffer
 
 
-def plot_mercator_dual(glm_obj, extent_coords, wtlma_obj):
+def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None, range_rings=False):
 
     globe = ccrs.Globe(semimajor_axis=glm_obj.data['semi_major_axis'], semiminor_axis=glm_obj.data['semi_minor_axis'],
                        flattening=None, inverse_flattening=glm_obj.data['inv_flattening'])
-
-    ext_lats = [extent_coords[0][0], extent_coords[1][0]]
-    ext_lons = [extent_coords[0][1], extent_coords[1][1]]
 
     Xs, Ys = georeference(glm_obj.data['x'], glm_obj.data['y'], glm_obj.data['lon_0'], glm_obj.data['height'],
                           glm_obj.data['sweep_ang_axis'])
@@ -37,7 +34,23 @@ def plot_mercator_dual(glm_obj, extent_coords, wtlma_obj):
 
     ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=1)
 
-    ax.set_extent([min(ext_lons), max(ext_lons), min(ext_lats), max(ext_lats)], crs=ccrs.PlateCarree())
+    cent_lat = float(wtlma_obj.coord_center[0])
+    cent_lon = float(wtlma_obj.coord_center[1])
+
+    if (grid_extent is None):
+        bounds = geodesic_point_buffer(cent_lat, cent_lon, 300)
+        lats = [float(x[1]) for x in bounds.coords[:]]
+        lons = [float(x[0]) for x in bounds.coords[:]]
+        extent = {'min_lon': min(lons), 'max_lon': max(lons), 'min_lat': min(lats), 'max_lat': max(lats)}
+        del lats
+        del lons
+    else:
+        extent = grid_extent
+
+    ax.set_extent([extent['min_lon'], extent['max_lon'], extent['min_lat'], extent['max_lat']], crs=ccrs.PlateCarree())
+
+    grid_lons = np.arange(extent['min_lon'], extent['max_lon'], 0.01)
+    grid_lats = np.arange(extent['min_lat'], extent['max_lat'], 0.01)
 
     bounds = [5, 10, 20, 50, 100, 150, 200, 300, 400]
     glm_norm = colors.LogNorm(vmin=1, vmax=max(bounds))
@@ -51,25 +64,38 @@ def plot_mercator_dual(glm_obj, extent_coords, wtlma_obj):
     scat = plt.scatter(wtlma_obj.data['lon'], wtlma_obj.data['lat'], c=wtlma_obj.data['P'],
                        marker='o', s=100, cmap=cm.gist_ncar_r, vmin=-20, vmax=100, zorder=3, transform=ccrs.PlateCarree())
     cbar2 = plt.colorbar(scat, fraction=0.046, pad=0.04)
-    cbar2.set_label('WTLMA Flash Power (dBW)')
+    cbar2.set_label('WTLMA Source Power (dBW)')
 
-    plt.title('GLM FED {} {}\n WTLMA Flashes {}'.format(glm_obj.scan_date, glm_obj.scan_time, wtlma_obj._start_time_pp()), loc='right')
+    if (points_to_plot is not None):
+        plt.plot([points_to_plot[0][1], points_to_plot[1][1]], [points_to_plot[0][0], points_to_plot[1][0]],
+                           marker='o', color='r', zorder=4, transform=ccrs.PlateCarree())
+
+    if (range_rings):
+        clrs = ['g', 'y']
+        for idx, x in enumerate([100, 250]):
+            coord_list = geodesic_point_buffer(cent_lat, cent_lon, x)
+            lats = [float(x[1]) for x in coord_list.coords[:]]
+            max_lat = max(lats)
+
+            # https://stackoverflow.com/questions/27574897/plotting-disconnected-entities-with-shapely-descartes-and-matplotlib
+            mpl_poly = Polygon(np.array(coord_list), ec=clrs[idx], fc="none", transform=ccrs.PlateCarree(),
+                               linewidth=1.25, zorder=2)
+            ax.add_patch(mpl_poly)
+
+    plt.title('GLM FED {} {}\n WTLMA Sources {}'.format(glm_obj.scan_date, glm_obj.scan_time, wtlma_obj._start_time_pp()), loc='right')
     plt.tight_layout()
     plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
 
 
 
-def plot_mercator_dual_2(glm_obj, extent_coords, wtlma_obj):
+def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None, range_rings=False):
     """
     Same as plot_mercator_dual(), except it plots the wtlma strokes as
     power densities
     """
     globe = ccrs.Globe(semimajor_axis=glm_obj.data['semi_major_axis'], semiminor_axis=glm_obj.data['semi_minor_axis'],
                        flattening=None, inverse_flattening=glm_obj.data['inv_flattening'])
-
-    ext_lats = [extent_coords[0][0], extent_coords[1][0]]
-    ext_lons = [extent_coords[0][1], extent_coords[1][1]]
 
     Xs, Ys = georeference(glm_obj.data['x'], glm_obj.data['y'], glm_obj.data['lon_0'], glm_obj.data['height'],
                           glm_obj.data['sweep_ang_axis'])
@@ -83,8 +109,23 @@ def plot_mercator_dual_2(glm_obj, extent_coords, wtlma_obj):
 
     ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=1)
 
-    ax.set_extent([min(ext_lons), max(ext_lons), min(ext_lats), max(ext_lats)], crs=ccrs.PlateCarree())
+    cent_lat = float(wtlma_obj.coord_center[0])
+    cent_lon = float(wtlma_obj.coord_center[1])
 
+    if (grid_extent is None):
+        bounds = geodesic_point_buffer(cent_lat, cent_lon, 300)
+        lats = [float(x[1]) for x in bounds.coords[:]]
+        lons = [float(x[0]) for x in bounds.coords[:]]
+        extent = {'min_lon': min(lons), 'max_lon': max(lons), 'min_lat': min(lats), 'max_lat': max(lats)}
+        del lats
+        del lons
+    else:
+        extent = grid_extent
+
+    ax.set_extent([extent['min_lon'], extent['max_lon'], extent['min_lat'], extent['max_lat']], crs=ccrs.PlateCarree())
+
+    grid_lons = np.arange(extent['min_lon'], extent['max_lon'], 0.01)
+    grid_lats = np.arange(extent['min_lat'], extent['max_lat'], 0.01)
 
     bounds = [5, 10, 20, 50, 100, 150, 200, 300, 400]
     glm_norm = colors.LogNorm(vmin=1, vmax=max(bounds))
@@ -95,24 +136,36 @@ def plot_mercator_dual_2(glm_obj, extent_coords, wtlma_obj):
     cbar1.ax.set_yticklabels([str(x) for x in bounds])
     cbar1.set_label('GLM Flash Extent Density')
 
-
-    grid_lons = np.arange(min(ext_lons), max(ext_lons), 0.01)
-    grid_lats = np.arange(min(ext_lats), max(ext_lats), 0.01)
-
-    lma_norm = colors.LogNorm(vmin=1, vmax=150)
+    lma_norm = colors.LogNorm(vmin=1, vmax=400)
 
     H, X_edges, Y_edges = np.histogram2d(wtlma_obj.data['lon'], wtlma_obj.data['lat'],
-                          bins=250, range=[[min(ext_lons), max(ext_lons)], [min(ext_lats), max(ext_lats)]],
+                          bins=250, range=[[extent['min_lon'], extent['max_lon']], [extent['min_lat'], extent['max_lat']]],
                           weights=wtlma_obj.data['P']) # bins=[len(grid_lons), len(grid_lats)]
 
     lma_mesh = plt.pcolormesh(X_edges, Y_edges, H.T, norm=lma_norm, transform=ccrs.PlateCarree(), cmap=cm.inferno, zorder=2)
 
-    lma_bounds = [5, 10, 15, 20, 25, 50, 100, 150]
+    lma_bounds = [5, 10, 15, 20, 25, 50, 100, 200, 300, 400]
     cbar2 = plt.colorbar(lma_mesh, ticks=lma_bounds, spacing='proportional',fraction=0.046, pad=0.04)
     cbar2.ax.set_yticklabels([str(x) for x in lma_bounds])
-    cbar2.set_label('WTLMA Flash Power Density (dBW)')
+    cbar2.set_label('WTLMA Source Power Density (dBW)')
 
-    plt.title('GLM FED {} {}\n WTLMA Flashes {}'.format(glm_obj.scan_date, glm_obj.scan_time, wtlma_obj._start_time_pp()), loc='right')
+    if (points_to_plot is not None):
+        plt.plot([points_to_plot[0][1], points_to_plot[1][1]], [points_to_plot[0][0], points_to_plot[1][0]],
+                           marker='o', color='r', zorder=4, transform=ccrs.PlateCarree())
+
+    if (range_rings):
+        clrs = ['g', 'y']
+        for idx, x in enumerate([100, 250]):
+            coord_list = geodesic_point_buffer(cent_lat, cent_lon, x)
+            lats = [float(x[1]) for x in coord_list.coords[:]]
+            max_lat = max(lats)
+
+            # https://stackoverflow.com/questions/27574897/plotting-disconnected-entities-with-shapely-descartes-and-matplotlib
+            mpl_poly = Polygon(np.array(coord_list), ec=clrs[idx], fc="none", transform=ccrs.PlateCarree(),
+                               linewidth=1.25, zorder=2)
+            ax.add_patch(mpl_poly)
+
+    plt.title('GLM FED {} {}\n WTLMA Sources {}'.format(glm_obj.scan_date, glm_obj.scan_time, wtlma_obj._start_time_pp()), loc='right')
     plt.tight_layout()
     plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
@@ -547,7 +600,7 @@ def plot_mrms_cross_section_inset(data=None, inset_data=None, inset_lons=None, i
 
 
 
-def plot_wtlma(wtlma_obj_list, grid_extent=None, nbins=1000):
+def plot_wtlma(wtlma_obj_list, grid_extent=None, nbins=1000, points_to_plot=None):
 
     if (not isinstance(wtlma_obj_list, list)):
         wtlma_obj_list = [wtlma_obj_list]
@@ -594,6 +647,10 @@ def plot_wtlma(wtlma_obj_list, grid_extent=None, nbins=1000):
     cbar = plt.colorbar(lma_mesh, ticks=lma_bounds, spacing='proportional',fraction=0.046, pad=0.04)
     cbar.ax.set_yticklabels([str(x) for x in lma_bounds])
     cbar.set_label('WTLMA Source Density')
+
+    if (points_to_plot is not None):
+        plt.plot([points_to_plot[0][1], points_to_plot[1][1]], [points_to_plot[0][0], points_to_plot[1][0]],
+                           marker='o', color='r', zorder=4, transform=ccrs.PlateCarree())
 
     for x in [100, 250]:
         coord_list = geodesic_point_buffer(cent_lat, cent_lon, x)

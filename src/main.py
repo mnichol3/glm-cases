@@ -34,14 +34,30 @@ def main():
     point1 = (35.565, -101.365)
     point2 = (36.045, -101.115)
 
+    """
+    lma_objs = []
+    wtlma_files = wtlma.get_files_in_range(local_wtlma_path, '05-23-2019-21:00', '05-23-2019-21:55')
 
+    for f in wtlma_files:
+        abs_path = wtlma._parse_abs_path(local_wtlma_path, f)
+        lma_objs.append(wtlma.parse_file(abs_path))
+    plotting_funcs.plot_wtlma(lma_objs, points_to_plot=(point1, point2))
+    """
+
+    """
     wtlma_data = wtlma.parse_file(abs_path_wtlma, sub_t='21:19')
     wtlma_data._set_data(plotting_utils.filter_by_dist(wtlma_data.data, 3000, point1, point2, 100))
+    plotting_funcs.run_mrms_xsect(local_mrms_path, '2119', point1, point2)
+    """
 
-    #plotting_funcs.run_mrms_xsect(local_mrms_path, '2119', point1, point2)
+    glm_data = glm_utils.read_file(abs_path_glm, meta=True, window=False)
+    wtlma_data = wtlma.parse_file(abs_path_wtlma, sub_t='21:21')
+    plotting_funcs.plot_mercator_dual_2(glm_data, wtlma_data, points_to_plot=(point1, point2), range_rings=True)
 
-    cross_data, lats, lons = plotting_utils.process_slice(local_mrms_path, '2119', point1, point2)
-    plotting_funcs.plot_mrms_cross_section2(data=cross_data, lons=lons, lats=lats, wtlma_df=wtlma_data.data)
+
+    #cross_data, lats, lons = plotting_utils.process_slice(local_mrms_path, '2119', point1, point2)
+    #plotting_funcs.plot_mrms_cross_section2(data=cross_data, lons=lons, lats=lats, wtlma_df=wtlma_data.data)
+    #lma_extent = {'min_lon': -101.365, 'max_lon': -101.115, 'min_lat': 35.565, 'max_lat': 36.045}
 
 
     #plotting_funcs.plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtlma_df=None)
