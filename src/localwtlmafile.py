@@ -47,5 +47,26 @@ class LocalWtlmaFile(object):
 
 
 
+    def _data_start_pp(self):
+        date, _ = self.start_time.split('-')
+        year = date[:4]
+        month = date[4:6]
+        day = date[-2:]
+        time = self.data['time'].iloc[0]
+        pp = month + '-' + day + '-' + year + ' ' + time
+        return pp
+
+
+
+    def _data_end_pp(self):
+        date, _ = self.start_time.split('-')
+        year = date[:4]
+        month = date[4:6]
+        day = date[-2:]
+        time = self.data['time'].iloc[-1]
+        pp = month + '-' + day + '-' + year + ' ' + time
+        return pp
+
+
     def __repr__(self):
         return '<LocalWtlmaFile object - {}>'.format(self.start_time)
