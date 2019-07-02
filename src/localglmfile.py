@@ -13,7 +13,7 @@ class LocalGLMFile(object):
         super(LocalGLMFile, self).__init__()
         self._scan_date_re = re.compile(r'\.(\d{8})')
         self._scan_time_re = re.compile(r'_\d{2}(\d{4})_')
-        self.filepath = None
+        self.abs_path = abs_path
         self.filename = None
         self.scan_date = None
         self.scan_time = None
@@ -31,7 +31,7 @@ class LocalGLMFile(object):
 
 
     def _parse_fname(self, abs_path):
-        self.filepath, self.filename = os.path.split(abs_path)
+        _, self.filename = os.path.split(abs_path)
 
 
 
