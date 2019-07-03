@@ -15,6 +15,18 @@ import plotting_utils
 
 
 
+def make_wtlma_plot(base_path, start, stop, points_to_plot=None):
+    # '05-23-2019-21:00', '05-23-2019-21:55'
+    lma_objs = []
+    wtlma_files = wtlma.get_files_in_range(local_wtlma_path, start, stop)
+
+    for f in wtlma_files:
+        abs_path = wtlma._parse_abs_path(local_wtlma_path, f)
+        lma_objs.append(wtlma.parse_file(abs_path))
+    plotting_funcs.plot_wtlma(lma_objs, points_to_plot=points_to_plot)
+
+
+
 def main():
     local_abi_path = '/media/mnichol3/pmeyers1/MattNicholson/goes'
     local_wtlma_path = '/media/mnichol3/pmeyers1/MattNicholson/wtlma'
@@ -38,16 +50,6 @@ def main():
     # 21:19
     point1 = (35.565, -101.365)
     point2 = (36.045, -101.115)
-
-    """
-    lma_objs = []
-    wtlma_files = wtlma.get_files_in_range(local_wtlma_path, '05-23-2019-21:00', '05-23-2019-21:55')
-
-    for f in wtlma_files:
-        abs_path = wtlma._parse_abs_path(local_wtlma_path, f)
-        lma_objs.append(wtlma.parse_file(abs_path))
-    plotting_funcs.plot_wtlma(lma_objs, points_to_plot=(point1, point2))
-    """
 
     abs_path_wtlma = '/media/mnichol3/pmeyers1/MattNicholson/wtlma/2019/05/23/LYLOUT_190523_211000_0600.dat'
     wtlma_data = wtlma.parse_file(abs_path_wtlma, sub_t='21:19')
