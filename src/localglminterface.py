@@ -31,7 +31,7 @@ def print_files(base_path, hour=None):
 
 
 def get_files(base_path, hour=None):
-    files = [LocalGLMFile(f) for f in listdir(base_path) if isfile(join(base_path, f))]
+    files = [LocalGLMFile(join(base_path, f)) for f in listdir(base_path) if isfile(join(base_path, f))]
 
     if (hour is not None):
         filtered = [f for f in files if f.scan_time[0:2] == hour]
