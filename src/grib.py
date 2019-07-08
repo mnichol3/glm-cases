@@ -103,7 +103,9 @@ def get_grb_data(abs_path, point1, point2, missing=0, debug=False):
 
     grid = init_grid()
     point1, point2 = _augment_coords(point1, point2)
+
     min_lat, max_lat, min_lon, max_lon = get_bbox_indices(grid, point1, point2)
+
     grid_lons, grid_lats = subset_grid(grid, [min_lat, max_lat, min_lon, max_lon]) # (lons, lats)
 
     grb_file = pygrib.open(abs_path)
@@ -121,7 +123,9 @@ def get_grb_data(abs_path, point1, point2, missing=0, debug=False):
     path, fname = abs_path.rsplit('/', 1)
     data_shape = data.shape
 
-    fp = np.memmap(join(memmap_path, fname.replace('grib2', 'txt')), dtype='float32', mode='w+', shape=data_shape)
+    out_path = join(memmap_path, fname.replace('grib2', 'txt'))
+
+    fp = np.memmap(out_path, dtype='float32', mode='w+', shape=data_shape)
     fp[:] = data[:]
     del fp
 
@@ -323,11 +327,19 @@ def get_bbox_indices(grid, point1, point2, debug=False):
     lats = np.array([point1[0], point2[0]])
     lons = np.array([point1[1], point2[1]])
 
+    min_lon = (np.abs(grid_lons - np.amin(lons))).argmin()
+    max_lon = (np.abs(grid_lons - np.amax(lons))).argmin()
+
+    min_lat = (np.abs(grid_lats - np.amin(lats))).argmin()
+    max_lat = (np.abs(grid_lats - np.amax(lats))).argmin()
+
+    """
     min_lon = np.where(grid_lons == np.amin(lons))[0][0]
     max_lon = np.where(grid_lons == np.amax(lons))[0][0]
 
     min_lat = np.where(grid_lats == np.amin(lats))[0][0]
     max_lat = np.where(grid_lats == np.amax(lats))[0][0]
+    """
 
     #indices = {'min_lon': min_lon[0][0], 'max_lon': max_lon[0][0], 'min_lat': min_lat[0][0], 'max_lat': max_lat[0][0]}
 
@@ -492,7 +504,7 @@ def fetch_scans(base_path, time, angles=None):
 
     for subdir, dirs, files in walk(base_path):
         curr_fname = None
-        curr_tdelta = 100000
+        curr_tdelta = 6
         for file in files:
             time_match = time_re.search(file)
             if (time_match is not None):
