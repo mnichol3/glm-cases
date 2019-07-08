@@ -63,18 +63,11 @@ def main():
         point1 = (step['lat1'], step['lon1'])
         point2 = (step['lat2'], step['lon2'])
 
-        #print(grib.trunc(point1, 3))
-        #print(grib.trunc(point2, 3))
+        point1 = grib.trunc(point1, 3)
+        point2 = grib.trunc(point2, 3)
 
         make_mrms_glm_plot(local_mrms_path, local_glm_path, step['date'], step['mrms-time'], point1, point2)
 
-    # 2120
-    #point1 = (37.195, -102.185)
-    #point2 = (34.565, -99.865)
-
-    # 21:19
-    point1 = (35.565, -101.365)
-    point2 = (36.045, -101.115)
 
     """
     abs_path_wtlma = '/media/mnichol3/pmeyers1/MattNicholson/wtlma/2019/05/23/LYLOUT_190523_211000_0600.dat'
