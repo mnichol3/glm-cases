@@ -4,6 +4,9 @@ import scipy.ndimage
 import matplotlib as mpl
 import numpy as np
 import cartopy.crs as ccrs
+import matplotlib.ticker as mticker
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 from cartopy.feature import NaturalEarthFeature
 import matplotlib.cm as cm
 import matplotlib.colors as colors
@@ -681,6 +684,70 @@ def plot_wtlma(wtlma_obj_list, grid_extent=None, nbins=1000, points_to_plot=None
         plt.title('WTLMA Flashes {} to {}'.format(wtlma_obj_list[0]._data_start_pp(), wtlma_obj_list[-1]._data_end_pp()), loc='right')
     #plt.tight_layout()
     #plt.gca().set_aspect('equal', adjustable='box')
+    plt.show()
+
+
+
+def plot_mrms_glm(grb_obj, glm_obj):
+    globe = ccrs.Globe(semimajor_axis=glm_obj.data['semi_major_axis'], semiminor_axis=glm_obj.data['semi_minor_axis'],
+                       flattening=None, inverse_flattening=glm_obj.data['inv_flattening'])
+
+    Xs, Ys = georeference(glm_obj.data['x'], glm_obj.data['y'], glm_obj.data['lon_0'], glm_obj.data['height'],
+                          glm_obj.data['sweep_ang_axis'])
+
+    fig = plt.figure(figsize=(10, 5))
+
+    ax = fig.add_subplot(111, projection=ccrs.Mercator(globe=globe))
+
+    states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='black',
+                             name='admin_1_states_provinces_shp', zorder=0)
+
+    ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=1)
+
+    ax.set_extent([min(grb_obj.grid_lons), max(grb_obj.grid_lons), min(grb_obj.grid_lats), max(grb_obj.grid_lats)], crs=ccrs.PlateCarree())
+
+    mrms_ref = np.memmap(grb_obj.get_data_path(), dtype='float32', mode='r', shape=grb_obj.shape)
+    mrms_ref = np.asarray(mrms_ref)
+    mrms_ref = mrms_ref.astype('float')
+    mrms_ref[mrms_ref == 0] = np.nan
+
+    refl = plt.pcolormesh(grb_obj.grid_lons, grb_obj.grid_lats, mrms_ref, transform=ccrs.PlateCarree(), cmap=cm.gist_ncar, zorder=2)
+
+    bounds = [5, 10, 20, 50, 100, 150, 200, 300, 400]
+    glm_norm = colors.LogNorm(vmin=1, vmax=max(bounds))
+
+    cmesh = plt.pcolormesh(Xs, Ys, glm_obj.data['data'], norm=glm_norm, transform=ccrs.PlateCarree(), cmap=cm.jet, zorder=3)
+    cbar2 = plt.colorbar(refl,fraction=0.046, pad=0.04)
+    plt.setp(cbar2.ax.yaxis.get_ticklabels(), fontsize=12)
+    cbar2.set_label('Reflectivity (dbz)', fontsize = 14, labelpad = 20)
+
+    cbar1 = plt.colorbar(cmesh, norm=glm_norm, ticks=bounds, spacing='proportional', fraction=0.046, pad=0.04)
+    cbar1.ax.set_yticklabels([str(x) for x in bounds])
+    cbar1.set_label('GLM Flash Extent Density')
+
+    lon_ticks = [x for x in range(-180, 181)]
+    lat_ticks = [x for x in range(-90, 91)]
+
+    gl = ax.gridlines(crs=ccrs.PlateCarree(), linewidth=1, color='gray',
+                      alpha=0.5, linestyle='--', draw_labels=True)
+    gl.xlabels_top = False
+    gl.ylabels_right=False
+    gl.xlocator = mticker.FixedLocator(lon_ticks)
+    gl.ylocator = mticker.FixedLocator(lat_ticks)
+    gl.xformatter = LONGITUDE_FORMATTER
+    gl.yformatter = LATITUDE_FORMATTER
+    gl.xlabel_style = {'color': 'red', 'weight': 'bold'}
+    gl.ylabel_style = {'color': 'red', 'weight': 'bold'}
+
+    # Increase font size of colorbar tick labels
+    plt.title('MRMS Reflectivity ' + str(grb_obj.validity_date) + ' ' + str(grb_obj.validity_time) + 'z')
+
+    plt.tight_layout()
+
+    fig = plt.gcf()
+    fig.set_size_inches((8.5, 11), forward=False)
+    #fig.savefig(join(out_path, scan_date.strftime('%Y'), scan_date.strftime('%Y%m%d-%H%M')) + '.png', dpi=500)
+
     plt.show()
 
 
