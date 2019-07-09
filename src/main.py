@@ -72,10 +72,6 @@ def main():
     local_mrms_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
     memmap_path = '/media/mnichol3/pmeyers1/MattNicholson/data'
 
-    abs_path_glm = '/media/mnichol3/pmeyers1/MattNicholson/glm/glm20190523/IXTR99_KNES_232121_40312.2019052321'
-    abs_path_wtlma = '/media/mnichol3/pmeyers1/MattNicholson/wtlma/2019/05/23/LYLOUT_190523_212000_0600.dat'
-
-
     case_coords = '/home/mnichol3/Coding/glm-cases/resources/05232019-coords.txt'
     d_dict = {'date': str, 'wsr-time': str, 'mrms-time': str, 'lat1': float,
               'lon1': float, 'lat2': float, 'lon2': float}
@@ -89,15 +85,13 @@ def main():
         point1 = grib.trunc(point1, 3)
         point2 = grib.trunc(point2, 3)
 
-        dt = _format_date_time(step['date'], step['mrms-time'])
-        files = wtlma.get_files_in_range(local_wtlma_path, dt, dt)
-        path = wtlma._parse_abs_path(local_wtlma_path, files[0])
 
-        exit(0)
+        make_mrms_xsect2(local_mrms_path, local_wtlma_path, step['date'], step['mrms-time'], point1, point2)
+
         #make_mrms_glm_plot(local_mrms_path, local_glm_path, step['date'], step['mrms-time'], point1, point2)
 
 
-    
+
     #glm_data = glm_utils.read_file(abs_path_glm, meta=True, window=True)
     #glm_data = glm_utils.read_file(abs_path_glm, meta=True, window=True)
 
