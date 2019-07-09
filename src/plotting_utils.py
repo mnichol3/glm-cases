@@ -525,7 +525,21 @@ def get_composite_ref(base_path, slice_time, point1, point2, memmap_path):
 
 def calc_coords(point1, point2, num):
     """
-    
+    Calculates the coordinates for a number, num, of points along the line
+    defined by point1 and point2
+
+    Parameters
+    ----------
+    point1 : tuple of floats
+        Format: (lat, lon)
+    point2 : tuple of floats
+        Format: (lat, lon)
+
+    Returns
+    -------
+    Tuple of lists
+        Tuple containing the lists of latitude and longitude coordinates
+        Format: (lats, lons)
     """
     xs = [point1[1], point2[1]]
     ys = [point1[0], point2[0]]
