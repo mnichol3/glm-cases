@@ -227,6 +227,30 @@ def get_cross_neighbor(grb, point1, point2, first=False):
 
 
 def process_slice(base_path, slice_time, point1, point2, write=False):
+    """
+    Does all the heavy lifting to compute a vertical cross section slice of MRMS
+    data
+
+    Parameters
+    ----------
+    base_path : str
+        Path to the parent MRMS data directory
+    slice_time : str
+        Validity time of the desired data
+    point1 : tuple of floats
+        First coordinate pair defining the cross section
+        Format: (lat, lon)
+    point2 : tuple of floats
+        Second coordinate pair defining the cross section
+        Format: (lat, lon)
+    write: bool, optional
+        If true, the cross section array will be written to a file
+
+    Returns
+    -------
+    Tuple
+        Contains the cross section array, lats, and lons
+    """
     BASE_PATH_XSECT = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
     BASE_PATH_XSECT_COORDS = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/coords'
 
@@ -257,6 +281,27 @@ def process_slice(base_path, slice_time, point1, point2, write=False):
 
 def process_slice_inset(base_path, slice_time, point1, point2):
     """
+    Does all the heavy lifting to compute a vertical cross section slice of MRMS
+    data with geographical plot inset
+
+    Parameters
+    ----------
+    base_path : str
+        Path to the parent MRMS data directory
+    slice_time : str
+        Validity time of the desired data
+    point1 : tuple of floats
+        First coordinate pair defining the cross section
+        Format: (lat, lon)
+    point2 : tuple of floats
+        Second coordinate pair defining the cross section
+        Format: (lat, lon)
+
+    Returns
+    -------
+    Dictionary
+        Keys: x_sect, f_inset_lons, f_inset_lats, f_inset_data
+
     ex:
         dict = process_slice2(base_path, slice_time, point1, point2)
         plot_cross_section_inset(inset_data=dict['f_inset_data'], inset_lons=dict['f_inset_lons'],
@@ -418,6 +463,28 @@ def filter_by_dist(lma_df, dist, start_point, end_point, num_pts):
 
 
 def get_composite_ref(base_path, slice_time, point1, point2, memmap_path):
+    """
+    Creates a composite reflectivity product from the 33 MRMS scan angles
+
+    Parameters
+    ----------
+    base_path : str
+        Path of the parent MRMS data directory
+    slice_time : str
+        Validity time of the desired data
+    point1 : tuple of floats
+        First coordinate pair defining the cross section
+        Format: (lat, lon)
+    point2 : tuple of floats
+        Second coordinate pair defining the cross section
+        Format: (lat, lon)
+    memmap_path : str
+        Path to the directory being used to store memory-mapped array files
+
+    Returns
+    -------
+    comp_obj : MRMSComposite object
+    """
     #memmap_path = '/media/mnichol3/pmeyers1/MattNicholson/data'
     scans = fetch_scans(base_path, slice_time)
 
@@ -457,6 +524,9 @@ def get_composite_ref(base_path, slice_time, point1, point2, memmap_path):
 
 
 def calc_coords(point1, point2, num):
+    """
+    
+    """
     xs = [point1[1], point2[1]]
     ys = [point1[0], point2[0]]
 
