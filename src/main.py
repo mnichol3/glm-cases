@@ -18,6 +18,24 @@ import plotting_utils
 
 
 def make_wtlma_plot(base_path, start, stop, points_to_plot=None):
+    """
+    Contains helper-function calls needed for plot_wtlma()
+
+    Parameters
+    ----------
+    base_path : str
+        Path the the parent directory of the WTLMA data
+    start : str
+        Beginning of the data accumulation period
+        Format: MM-DD-YYYY-HH:MM
+    end : str
+        End of the data accumulation period
+        Format: MM-DD-YYYY-HH:MM
+    points_to_plot : list of tuple, optional
+        List of coordinates to plot, used to illustrate the location of the
+        MRMS cross section.
+        Format: [(lat1, lon1), (lat2, lon2)]
+    """
     # '05-23-2019-21:00', '05-23-2019-21:55'
     lma_objs = []
     wtlma_files = wtlma.get_files_in_range(local_wtlma_path, start, stop)
@@ -30,6 +48,24 @@ def make_wtlma_plot(base_path, start, stop, points_to_plot=None):
 
 
 def make_mrms_glm_plot(local_mrms_path, local_glm_path, date, time, point1, point2):
+    """
+    Contains helper-function calls needed for plot_mrms_glm()
+
+    Parameters
+    ----------
+    local_mrms_path : str
+        Path the the parent directory of the MRMS data
+    local_wtlma_path : str
+        Path the the parent directory of the WTLMA data
+    date : str
+        Format: MMDDYYYY
+    time : str
+        Format: HHMM
+    point1 : tuple of floats
+        First point defining the cross section
+    point2 : tuple of floats
+        Second point defining the cross section
+    """
     mrms_scans = grib.fetch_scans(local_mrms_path, time)
     mrms_obj = grib.get_grib_objs(mrms_scans[12], local_mrms_path, point1, point2)[0]
 
@@ -44,6 +80,24 @@ def make_mrms_glm_plot(local_mrms_path, local_glm_path, date, time, point1, poin
 
 
 def make_mrms_xsect2(local_mrms_path, local_wtlma_path, date, time, point1, point2):
+    """
+    Contains helper-function calls needed for run_mrms_xsect2()
+
+    Parameters
+    ----------
+    local_mrms_path : str
+        Path the the parent directory of the MRMS data
+    local_wtlma_path : str
+        Path the the parent directory of the WTLMA data
+    date : str
+        Format: MMDDYYYY
+    time : str
+        Format: HHMM
+    point1 : tuple of floats
+        First point defining the cross section
+    point2 : tuple of floats
+        Second point defining the cross section
+    """
     dt = _format_date_time(date, time)
     sub_time = _format_time_wtlma(time)
 
