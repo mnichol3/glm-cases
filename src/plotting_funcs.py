@@ -21,6 +21,22 @@ from plotting_utils import geodesic_point_buffer
 
 
 def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None, range_rings=False):
+    """
+    Plots both GLM FED, as a colormesh, and WTLMA sources, as points.
+
+    Parameters
+    ----------
+    glm_obj : LocalGLMFile
+    wtlma_obj : LocalWTLMAFile
+    grid_extent : dictionary
+        Dictionary that defines the extent of the data grid
+        Keys: min_lon, max_lon, min_lat, max_lat
+    points_to_plot : tuple of tuples or list of tuples, optional
+        Format: [(lat1, lon1), (lat2, lon2)]
+    range_rings : bool, optional
+        If true, plots color-coded WTLMA range-rings to indicate the possibly
+        decrease in data quality due to distance
+    """
 
     globe = ccrs.Globe(semimajor_axis=glm_obj.data['semi_major_axis'], semiminor_axis=glm_obj.data['semi_minor_axis'],
                        flattening=None, inverse_flattening=glm_obj.data['inv_flattening'])
@@ -96,6 +112,19 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
     """
     Same as plot_mercator_dual(), except it plots the wtlma strokes as
     power densities
+
+    Parameters
+    ----------
+    glm_obj : LocalGLMFile
+    wtlma_obj : LocalWTLMAFile
+    grid_extent : dictionary
+        Dictionary that defines the extent of the data grid
+        Keys: min_lon, max_lon, min_lat, max_lat
+    points_to_plot : tuple of tuples or list of tuples, optional
+        Format: [(lat1, lon1), (lat2, lon2)]
+    range_rings : bool, optional
+        If true, plots color-coded WTLMA range-rings to indicate the possibly
+        decrease in data quality due to distance
     """
     globe = ccrs.Globe(semimajor_axis=glm_obj.data['semi_major_axis'], semiminor_axis=glm_obj.data['semi_minor_axis'],
                        flattening=None, inverse_flattening=glm_obj.data['inv_flattening'])
@@ -548,12 +577,6 @@ def plot_mrms_cross_section_inset(data=None, inset_data=None, inset_lons=None, i
     -------
     None, displays a plot of the reflectivity cross section
     """
-    import cartopy.crs as ccrs
-    import matplotlib.ticker as mticker
-    from mpl_toolkits.axes_grid1 import make_axes_locatable
-    from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-    from cartopy.feature import NaturalEarthFeature
-
     scan_angles = np.array([0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75,
                             3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9,
                             10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
@@ -615,6 +638,21 @@ def plot_mrms_cross_section_inset(data=None, inset_data=None, inset_lons=None, i
 
 
 def plot_wtlma(wtlma_obj_list, grid_extent=None, nbins=1000, points_to_plot=None):
+    """
+    Plots WTLMA data as a colormesh
+
+    Parameters
+    ----------
+    wtlma_obj_list : list of LocalWTLMAFile objects
+    grid_extent : Dictionary, optional
+        Defines the extent of the grid
+        Keys: min_lat, max_lat, min_lon, max_lon
+    nbins : int, optional
+        Number of bins to use when computing the 2D histogram. Default is 1000
+    points_to_plot : list of tuples, optional
+        Coordinate pairs to plot
+        Format: [(lat1, lon1), (lat2, lon2)]
+    """
 
     if (not isinstance(wtlma_obj_list, list)):
         wtlma_obj_list = [wtlma_obj_list]
@@ -689,6 +727,16 @@ def plot_wtlma(wtlma_obj_list, grid_extent=None, nbins=1000, points_to_plot=None
 
 
 def plot_mrms_glm(grb_obj, glm_obj):
+    """
+    Plots MRMS and GLM data on a Mercator projection
+
+    Parameters
+    ----------
+    grb_obj : MRMSGrib object
+        MRMSGrib object containing the MRMS data to plot
+    glm_obj : LocalGLMFile object
+        LocalGLMFile object containing the GLM data to plot
+    """
     globe = ccrs.Globe(semimajor_axis=glm_obj.data['semi_major_axis'], semiminor_axis=glm_obj.data['semi_minor_axis'],
                        flattening=None, inverse_flattening=glm_obj.data['inv_flattening'])
 
@@ -753,8 +801,21 @@ def plot_mrms_glm(grb_obj, glm_obj):
 
 
 def run_mrms_xsect(base_path, slice_time, point1, point2):
-    base_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
-    f_out = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
+    """
+    Preforms some function calls needed to execute plot_mrms_cross_section()
+
+    Parameters
+    ----------
+    base_path : str
+        Path to the parent MRMS data directory
+    slice_time : str
+        Validity time of the MRMS data
+    point1 : tuple of floats
+        First point defining the cross section
+    point2 : tuple of floats
+        Second point defining the cross section
+    """
+    #f_out = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
 
     cross_data, lats, lons = process_slice(base_path, slice_time, point1, point2)
     plot_mrms_cross_section(data=cross_data, lons=lons, lats=lats)
@@ -762,12 +823,45 @@ def run_mrms_xsect(base_path, slice_time, point1, point2):
 
 
 def run_mrms_xsect2(base_path, slice_time, point1, point2, wtlma_obj, wtlma_coords):
+    """
+    Preforms some function calls needed to execute plot_mrms_cross_section2()
+
+    Parameters
+    ----------
+    base_path : str
+        Path to the parent MRMS data directory
+    slice_time : str
+        Validity time of the MRMS data
+    point1 : tuple of floats
+        First point defining the cross section
+    point2 : tuple of floats
+        Second point defining the cross section
+    wtlma_obj : LocalWTLMAFile obj
+        Object containing WTLMA data
+    wtlma_coords : list of tuple
+        List of coordinates of filtered WTLMA events (?)
+        Format: (lat, lon)
+    """
     cross_data, lats, lons = process_slice(base_path, slice_time, point1, point2)
     plot_mrms_cross_section2(data=cross_data, lons=lons, lats=lats, wtlma_obj=wtlma_obj, wtlma_coords=wtlma_coords)
 
 
 
 def run_mrms_xsect_inset(base_path, slice_time, point1, point2):
+    """
+    Preforms some function calls needed to execute plot_cross_section_inset()
+
+    Parameters
+    ----------
+    base_path : str
+        Path to the parent MRMS data directory
+    slice_time : str
+        Validity time of the MRMS data
+    point1 : tuple of floats
+        First point defining the cross section
+    point2 : tuple of floats
+        Second point defining the cross section
+    """
     base_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
     f_out = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
 
