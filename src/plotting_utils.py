@@ -512,6 +512,7 @@ def get_composite_ref(base_path, slice_time, point1, point2, memmap_path):
     fname = '{}-{}-{}'.format('comp_ref', valid_date, valid_time)
     outpath = join(memmap_path, fname)
 
+    # write the composite data to memmap arr
     fp = np.memmap(out_path, dtype='float32', mode='w+', shape=data_shape)
     fp[:] = composite[:]
     del fp
