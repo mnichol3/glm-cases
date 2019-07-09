@@ -432,6 +432,9 @@ def filter_by_dist(lma_df, dist, start_point, end_point, num_pts):
     -------
     subs_df : Pandas DataFrame
         DataFrame containing the filtered WTLMA events
+    coords : list of tuples
+        List of coordinates of filtered WTLMA events (?)
+        Format: (lat, lon)
     """
     if (not isinstance(dist, int)):
         raise TypeError('dist must be of type int')
