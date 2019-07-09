@@ -11,6 +11,7 @@ from shapely.ops import transform
 import pyproj
 
 from grib import fetch_scans, get_grib_objs
+from mrmscomposite import MRMSComposite, set_comp_data
 
 def to_file(out_path, f_name, data):
     """
@@ -413,6 +414,45 @@ def filter_by_dist(lma_df, dist, start_point, end_point, num_pts):
     subs_df = lma_df.iloc[idxs]
 
     return subs_df, coords
+
+
+
+def get_composite_ref(base_path, slice_time, point1, point2, memmap_path):
+    #memmap_path = '/media/mnichol3/pmeyers1/MattNicholson/data'
+    scans = fetch_scans(base_path, slice_time)
+
+    grbs = get_grib_objs(scans, base_path, point1, point2)
+
+    valid_date = grbs[0].validity_date
+    valid_time = grbs[0].validity_time
+    major_axis = grbs[0].major_axis
+    minor_axis = grbs[0].minor_axis
+    data_shape = grbs[0].shape
+
+    fname = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z.txt'
+
+    composite = np.memmap(grbs[0].get_data_path(), dtype='float32', mode='r', shape=grbs[0].shape)
+
+    for grb in grbs[1:]:
+        curr_ref = np.memmap(grb.get_data_path(), dtype='float32', mode='r', shape=grb.shape)
+
+        for idx, val in enumerate(composite):
+            for sub_idx, sub_val in enumerate(val):
+                if (curr_ref[idx][sub_idx] > composite[idx][sub_idx]):
+                    composite[idx][sub_idx] = curr_ref[idx][sub_idx]
+        del curr_ref
+
+    fname = '{}-{}-{}'.format('comp_ref', valid_date, valid_time)
+    outpath = join(memmap_path, fname)
+
+    fp = np.memmap(out_path, dtype='float32', mode='w+', shape=data_shape)
+    fp[:] = composite[:]
+    del fp
+
+    comp_obj = MRMSComposite(valid_date, valid_time, major_axis, minor_axis,
+                             outpath, fname, data_shape, grid_lons=grbs[0].grid_lons, grid_lats=grbs[0].grid_lats)
+
+    return comp_obj
 
 
 
