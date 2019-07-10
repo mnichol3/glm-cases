@@ -501,7 +501,11 @@ def get_composite_ref(base_path, slice_time, point1, point2, memmap_path):
 
     fname = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z.txt'
 
-    composite = np.memmap(grbs[0].get_data_path(), dtype='float32', mode='r', shape=grbs[0].shape)
+    scan_0 = np.memmap(grbs[0].get_data_path(), dtype='float32', mode='r', shape=grbs[0].shape)
+    composite = np.empty_like(scan_0)
+    composite[:] = scan_0
+
+    del scan_0
 
     for grb in grbs[1:]:
         curr_ref = np.memmap(grb.get_data_path(), dtype='float32', mode='r', shape=grb.shape)
@@ -516,7 +520,7 @@ def get_composite_ref(base_path, slice_time, point1, point2, memmap_path):
     outpath = join(memmap_path, fname)
 
     # write the composite data to memmap arr
-    fp = np.memmap(out_path, dtype='float32', mode='w+', shape=data_shape)
+    fp = np.memmap(outpath, dtype='float32', mode='w+', shape=data_shape)
     fp[:] = composite[:]
     del fp
 
