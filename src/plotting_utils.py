@@ -11,7 +11,7 @@ from shapely.ops import transform
 import pyproj
 
 from grib import fetch_scans, get_grib_objs
-from mrmscomposite import MRMSComposite, set_comp_data
+from mrmscomposite import MRMSComposite
 
 def to_file(out_path, f_name, data):
     """
