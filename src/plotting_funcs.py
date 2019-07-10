@@ -443,8 +443,8 @@ def plot_mrms_cross_section(data=None, abs_path=None, lons=None, lats=None):
     xs = np.arange(0, 1000)
 
     #im = ax.pcolormesh(xs, scan_angles, data, cmap=mpl.cm.gist_ncar)
-    im = ax.pcolormesh(coords, scan_angles, data, cmap=mpl.cm.gist_ncar)
-    cbar = fig.colorbar(im, ax=ax)
+    im = ax.pcolormesh(coords, scan_angles, data, cmap=mpl.cm.gist_ncar, vmin=0, vmax=65)
+    cbar = fig.colorbar(im, ax=ax, ticks=[10,20,30,40,50,60])
     cbar.set_label('Reflectivity (dbz)', rotation=90)
     ax.set_title('MRMS Reflectivity Cross Section')
     ax.xaxis.set_major_locator(plt.MaxNLocator(10))
