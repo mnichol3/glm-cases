@@ -140,10 +140,10 @@ def main():
         point2 = grib.trunc(point2, 3)
 
 
-        #make_mrms_xsect2(local_mrms_path, local_wtlma_path, step['date'], step['mrms-time'], point1, point2)
+        make_mrms_xsect2(local_mrms_path, local_wtlma_path, step['date'], step['mrms-time'], point1, point2)
         #make_mrms_glm_plot(local_mrms_path, local_glm_path, step['date'], step['mrms-time'], point1, point2)
-        comp = plotting_utils.get_composite_ref(local_mrms_path, step['mrms-time'], point1, point2, memmap_path)
-        print(comp)
+        #comp = plotting_utils.get_composite_ref(local_mrms_path, step['mrms-time'], point1, point2, memmap_path)
+        #print(comp)
 
 
 

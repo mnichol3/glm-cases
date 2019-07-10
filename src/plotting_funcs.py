@@ -517,12 +517,12 @@ def plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtl
 
     xs = np.arange(0, 1000)
 
-    #im = ax.pcolormesh(xs, scan_angles, data, cmap=mpl.cm.gist_ncar)
-    im = ax.pcolormesh(coords, scan_angles*1000, data, cmap=mpl.cm.gist_ncar)
-    cbar = fig.colorbar(im, ax=ax)
+    ref_norm = colors.Normalize(vmin=0, vmax=65)
+    im = ax.pcolormesh(coords, scan_angles*1000, data, cmap=mpl.cm.gist_ncar, vmin=0, vmax=65)
+    cbar = fig.colorbar(im, ax=ax, ticks=[10,20,30,40,50,60])
     cbar.set_label('Reflectivity (dbz)', rotation=90)
 
-    l_norm = colors.Normalize(vmin=0, vmax=25)
+    #l_norm = colors.Normalize(vmin=0, vmax=25)
 
     wtlma_lats, wtlma_lons = list(zip(*wtlma_coords))
 
