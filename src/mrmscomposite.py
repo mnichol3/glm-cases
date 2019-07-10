@@ -43,7 +43,7 @@ class MRMSComposite(object):
         """
         memmap_path = '/media/mnichol3/pmeyers1/MattNicholson/data'
 
-        super(MRMSGrib, self).__init__()
+        super(MRMSComposite, self).__init__()
         self.validity_date = validity_date
         self.validity_time = validity_time
         self.major_axis = major_axis
@@ -53,3 +53,13 @@ class MRMSComposite(object):
         self.shape = shape
         self.grid_lons = grid_lons
         self.grid_lats = grid_lats
+
+
+
+    def get_data_path(self):
+        return self.data_path
+
+
+
+    def __repr__(self):
+        return '<MRMSComposite object - {}z>'.format(str(self.validity_date) + '-' + str(self.validity_time))
