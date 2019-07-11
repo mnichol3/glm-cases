@@ -748,7 +748,7 @@ def plot_mrms_glm(grb_obj, glm_obj, wtlma_obj=None, points_to_plot=None):
     Axis extent set by subsetted MRMS lat & lon extent
     """
     tx_county_path = '/home/mnichol3/Coding/glm-cases/resources/Texas_County_Boundaries/Texas_County_Boundaries.shp'
-    ok_county_path = '/home/mnichol3/Coding/glm-cases/resources/tl_2017_40_place/tl_2017_40_place.shp'
+    ok_county_path = '//home/mnichol3/Coding/glm-cases/resources/tl_2016_40_cousub/tl_2016_40_cousub.shp'
 
     tx_counties_reader = shpreader.Reader(tx_county_path)
     tx_counties_list = list(tx_counties_reader.geometries())
