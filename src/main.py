@@ -74,15 +74,16 @@ def make_mrms_glm_plot(local_mrms_path, local_glm_path, local_wtlma_path, date, 
     t1 = _format_date_time(date, time)
     sub_time = _format_time_wtlma(time)
 
-    files = wtlma.get_files_in_range(local_wtlma_path, t1, t1)
-    wtlma_abs_path = wtlma._parse_abs_path(local_wtlma_path, files[0])
+    wtlma_files = wtlma.get_files_in_range(local_wtlma_path, t1, t1)
+    wtlma_abs_path = wtlma._parse_abs_path(local_wtlma_path, wtlma_files[0])
     wtlma_data = wtlma.parse_file(wtlma_abs_path, sub_t=sub_time)
 
     glm_scans = localglminterface.get_files_in_range(local_glm_path, t1, t1)
     # 2 files for each time, apparently from 2 diff sources but same data
     glm_obj = glm_utils.read_file(glm_scans[0].abs_path, meta=True)
-    plotting_funcs.plot_mrms_glm(mrms_obj, glm_obj, wtlma_data)
-    del mrms_obj
+    # sig : plot_mrms_glm(grb_obj, glm_obj, wtlma_obj=None, points_to_plot=None)
+    plotting_funcs.plot_mrms_glm(mrms_obj, glm_obj, wtlma_obj=wtlma_data, points_to_plot=[point1, point2])
+    del mrms_obj    # Probably not needed but yolo
 
 
 
@@ -150,7 +151,7 @@ def main():
 
         #make_mrms_xsect2(local_mrms_path, local_wtlma_path, step['date'], step['mrms-time'], point1, point2)
         if (step['mrms-time'] != '2206'): # MISSING FILE
-            make_mrms_glm_plot(local_mrms_path, local_glm_path, step['date'], step['mrms-time'], point1, point2, memmap_path)
+            make_mrms_glm_plot(local_mrms_path, local_glm_path, local_wtlma_path, step['date'], step['mrms-time'], point1, point2, memmap_path)
 
 
 

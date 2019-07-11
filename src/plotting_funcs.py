@@ -8,6 +8,8 @@ import matplotlib.ticker as mticker
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 from cartopy.feature import NaturalEarthFeature
+import cartopy.io.shapereader as shpreader
+import cartopy.feature as cfeature
 import matplotlib.cm as cm
 import matplotlib.colors as colors
 import scipy.ndimage
@@ -740,7 +742,22 @@ def plot_mrms_glm(grb_obj, glm_obj, wtlma_obj=None, points_to_plot=None):
         WTLMA object to plot
     points_to_plot : tuple of tuples or list of tuples, optional
         Format: [(lat1, lon1), (lat2, lon2)]
+
+    Notes
+    -----
+    Axis extent set by subsetted MRMS lat & lon extent
     """
+    tx_county_path = '/home/mnichol3/Coding/glm-cases/resources/Texas_County_Boundaries/Texas_County_Boundaries.shp'
+    ok_county_path = '/home/mnichol3/Coding/glm-cases/resources/tl_2017_40_place/tl_2017_40_place.shp'
+
+    tx_counties_reader = shpreader.Reader(tx_county_path)
+    tx_counties_list = list(tx_counties_reader.geometries())
+    tx_counties = cfeature.ShapelyFeature(tx_counties_list, ccrs.PlateCarree())
+
+    ok_counties_reader = shpreader.Reader(ok_county_path)
+    ok_counties_list = list(ok_counties_reader.geometries())
+    ok_counties = cfeature.ShapelyFeature(ok_counties_list, ccrs.PlateCarree())
+
     globe = ccrs.Globe(semimajor_axis=glm_obj.data['semi_major_axis'], semiminor_axis=glm_obj.data['semi_minor_axis'],
                        flattening=None, inverse_flattening=glm_obj.data['inv_flattening'])
 
@@ -755,6 +772,8 @@ def plot_mrms_glm(grb_obj, glm_obj, wtlma_obj=None, points_to_plot=None):
                              name='admin_1_states_provinces_shp', zorder=0)
 
     ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=1)
+    ax.add_feature(tx_counties, linewidth=.6, facecolor='none', edgecolor='gray', zorder=1)
+    ax.add_feature(ok_counties, linewidth=.6, facecolor='none', edgecolor='gray', zorder=1)
 
     ax.set_extent([min(grb_obj.grid_lons), max(grb_obj.grid_lons), min(grb_obj.grid_lats), max(grb_obj.grid_lats)], crs=ccrs.PlateCarree())
 
@@ -778,15 +797,15 @@ def plot_mrms_glm(grb_obj, glm_obj, wtlma_obj=None, points_to_plot=None):
     cbar1.set_label('GLM Flash Extent Density')
 
     if (wtlma_obj is not None):
-        scat = plt.scatter(wtlma_obj.data['lon'], wtlma_obj.data['lat'], c='r',
-                           marker='o', s=100, zorder=3, transform=ccrs.PlateCarree())
+        scat = plt.scatter(wtlma_obj.data['lon'], wtlma_obj.data['lat'], c='gray',
+                           marker='o', s=50, zorder=3, transform=ccrs.PlateCarree(), alpha=0.5)
 
     if (points_to_plot is not None):
         plt.plot([points_to_plot[0][1], points_to_plot[1][1]], [points_to_plot[0][0], points_to_plot[1][0]],
-                           marker='o', color='r', zorder=4, transform=ccrs.PlateCarree())
+                           marker='o', color='black', zorder=4, transform=ccrs.PlateCarree())
 
-    lon_ticks = [x for x in range(-180, 181)]
-    lat_ticks = [x for x in range(-90, 91)]
+    lon_ticks = [x for x in np.arange(-180, 181, 0.5)]
+    lat_ticks = [x for x in np.arange(-90, 91, 0.5)]
 
     gl = ax.gridlines(crs=ccrs.PlateCarree(), linewidth=1, color='gray',
                       alpha=0.5, linestyle='--', draw_labels=True)
