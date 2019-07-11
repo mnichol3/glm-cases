@@ -726,7 +726,7 @@ def plot_wtlma(wtlma_obj_list, grid_extent=None, nbins=1000, points_to_plot=None
 
 
 
-def plot_mrms_glm(grb_obj, glm_obj):
+def plot_mrms_glm(grb_obj, glm_obj, wtlma_obj=None, points_to_plot=None):
     """
     Plots MRMS and GLM data on a Mercator projection
 
@@ -736,6 +736,10 @@ def plot_mrms_glm(grb_obj, glm_obj):
         MRMSGrib object containing the MRMS data to plot
     glm_obj : LocalGLMFile object
         LocalGLMFile object containing the GLM data to plot
+    wtlma_obj : LocalWTLMAFile, optional
+        WTLMA object to plot
+    points_to_plot : tuple of tuples or list of tuples, optional
+        Format: [(lat1, lon1), (lat2, lon2)]
     """
     globe = ccrs.Globe(semimajor_axis=glm_obj.data['semi_major_axis'], semiminor_axis=glm_obj.data['semi_minor_axis'],
                        flattening=None, inverse_flattening=glm_obj.data['inv_flattening'])
@@ -772,6 +776,14 @@ def plot_mrms_glm(grb_obj, glm_obj):
     cbar1 = plt.colorbar(cmesh, norm=glm_norm, ticks=bounds, spacing='proportional', fraction=0.046, pad=0.04)
     cbar1.ax.set_yticklabels([str(x) for x in bounds])
     cbar1.set_label('GLM Flash Extent Density')
+
+    if (wtlma_obj is not None):
+        scat = plt.scatter(wtlma_obj.data['lon'], wtlma_obj.data['lat'], c='r',
+                           marker='o', s=100, zorder=3, transform=ccrs.PlateCarree())
+
+    if (points_to_plot is not None):
+        plt.plot([points_to_plot[0][1], points_to_plot[1][1]], [points_to_plot[0][0], points_to_plot[1][0]],
+                           marker='o', color='r', zorder=4, transform=ccrs.PlateCarree())
 
     lon_ticks = [x for x in range(-180, 181)]
     lat_ticks = [x for x in range(-90, 91)]

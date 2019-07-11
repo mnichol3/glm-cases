@@ -47,7 +47,7 @@ def make_wtlma_plot(base_path, start, stop, points_to_plot=None):
 
 
 
-def make_mrms_glm_plot(local_mrms_path, local_glm_path, date, time, point1, point2, memmap_path):
+def make_mrms_glm_plot(local_mrms_path, local_glm_path, local_wtlma_path, date, time, point1, point2, memmap_path):
     """
     Contains helper-function calls needed for plot_mrms_glm()
 
@@ -70,11 +70,18 @@ def make_mrms_glm_plot(local_mrms_path, local_glm_path, date, time, point1, poin
     #mrms_obj = grib.get_grib_objs(mrms_scans[12], local_mrms_path, point1, point2)[0]
     #del mrms_scans
     mrms_obj = plotting_utils.get_composite_ref(local_mrms_path, time, point1, point2, memmap_path)
+
     t1 = _format_date_time(date, time)
+    sub_time = _format_time_wtlma(time)
+
+    files = wtlma.get_files_in_range(local_wtlma_path, t1, t1)
+    wtlma_abs_path = wtlma._parse_abs_path(local_wtlma_path, files[0])
+    wtlma_data = wtlma.parse_file(wtlma_abs_path, sub_t=sub_time)
+
     glm_scans = localglminterface.get_files_in_range(local_glm_path, t1, t1)
     # 2 files for each time, apparently from 2 diff sources but same data
     glm_obj = glm_utils.read_file(glm_scans[0].abs_path, meta=True)
-    plotting_funcs.plot_mrms_glm(mrms_obj, glm_obj)
+    plotting_funcs.plot_mrms_glm(mrms_obj, glm_obj, wtlma_data)
     del mrms_obj
 
 
@@ -105,7 +112,7 @@ def make_mrms_xsect2(local_mrms_path, local_wtlma_path, date, time, point1, poin
     wtlma_abs_path = wtlma._parse_abs_path(local_wtlma_path, files[0])
     wtlma_data = wtlma.parse_file(wtlma_abs_path, sub_t=sub_time)
     # filter_by_dist(lma_df, dist, start_point, end_point, num_pts) dist in m
-    filtered_data, coords = plotting_utils.filter_by_dist(wtlma_data.data, 1000, point1, point2, 100)
+    filtered_data, coords = plotting_utils.filter_by_dist(wtlma_data.data, 6000, point1, point2, 100)
     wtlma_data._set_data(filtered_data)
 
     plotting_funcs.run_mrms_xsect2(local_mrms_path, time, point1, point2, wtlma_data, coords)
