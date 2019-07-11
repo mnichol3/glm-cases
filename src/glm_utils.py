@@ -140,7 +140,7 @@ def read_file(abs_path, window=False, meta=False):
     data_dict['x'] = fh.variables['x'][:]
     data_dict['y'] = fh.variables['y'][:]
 
-    if (window):
+    if (window is not False):
         data_dict['data'] = fh.variables['Flash_extent_density_window'][:]
     else:
         data_dict['data'] = fh.variables['Flash_extent_density'][:]
