@@ -80,7 +80,7 @@ def make_mrms_glm_plot(local_mrms_path, local_glm_path, local_wtlma_path, date, 
 
     glm_scans = localglminterface.get_files_in_range(local_glm_path, t1, t1)
     # 2 files for each time, apparently from 2 diff sources but same data
-    glm_obj = glm_utils.read_file(glm_scans[0].abs_path, meta=True)
+    glm_obj = glm_utils.read_file(glm_scans[1].abs_path, meta=True)
     # sig : plot_mrms_glm(grb_obj, glm_obj, wtlma_obj=None, points_to_plot=None)
     plotting_funcs.plot_mrms_glm(mrms_obj, glm_obj, wtlma_obj=wtlma_data, points_to_plot=[point1, point2])
     del mrms_obj    # Probably not needed but yolo
