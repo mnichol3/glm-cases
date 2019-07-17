@@ -14,6 +14,7 @@ import sys
 from grib import fetch_scans, get_grib_objs
 from mrmscomposite import MRMSComposite
 
+
 def to_file(out_path, f_name, data):
     """
     Writes a numpy 2d array to a text file

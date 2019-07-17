@@ -14,6 +14,7 @@ import localglminterface
 import glm_utils
 import plotting_funcs
 import plotting_utils
+import goes_utils
 
 
 
@@ -135,6 +136,7 @@ def main():
     local_mrms_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
     memmap_path = '/media/mnichol3/pmeyers1/MattNicholson/data'
 
+    """
     case_coords = '/home/mnichol3/Coding/glm-cases/resources/05232019-coords.txt'
     d_dict = {'date': str, 'wsr-time': str, 'mrms-time': str, 'lat1': float,
               'lon1': float, 'lat2': float, 'lon2': float}
@@ -149,11 +151,11 @@ def main():
         point2 = grib.trunc(point2, 3)
 
 
-        #make_mrms_xsect2(local_mrms_path, local_wtlma_path, step['date'], step['mrms-time'], point1, point2)
         if (step['mrms-time'] != '2206'): # MISSING FILE
-            make_mrms_glm_plot(local_mrms_path, local_glm_path, local_wtlma_path, step['date'], step['mrms-time'], point1, point2, memmap_path)
+            #make_mrms_glm_plot(local_mrms_path, local_glm_path, local_wtlma_path, step['date'], step['mrms-time'], point1, point2, memmap_path)
+            make_mrms_xsect2(local_mrms_path, local_wtlma_path, step['date'], step['mrms-time'], point1, point2)
 
-
+    """
 
 
     #glm_data = glm_utils.read_file(abs_path_glm, meta=True, window=True)
@@ -162,13 +164,11 @@ def main():
     #plotting_funcs.plot_mercator_dual(glm_data, (point1, point2), wtlma_data)
     #plotting_funcs.plot_mercator_dual_2(glm_data, (point1, point2), wtlma_data)
 
+    abi_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L2-CMIPM', '5-23-2019-20:00', '5-23-2019-20:00', 'M1', '13', prompt=False)
+    #for f in abi_files:
+    #    print(f)
 
     """
-    conn = goesawsinterface.GoesAWSInterface()
-    imgs = conn.get_avail_images_in_range('goes16', 'ABI-L2-CMIPM', '5-23-2019-20:00', '5-23-2019-21:00', 'M1', '13')
-    for x in imgs:
-        print(x)
-
     avail_glm_imgs = localglminterface.get_files_in_range('/media/mnichol3/pmeyers1/MattNicholson/glm/glm20190523', '5-23-2019-20:00', '5-23-2019-21:00')
     for x in avail_glm_imgs:
         print(x)

@@ -11,6 +11,7 @@ import matplotlib.cm as cm
 from cartopy.feature import NaturalEarthFeature
 
 import goesawsinterface
+from glm_utils import georeference
 
 
 
@@ -67,7 +68,7 @@ def get_abi_files(base_path, satellite, product, t_start, t_end, sector, channel
 
 
 
-def read_file(abi_file):
+def read_file(abi_file, extent=None):
     """
     Opens & reads a GOES-16 ABI data file, returning a dictionary of data
 
@@ -88,19 +89,9 @@ def read_file(abi_file):
 
     data_dict = {}
 
-    # Ch. 1 - Blue vis. Good resolution, not able to use at night
-
-    # Ch. 11 - Cloud top infrared. Has much lower resolution than visible bands
-
-    # Ch. 13 - 'Clean' Longwave window. Not much different than Ch. 11
-
-
-    fh = Dataset(join(PATH_LINUX_ABI, abi_file), mode='r')
+    fh = Dataset(abi_file, mode='r')
 
     data_dict['band_id'] = fh.variables['band_id'][0]
-
-    if (data_dict['band_id'] < 8):
-        print('\n!!! WARNING: Currently plotting non-IR satellite data !!!' )
 
     data_dict['band_wavelength'] = "%.2f" % fh.variables['band_wavelength'][0]
     data_dict['semimajor_ax'] = fh.variables['goes_imager_projection'].semi_major_axis
@@ -137,6 +128,8 @@ def read_file(abi_file):
     # Satellite sweep
     sat_sweep = fh.variables['goes_imager_projection'].sweep_angle_axis
 
+    if (extent is not None):
+        # subset the data
     data = fh.variables['CMI'][:].data
 
     Xs = fh.variables['x'][:]
@@ -156,44 +149,6 @@ def read_file(abi_file):
     data_dict['data'] = data
 
     return data_dict
-
-
-
-def georeference(data_dict):
-    """
-    Calculates the longitude and latitude coordinates of each data point
-
-    Parameters
-    ------------
-    data_dict : dictionary
-        Dictionary of ABI file data & metadata
-
-
-    Returns
-    ------------
-    (lons, lats) : tuple of lists of floats
-        Tuple containing a list of data longitude coordinates and a list of
-        data latitude coordinates
-    """
-
-    sat_height = data_dict['sat_height']
-    sat_lon = data_dict['sat_lon']
-    sat_sweep = data_dict['sat_sweep']
-    data = data_dict['data'] # (1000, 1000) array
-
-    # Multiplying by sat height might not be necessary here
-    Xs = data_dict['x'] * sat_height # (1000,)
-    Ys = data_dict['y'] * sat_height # (1000,)
-
-    p = pyproj.Proj(proj='geos', h=sat_height, lon_0=sat_lon, sweep=sat_sweep)
-
-    lons, lats = np.meshgrid(Xs, Ys)
-    lons, lats = p(lons, lats, inverse=True)
-
-    lats[np.isnan(data)] = 57
-    lons[np.isnan(data)] = -152
-
-    return (lons, lats)
 
 
 
