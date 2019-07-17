@@ -18,7 +18,7 @@ import plotting_utils
 import glm_utils
 
 def test_glm_plot(abs_path):
-    glm_obj = glm_utils.read_file(abs_path, window=True, meta=True)
+    glm_obj = glm_utils.read_file(abs_path, window=False, meta=True)
 
     globe = ccrs.Globe(semimajor_axis=glm_obj.data['semi_major_axis'], semiminor_axis=glm_obj.data['semi_minor_axis'],
                        flattening=None, inverse_flattening=glm_obj.data['inv_flattening'])
@@ -84,5 +84,5 @@ f1 = 'IXTR99_KNES_232107_40255.2019052321'
 f2 = 'IXTR99_KNES_232107_14608.2019052322'
 base_path = '/media/mnichol3/pmeyers1/MattNicholson/glm/glm20190523'
 abs_path = join(base_path, f2)
-#test_glm_plot(abs_path)
-are_equal(f1, f2, base_path)
+test_glm_plot(abs_path)
+#are_equal(f1, f2, base_path)
