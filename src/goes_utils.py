@@ -12,6 +12,7 @@ from cartopy.feature import NaturalEarthFeature
 
 import goesawsinterface
 from glm_utils import georeference
+from proj_utils import geod_to_scan
 
 
 
@@ -128,12 +129,13 @@ def read_file(abi_file, extent=None):
     # Satellite sweep
     sat_sweep = fh.variables['goes_imager_projection'].sweep_angle_axis
 
-    if (extent is not None):
-        # subset the data
-    data = fh.variables['CMI'][:].data
+    X = fh.variables['x'][:]
+    Y = fh.variables['y'][:]
 
-    Xs = fh.variables['x'][:]
-    Ys = fh.variables['y'][:]
+    if (extent is not None):
+        Xs, Ys = georeference(X, Y, sat_lon, sat_height, sat_sweep)
+
+    data = fh.variables['CMI'][:].data
 
     fh.close()
     fh = None
@@ -326,3 +328,53 @@ def plot_abi(fname):
     cb.set_ticks([1, 100, 200, 300, 400, 500, 600])
     cb.set_label('Radiance (W m-2 sr-1 um-1)')
     plt.show()
+
+
+
+def subset_grid(min_lat, max_lat, min_lon, max_lon, grid_Xs, grid_Ys):
+    """
+    Finds the ABI grid indexes corresponding to the given min & max lat and lon
+    coords
+
+    Parameters
+    ----------
+    min_lon : float
+    max_lon : float
+    min_lat : float
+    max_lat : float
+    grid_Xs : numpy 2D array
+    grid_Ys : numpy 2D array
+
+    Returns
+    -------
+    Tuple of floats
+        Indices of the ABI grid corresponding to the min & max lat and lon coords
+        Format: (min_y, max_y, min_x, max_x)
+    """
+    point1 = geod_to_scan(min_lat, min_lon)
+    point2 = geod_to_scan(max_lat, max_lon)
+
+    min_x = _find_nearest_idx(grid_Xs, point1[1])
+    max_x = _find_nearest_idx(grid_Xs, point2[1])
+    min_y = _find_nearest_idx(grid_Ys, point1[0])
+    max_y = _find_nearest_idx(grid_Ys, point2[0])
+
+    return (min_y, max_y, min_x, max_x)
+
+
+
+def _find_nearest_idx(array, value):
+    """
+    Helper function called in subset_grid(). Finds the index of the array element
+    with the value closest to the parameter value
+
+    Parameters
+    ----------
+    array : Numpy array
+        Array to search for the nearest value
+    value : int or float
+        Value to search the array for
+    """
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return idx
