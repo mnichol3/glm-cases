@@ -538,7 +538,7 @@ def plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtl
         wtlma_coords.append('(' + str(x) + ', ' + str(wtlma_lats[idx]) + ')')
 
     scatt = ax.scatter(wtlma_coords, wtlma_obj.data['alt'], c=wtlma_obj.data['P'],
-                       marker='o', s=100, cmap=mpl.cm.jet, vmin=-20, vmax=100, zorder=2)
+                       marker='o', s=100, cmap=mpl.cm.jet, vmin=-20, vmax=100, alpha=0.5, zorder=2)
 
     cbar2 = fig.colorbar(scatt, ax=ax)
     cbar2.set_label('WTLMA Stroke Power (dBW)', rotation=90)
