@@ -11,7 +11,7 @@ Equations obtained from:
 United States, Congress, National Oceanic & Atmospheric Administration.
     “GOES R Series Product Definition and User's Guide.”
     GOES R Series Product Definition and User's Guide, 2nd ed., vol. 3,
-    Harris Corporation, 2018, pp. 56–60. 
+    Harris Corporation, 2018, pp. 56–60.
 """
 
 from math import degrees, radians, atan, sin, cos, sqrt, tan
@@ -44,6 +44,11 @@ def scan_to_geod(y, x):
     h_goes = 35786023       # perspective point height, m
     H = 42164160            # h_goes + r_eq, m
     lambda_0 = -1.308996939 # longitude of origin projection
+
+    if (not isinstance(x, float)):
+        x = float(x)
+    if (not isinstance(y, float)):
+        y = float(y))
 
     a = _calc_a(x, y, r_eq, r_pol)
     b = _calc_b(x, y, H)
@@ -88,6 +93,11 @@ def geod_to_scan(lat, lon):
     h_goes = 35786023       # perspective point height, m
     H = 42164160            # h_goes + r_eq, m
     lambda_0 = -1.308996939 # longitude of origin projection
+
+    if (not isinstance(lat, float)):
+        lat = float(lat)
+    if (not isinstance(lon, float)):
+        lon = float(lon))
 
     lat = radians(lat)
     lon = radians(lon)
