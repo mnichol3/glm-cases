@@ -68,8 +68,21 @@ def test_glm_plot(abs_path):
 
 
 
+def are_equal(file1, file2, base_path):
+    path1 = join(base_path, file1)
+    path2 = join(base_path, file2)
+
+    glm_obj_1 = glm_utils.read_file(path1)
+    glm_obj_2 = glm_utils.read_file(path2)
+
+    print(np.array_equal(glm_obj_1.data, glm_obj_2.data))
+
+
+
+
 f1 = 'IXTR99_KNES_232107_40255.2019052321'
 f2 = 'IXTR99_KNES_232107_14608.2019052322'
 base_path = '/media/mnichol3/pmeyers1/MattNicholson/glm/glm20190523'
 abs_path = join(base_path, f2)
-test_glm_plot(abs_path)
+#test_glm_plot(abs_path)
+are_equal(f1, f2, base_path)
