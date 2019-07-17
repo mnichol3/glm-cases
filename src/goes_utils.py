@@ -327,12 +327,18 @@ def plot_mercator(data_dict, out_path):
 
 
 
-def plot_abi(fname):
-    fh = Dataset(fname, mode='r')
+def plot_abi(data_dict=None, fname=None):
+    if (data_dict is None):
+        if (fname is None):
+            raise ValueError('fname parameter cannot be none')
+        else:
+            fh = Dataset(fname, mode='r')
 
-    radiance = fh.variables['CMI'][:]
-    fh.close()
-    fh = None
+            radiance = fh.variables['CMI'][:]
+            fh.close()
+            fh = None
+    else:
+        radiance = data_dict['data']
 
     fig = plt.figure(figsize=(6,6),dpi=200)
     im = plt.imshow(radiance, cmap='Greys')
