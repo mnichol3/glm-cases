@@ -12,6 +12,7 @@ import pyproj
 
 from grib import fetch_scans, get_grib_objs
 from mrmscomposite import MRMSComposite
+import goesawsinterface
 
 def to_file(out_path, f_name, data):
     """
@@ -592,3 +593,46 @@ def geodesic_point_buffer(lat, lon, km):
     buf = Point(0, 0).buffer(km * 1000)  # distance in metres
 
     return transform(project, buf).exterior
+
+
+
+def get_abi_files(base_path, satellite, product, t_start, t_end, sector, channel, prompt=False):
+    """
+    Fetches GOES ABI file(s) for the given satellite, product, sector, & channel,
+    for the time period spanning t_start to t_end
+
+    Parameters
+    ----------
+    base_path : str
+        Path of the directory to download the files to
+    satellite : str
+        'goes16' or 'goes17'
+    product : str
+        Just use 'ABI-L2-CMIPM'
+    t_start : str
+        start time
+        Format: MM-DD-YYYY-HH:MM
+    t_end : str
+        End time
+        Format: MM-DD-YYYY-HH:MM
+    sector : str
+        M1 = mesoscale 1, M2 = mesoscale 2, C = CONUS
+    channel : str
+        Imagery channel
+    prompt : bool, optional
+        If true, will prompt the user before downloading the ABI files
+    """
+    conn = goesawsinterface.GoesAWSInterface()
+    abi_files = conn.get_avail_images_in_range(satellite, product, t_start, t_end, sector, channel)
+
+    if (prompt):
+        for f in abi_files:
+            print(f)
+        print('\n')
+        dl = input('Download these ABI files? (Y/n) ')
+
+        if (dl == 'Y'):
+            dl_result = conn.download(satellite, abi_files, base_path, keep_aws_folders=False, threads=6)
+    else:
+        dl_result = conn.download(satellite, abi_files, base_path, keep_aws_folders=False, threads=6)
+        
