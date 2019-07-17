@@ -9,6 +9,7 @@ from functools import partial
 from shapely.geometry import Point, LineString
 from shapely.ops import transform
 import pyproj
+import sys
 
 from grib import fetch_scans, get_grib_objs
 from mrmscomposite import MRMSComposite
@@ -621,18 +622,30 @@ def get_abi_files(base_path, satellite, product, t_start, t_end, sector, channel
         Imagery channel
     prompt : bool, optional
         If true, will prompt the user before downloading the ABI files
+
+    Returns
+    -------
+    abi_paths : list of str
+        List containing the absolute paths of the downloaded ABI files
     """
+    abi_paths = []
     conn = goesawsinterface.GoesAWSInterface()
-    abi_files = conn.get_avail_images_in_range(satellite, product, t_start, t_end, sector, channel)
+    aws_abi_files = conn.get_avail_images_in_range(satellite, product, t_start, t_end, sector, channel)
+
+    for f in aws_abi_files:
+        print(f)
 
     if (prompt):
-        for f in abi_files:
-            print(f)
-        print('\n')
-        dl = input('Download these ABI files? (Y/n) ')
-
+        dl = input('Download the above ABI file(s)? (Y/n) ')
         if (dl == 'Y'):
-            dl_result = conn.download(satellite, abi_files, base_path, keep_aws_folders=False, threads=6)
+            dl_results = conn.download(satellite, aws_abi_files, base_path, keep_aws_folders=False, threads=6)
+        else:
+            print('Proceed response not entered, exiting...')
+            sys.exit(0)
     else:
-        dl_result = conn.download(satellite, abi_files, base_path, keep_aws_folders=False, threads=6)
-        
+        dl_results = conn.download(satellite, aws_abi_files, base_path, keep_aws_folders=False, threads=6)
+
+        for abi_file in dl_results._successfiles:
+            abi_paths.append(abi_file.filepath)
+
+    return abi_paths
