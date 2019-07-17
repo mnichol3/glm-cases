@@ -10,6 +10,61 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import matplotlib.cm as cm
 from cartopy.feature import NaturalEarthFeature
 
+import goesawsinterface
+
+
+
+def get_abi_files(base_path, satellite, product, t_start, t_end, sector, channel, prompt=False):
+    """
+    Fetches GOES ABI file(s) for the given satellite, product, sector, & channel,
+    for the time period spanning t_start to t_end
+
+    Parameters
+    ----------
+    base_path : str
+        Path of the directory to download the files to
+    satellite : str
+        'goes16' or 'goes17'
+    product : str
+        Just use 'ABI-L2-CMIPM'
+    t_start : str
+        start time
+        Format: MM-DD-YYYY-HH:MM
+    t_end : str
+        End time
+        Format: MM-DD-YYYY-HH:MM
+    sector : str
+        M1 = mesoscale 1, M2 = mesoscale 2, C = CONUS
+    channel : str
+        Imagery channel
+    prompt : bool, optional
+        If true, will prompt the user before downloading the ABI files
+
+    Returns
+    -------
+    abi_paths : list of str
+        List containing the absolute paths of the downloaded ABI files
+    """
+    abi_paths = []
+    conn = goesawsinterface.GoesAWSInterface()
+    aws_abi_files = conn.get_avail_images_in_range(satellite, product, t_start, t_end, sector, channel)
+
+    for f in aws_abi_files:
+        print(f)
+
+    if (prompt):
+        dl = input('Download the above ABI file(s)? (Y/n) ')
+        if (dl != 'Y'):
+            print('Proceed response not entered, exiting...')
+            sys.exit(0)
+    else:
+        dl_results = conn.download(satellite, aws_abi_files, base_path, keep_aws_folders=False, threads=6)
+
+        for abi_file in dl_results._successfiles:
+            abi_paths.append(abi_file.filepath)
+
+    return abi_paths
+
 
 
 def read_file(abi_file):
