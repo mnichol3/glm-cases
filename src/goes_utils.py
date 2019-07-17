@@ -73,13 +73,13 @@ def read_file(abi_file, extent=None):
     """
     Opens & reads a GOES-16 ABI data file, returning a dictionary of data
 
-    !!! NOTE: Returns implroper sat_lon value; return 75.0 but should be 75.2 for
-    GOES-16
-
     Parameters:
     ------------
-    fname : str
-        Name of the GOES-16 ABI date file to be opened & processed
+    abi_file : str
+        Absolute path of the GOES-16 ABI file to be opened & processed
+    extent : list of float, optional
+        List of floats used to subset the ABI data
+        Format: [min_lat, max_lat, min_lon, max_lon]
 
 
     Returns:
@@ -132,10 +132,22 @@ def read_file(abi_file, extent=None):
     X = fh.variables['x'][:]
     Y = fh.variables['y'][:]
 
+    data_dict['scan_date'] = scan_date
+    data_dict['sat_height'] = sat_height
+    data_dict['sat_lon'] = sat_lon
+    data_dict['sat_lat'] = sat_lat
+    data_dict['lat_lon_extent'] = lat_lon_extent
+    data_dict['sat_sweep'] = sat_sweep
+
     if (extent is not None):
         Xs, Ys = georeference(X, Y, sat_lon, sat_height, sat_sweep)
+        min_y, max_y, min_x, max_x = subset_grid(extent, Xs, Ys)
 
-    data = fh.variables['CMI'][:].data
+        data = fh.variables['CMI'][min_y : max_y, min_x : max_x].data # might not work idk
+        Xs = Xs[min_x : max_x]
+        Ys = Ys[min_y : max_y]
+    else:
+        print('WARNING: Not subsetting ABI data!\n')
 
     fh.close()
     fh = None
@@ -331,17 +343,16 @@ def plot_abi(fname):
 
 
 
-def subset_grid(min_lat, max_lat, min_lon, max_lon, grid_Xs, grid_Ys):
+def subset_grid(extent, grid_Xs, grid_Ys):
     """
     Finds the ABI grid indexes corresponding to the given min & max lat and lon
     coords
 
     Parameters
     ----------
-    min_lon : float
-    max_lon : float
-    min_lat : float
-    max_lat : float
+    extent : list of float
+        List containing the min and max lat & lon coordinates
+        Format: min_lat, max_lat, min_lon, max_lon
     grid_Xs : numpy 2D array
     grid_Ys : numpy 2D array
 
@@ -351,8 +362,8 @@ def subset_grid(min_lat, max_lat, min_lon, max_lon, grid_Xs, grid_Ys):
         Indices of the ABI grid corresponding to the min & max lat and lon coords
         Format: (min_y, max_y, min_x, max_x)
     """
-    point1 = geod_to_scan(min_lat, min_lon)
-    point2 = geod_to_scan(max_lat, max_lon)
+    point1 = geod_to_scan(extent[0], extent[2]) # min lat & min lon
+    point2 = geod_to_scan(extent[1], extent[3]) # max lat & max lon
 
     min_x = _find_nearest_idx(grid_Xs, point1[1])
     max_x = _find_nearest_idx(grid_Xs, point2[1])
