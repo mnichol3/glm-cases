@@ -165,14 +165,7 @@ def main():
     #plotting_funcs.plot_mercator_dual_2(glm_data, (point1, point2), wtlma_data)
 
     abi_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L2-CMIPM', '5-23-2019-20:00', '5-23-2019-20:00', 'M1', '13', prompt=False)
-    #for f in abi_files:
-    #    print(f)
-
-    """
-    avail_glm_imgs = localglminterface.get_files_in_range('/media/mnichol3/pmeyers1/MattNicholson/glm/glm20190523', '5-23-2019-20:00', '5-23-2019-21:00')
-    for x in avail_glm_imgs:
-        print(x)
-    """
+    # TODO: test this --> goes_utils.read_file(abi_files[0], [35, 36.5, -102.5, -100])
 
 
 def _format_date_time(date, time):
