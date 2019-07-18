@@ -10,6 +10,7 @@ from shapely.geometry import Point, LineString
 from shapely.ops import transform
 import pyproj
 import sys
+import math
 
 from grib import fetch_scans, get_grib_objs
 from mrmscomposite import MRMSComposite
@@ -449,12 +450,14 @@ def filter_by_dist(lma_df, dist, start_point, end_point, num_pts):
     idxs = []
     coords = []
     alts = lma_df['alt'].tolist()
+    xsect_az = int(calc_bearing(start_point, end_point))
 
     for pt1 in calc_geod_pts(start_point, end_point, num_pts=num_pts):
         for idx, pt2 in enumerate(list(zip(lma_df['lat'].tolist(), lma_df['lon'].tolist()))):
             # reverse the order of pt1 since the function returns the coordinates
             # as (lon, lat) and calc_dist wants (lat, lon)
-            if (calc_dist((pt1[1], pt1[0]), pt2, units='m') <= dist and idx not in idxs and alts[idx] < 19000):
+            curr_az = int(calc_bearing((pt1[1], pt1[0]), pt2))
+            if ((calc_dist((pt1[1], pt1[0]), pt2, units='m') <= dist) and (idx not in idxs) and (alts[idx] < 19000)):
                 idxs.append(idx)
                 coords.append([pt1[1], pt1[0]])
 
@@ -464,6 +467,54 @@ def filter_by_dist(lma_df, dist, start_point, end_point, num_pts):
     subs_df = lma_df.iloc[idxs]
 
     return subs_df, coords
+
+
+
+def calc_bearing(point1, point2):
+    """
+    Calculates the bearing between two points
+
+    https://gist.github.com/jeromer/2005586
+
+    Parameters
+    ----------
+    point1 : tuple of floats
+        Format: (lat, lon)
+    point2 : tuple of floats
+        Format: (lat, lon)
+
+    Returns
+    -------
+    bearing : float
+    """
+
+    lat1 = math.radians(point1[0])
+    lat2 = math.radians(point2[0])
+
+    diffLong = math.radians(point2[1] - point1[1])
+
+    x = math.sin(diffLong) * math.cos(lat2)
+    y = math.cos(lat1) * math.sin(lat2) - (math.sin(lat1)
+            * math.cos(lat2) * math.cos(diffLong))
+
+    initial_bearing = math.atan2(x, y)
+
+    # Now we have the initial bearing but math.atan2 return values
+    # from -180° to + 180° which is not what we want for a compass bearing
+    # The solution is to normalize the initial bearing as shown below
+    initial_bearing = math.degrees(initial_bearing)
+    bearing = (initial_bearing + 360) % 360
+    return bearing
+
+
+
+def bearing_diff(bearing1, bearing2):
+    diff = abs(bearing1 - bearing2)
+    if (diff > 360):
+        diff = abs(360 - diff)
+    if (diff > 180):
+        diff = abs(360 - diff)
+    return diff
 
 
 
