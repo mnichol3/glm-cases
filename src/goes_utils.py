@@ -98,8 +98,8 @@ def read_file(abi_file, extent=None):
     data_dict['semimajor_ax'] = fh.variables['goes_imager_projection'].semi_major_axis
     data_dict['semiminor_ax'] = fh.variables['goes_imager_projection'].semi_minor_axis
     data_dict['inverse_flattening'] = fh.variables['goes_imager_projection'].inverse_flattening
-    data_dict['latitude_of_projection_origin'] = fh.variables['goes_imager_projection'].latitude_of_projection_origin
-    data_dict['longitude_of_projection_origin'] = fh.variables['goes_imager_projection'].longitude_of_projection_origin
+    #data_dict['latitude_of_projection_origin'] = fh.variables['goes_imager_projection'].latitude_of_projection_origin
+    #data_dict['longitude_of_projection_origin'] = fh.variables['goes_imager_projection'].longitude_of_projection_origin
     data_dict['data_units'] = fh.variables['CMI'].units
 
     # Seconds since 2000-01-01 12:00:00
@@ -131,13 +131,6 @@ def read_file(abi_file, extent=None):
 
     X = fh.variables['x'][:]
     Y = fh.variables['y'][:]
-
-    data_dict['scan_date'] = scan_date
-    data_dict['sat_height'] = sat_height
-    data_dict['sat_lon'] = sat_lon
-    data_dict['sat_lat'] = sat_lat
-    data_dict['lat_lon_extent'] = lat_lon_extent
-    data_dict['sat_sweep'] = sat_sweep
 
     if (extent is not None):
         Xs, Ys = georeference(X, Y, sat_lon, sat_height, sat_sweep)
@@ -377,6 +370,36 @@ def subset_grid(extent, grid_Xs, grid_Ys):
     max_y = _find_nearest_idx(grid_Ys, point2[0])
 
     return (min_y, max_y, min_x, max_x)
+
+
+
+def get_geospatial_extent(abs_path):
+    """
+    Gets the geospatial extent of the ABI data in the given file
+
+    Parameters
+    ----------
+    abs_path : str
+        Absolute path of the GOES-16 ABI file to be opened & processed
+
+    Returns
+    -------
+    extent : dict of floats
+        Keys: 'north, south, east, west, lat_center, lon_center'
+    """
+    extent = {}
+    fh = Dataset(abs_path, mode='r')
+
+    extent['north'] = fh.variables['geospatial_lat_lon_extent'].geospatial_northbound_latitude
+    extent['south'] = fh.variables['geospatial_lat_lon_extent'].geospatial_southbound_latitude
+    extent['east'] = fh.variables['geospatial_lat_lon_extent'].geospatial_eastbound_longitude
+    extent['west'] = fh.variables['geospatial_lat_lon_extent'].geospatial_westbound_longitude
+    extent['lat_center'] = fh.variables['geospatial_lat_lon_extent'].geospatial_lat_center
+    extent['lon_center'] = fh.variables['geospatial_lat_lon_extent'].geospatial_lon_center
+    fh.close() # Not really needed but good practice
+    return extent
+
+
 
 
 
