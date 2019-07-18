@@ -48,7 +48,7 @@ def scan_to_geod(y, x):
     if (not isinstance(x, float)):
         x = float(x)
     if (not isinstance(y, float)):
-        y = float(y))
+        y = float(y)
 
     a = _calc_a(x, y, r_eq, r_pol)
     b = _calc_b(x, y, H)
@@ -97,7 +97,7 @@ def geod_to_scan(lat, lon):
     if (not isinstance(lat, float)):
         lat = float(lat)
     if (not isinstance(lon, float)):
-        lon = float(lon))
+        lon = float(lon)
 
     lat = radians(lat)
     lon = radians(lon)
