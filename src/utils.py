@@ -160,7 +160,7 @@ def plot_wwa(abs_path, datetime):
 
 
 
-def valid_wwa_time(issued, expired, target):
+def _valid_wwa_time(issued, expired, target):
     target = int(target)
     expired = int(expired)
     issued = int(issued)
