@@ -22,6 +22,10 @@ from plotting_utils import to_file, load_data, load_coordinates, parse_coord_fna
 from plotting_utils import geodesic_point_buffer
 
 
+TX_SHP_PATH = '/home/mnichol3/Coding/glm-cases/resources/Texas_County_Boundaries/Texas_County_Boundaries.shp'
+OK_SHP_PATH = '//home/mnichol3/Coding/glm-cases/resources/tl_2016_40_cousub/tl_2016_40_cousub.shp'
+
+
 def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None, range_rings=False):
     """
     Plots both GLM FED, as a colormesh, and WTLMA sources, as points.
@@ -39,14 +43,11 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
         If true, plots color-coded WTLMA range-rings to indicate the possibly
         decrease in data quality due to distance
     """
-    tx_county_path = '/home/mnichol3/Coding/glm-cases/resources/Texas_County_Boundaries/Texas_County_Boundaries.shp'
-    ok_county_path = '//home/mnichol3/Coding/glm-cases/resources/tl_2016_40_cousub/tl_2016_40_cousub.shp'
-
-    tx_counties_reader = shpreader.Reader(tx_county_path)
+    tx_counties_reader = shpreader.Reader(TX_SHP_PATH)
     tx_counties_list = list(tx_counties_reader.geometries())
     tx_counties = cfeature.ShapelyFeature(tx_counties_list, ccrs.PlateCarree())
 
-    ok_counties_reader = shpreader.Reader(ok_county_path)
+    ok_counties_reader = shpreader.Reader(OK_SHP_PATH)
     ok_counties_list = list(ok_counties_reader.geometries())
     ok_counties = cfeature.ShapelyFeature(ok_counties_list, ccrs.PlateCarree())
 
@@ -141,14 +142,11 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
         If true, plots color-coded WTLMA range-rings to indicate the possibly
         decrease in data quality due to distance
     """
-    tx_county_path = '/home/mnichol3/Coding/glm-cases/resources/Texas_County_Boundaries/Texas_County_Boundaries.shp'
-    ok_county_path = '//home/mnichol3/Coding/glm-cases/resources/tl_2016_40_cousub/tl_2016_40_cousub.shp'
-
-    tx_counties_reader = shpreader.Reader(tx_county_path)
+    tx_counties_reader = shpreader.Reader(TX_SHP_PATH)
     tx_counties_list = list(tx_counties_reader.geometries())
     tx_counties = cfeature.ShapelyFeature(tx_counties_list, ccrs.PlateCarree())
 
-    ok_counties_reader = shpreader.Reader(ok_county_path)
+    ok_counties_reader = shpreader.Reader(OK_SHP_PATH)
     ok_counties_list = list(ok_counties_reader.geometries())
     ok_counties = cfeature.ShapelyFeature(ok_counties_list, ccrs.PlateCarree())
 
@@ -777,14 +775,11 @@ def plot_mrms_glm(grb_obj, glm_obj, wtlma_obj=None, points_to_plot=None):
     -----
     Axis extent set by subsetted MRMS lat & lon extent
     """
-    tx_county_path = '/home/mnichol3/Coding/glm-cases/resources/Texas_County_Boundaries/Texas_County_Boundaries.shp'
-    ok_county_path = '//home/mnichol3/Coding/glm-cases/resources/tl_2016_40_cousub/tl_2016_40_cousub.shp'
-
-    tx_counties_reader = shpreader.Reader(tx_county_path)
+    tx_counties_reader = shpreader.Reader(TX_SHP_PATH)
     tx_counties_list = list(tx_counties_reader.geometries())
     tx_counties = cfeature.ShapelyFeature(tx_counties_list, ccrs.PlateCarree())
 
-    ok_counties_reader = shpreader.Reader(ok_county_path)
+    ok_counties_reader = shpreader.Reader(OK_SHP_PATH)
     ok_counties_list = list(ok_counties_reader.geometries())
     ok_counties = cfeature.ShapelyFeature(ok_counties_list, ccrs.PlateCarree())
 
