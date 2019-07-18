@@ -658,12 +658,12 @@ def get_wwa_polys(fname, date, time, wwa_type=['SV', 'TO']):
 
     if ('SV' in wwa_type):
         filtered_wwa_sv = [rec.geometry for rec in wwa_reader.records() if (rec.attributes['GTYPE'] == 'P')
-                        and (valid_wwa_time(rec.attributes['ISSUED'], rec.attributes['EXPIRED'], datetime))
+                        and (_valid_wwa_time(rec.attributes['ISSUED'], rec.attributes['EXPIRED'], datetime))
                         and (rec.attributes['PHENOM'] == 'SV')]
         polys['SV'] = filtered_wwa_sv
     if ('TO' in wwa_type):
         filtered_wwa_to = [rec.geometry for rec in wwa_reader.records() if (rec.attributes['GTYPE'] == 'P')
-                        and (valid_wwa_time(rec.attributes['ISSUED'], rec.attributes['EXPIRED'], datetime))
+                        and (_valid_wwa_time(rec.attributes['ISSUED'], rec.attributes['EXPIRED'], datetime))
                         and (rec.attributes['PHENOM'] == 'TO')]
         polys['TO'] = filtered_wwa_sv
     return polys

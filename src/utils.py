@@ -105,11 +105,12 @@ def plot_wwa(abs_path, datetime):
 
     wwa_reader = shpreader.Reader(abs_path)
 
+    # Datetime format: 201905232344
     filtered_wwa_sv = [rec.geometry for rec in wwa_reader.records() if (rec.attributes['GTYPE'] == 'P')
-                    and (valid_wwa_time(rec.attributes['ISSUED'], rec.attributes['EXPIRED'], datetime))
+                    and (_valid_wwa_time(rec.attributes['ISSUED'], rec.attributes['EXPIRED'], datetime))
                     and (rec.attributes['PHENOM'] == 'SV')]
     filtered_wwa_to = [rec.geometry for rec in wwa_reader.records() if (rec.attributes['GTYPE'] == 'P')
-                    and (valid_wwa_time(rec.attributes['ISSUED'], rec.attributes['EXPIRED'], datetime))
+                    and (_valid_wwa_time(rec.attributes['ISSUED'], rec.attributes['EXPIRED'], datetime))
                     and (rec.attributes['PHENOM'] == 'TO')]
 
     sv_polys = cfeature.ShapelyFeature(filtered_wwa_sv, ccrs.PlateCarree())
@@ -174,7 +175,7 @@ base_path = '/media/mnichol3/pmeyers1/MattNicholson/glm/glm20190523'
 wwa_base = '/home/mnichol3/Coding/glm-cases/resources/wwa_201905230000_201905240000'
 wwa_fname = 'wwa_201905230000_201905240000.shp'
 wwa_abs_path = join(wwa_base, wwa_fname)
-plot_wwa(wwa_abs_path, '201905232106')
+plot_wwa(wwa_abs_path, '201905232120')
 #abs_path = join(base_path, f1)
 #test_glm_plot(abs_path)
 #are_equal(f1, f2, base_path)
