@@ -49,7 +49,8 @@ def test_glm_plot(abs_path):
     ax.add_feature(tx_counties, linewidth=.6, facecolor='none', edgecolor='gray', zorder=1)
     ax.add_feature(ok_counties, linewidth=.6, facecolor='none', edgecolor='gray', zorder=1)
 
-    ax.set_extent([-102.5, -100, 35, 36.5], crs=ccrs.PlateCarree())
+    #ax.set_extent([-102.5, -100, 35, 36.5], crs=ccrs.PlateCarree())
+    ax.set_extent([-103, -99, 34, 37], crs=ccrs.PlateCarree())
 
     lon_ticks = [x for x in np.arange(-180, 181, 0.5)]
     lat_ticks = [x for x in np.arange(-90, 91, 0.5)]
@@ -97,6 +98,6 @@ def are_equal(file1, file2, base_path):
 f1 = 'IXTR99_KNES_232107_40255.2019052321'
 f2 = 'IXTR99_KNES_232107_14608.2019052322'
 base_path = '/media/mnichol3/pmeyers1/MattNicholson/glm/glm20190523'
-abs_path = join(base_path, f2)
+abs_path = join(base_path, f1)
 test_glm_plot(abs_path)
 #are_equal(f1, f2, base_path)
