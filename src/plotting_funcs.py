@@ -544,14 +544,16 @@ def plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtl
     fig = plt.figure()
     ax = plt.gca()
 
-    xs = np.arange(0, 1000)
+    ax.set_ylim([500, 19000]) # 500 to 19000 meters
 
     ref_norm = colors.Normalize(vmin=0, vmax=65)
+
+    if (len(coords) != data.shape[1]):
+        print('WARNING: Width of data array != length of x-axis values')
+
     im = ax.pcolormesh(coords, scan_angles*1000, data, cmap=mpl.cm.gist_ncar, vmin=0, vmax=65)
     cbar = fig.colorbar(im, ax=ax, ticks=[10,20,30,40,50,60])
     cbar.set_label('Reflectivity (dbz)', rotation=90)
-
-    #l_norm = colors.Normalize(vmin=0, vmax=25)
 
     wtlma_lats, wtlma_lons = list(zip(*wtlma_coords))
 
@@ -574,6 +576,7 @@ def plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtl
     ax.xaxis.set_major_locator(plt.MaxNLocator(10))
     ax.set_ylabel('Altitude (m)')
     ax.set_xlabel('Lon, Lat')
+    ax.margins(0, tight=True)
 
     fig.tight_layout()
 
