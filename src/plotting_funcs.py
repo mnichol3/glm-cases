@@ -39,6 +39,16 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
         If true, plots color-coded WTLMA range-rings to indicate the possibly
         decrease in data quality due to distance
     """
+    tx_county_path = '/home/mnichol3/Coding/glm-cases/resources/Texas_County_Boundaries/Texas_County_Boundaries.shp'
+    ok_county_path = '//home/mnichol3/Coding/glm-cases/resources/tl_2016_40_cousub/tl_2016_40_cousub.shp'
+
+    tx_counties_reader = shpreader.Reader(tx_county_path)
+    tx_counties_list = list(tx_counties_reader.geometries())
+    tx_counties = cfeature.ShapelyFeature(tx_counties_list, ccrs.PlateCarree())
+
+    ok_counties_reader = shpreader.Reader(ok_county_path)
+    ok_counties_list = list(ok_counties_reader.geometries())
+    ok_counties = cfeature.ShapelyFeature(ok_counties_list, ccrs.PlateCarree())
 
     globe = ccrs.Globe(semimajor_axis=glm_obj.data['semi_major_axis'], semiminor_axis=glm_obj.data['semi_minor_axis'],
                        flattening=None, inverse_flattening=glm_obj.data['inv_flattening'])
@@ -54,6 +64,9 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
                              name='admin_1_states_provinces_shp', zorder=0)
 
     ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=1)
+
+    ax.add_feature(tx_counties, linewidth=.6, facecolor='none', edgecolor='gray', zorder=1)
+    ax.add_feature(ok_counties, linewidth=.6, facecolor='none', edgecolor='gray', zorder=1)
 
     cent_lat = float(wtlma_obj.coord_center[0])
     cent_lon = float(wtlma_obj.coord_center[1])
@@ -128,6 +141,17 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
         If true, plots color-coded WTLMA range-rings to indicate the possibly
         decrease in data quality due to distance
     """
+    tx_county_path = '/home/mnichol3/Coding/glm-cases/resources/Texas_County_Boundaries/Texas_County_Boundaries.shp'
+    ok_county_path = '//home/mnichol3/Coding/glm-cases/resources/tl_2016_40_cousub/tl_2016_40_cousub.shp'
+
+    tx_counties_reader = shpreader.Reader(tx_county_path)
+    tx_counties_list = list(tx_counties_reader.geometries())
+    tx_counties = cfeature.ShapelyFeature(tx_counties_list, ccrs.PlateCarree())
+
+    ok_counties_reader = shpreader.Reader(ok_county_path)
+    ok_counties_list = list(ok_counties_reader.geometries())
+    ok_counties = cfeature.ShapelyFeature(ok_counties_list, ccrs.PlateCarree())
+
     globe = ccrs.Globe(semimajor_axis=glm_obj.data['semi_major_axis'], semiminor_axis=glm_obj.data['semi_minor_axis'],
                        flattening=None, inverse_flattening=glm_obj.data['inv_flattening'])
 
@@ -142,6 +166,9 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
                              name='admin_1_states_provinces_shp', zorder=0)
 
     ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=1)
+
+    ax.add_feature(tx_counties, linewidth=.6, facecolor='none', edgecolor='gray', zorder=1)
+    ax.add_feature(ok_counties, linewidth=.6, facecolor='none', edgecolor='gray', zorder=1)
 
     cent_lat = float(wtlma_obj.coord_center[0])
     cent_lon = float(wtlma_obj.coord_center[1])
