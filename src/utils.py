@@ -13,6 +13,7 @@ import cartopy.feature as cfeature
 import matplotlib.cm as cm
 import matplotlib.colors as colors
 from os.path import join
+import sys
 
 import plotting_utils
 import glm_utils
@@ -94,10 +95,86 @@ def are_equal(file1, file2, base_path):
 
 
 
+def plot_wwa(abs_path, datetime):
+    """
+    To plot warning polygons and not county/zone/parish, must filter wwa records by
+    GTYPE = P
+    """
+    tx_county_path = '/home/mnichol3/Coding/glm-cases/resources/Texas_County_Boundaries/Texas_County_Boundaries.shp'
+    ok_county_path = '//home/mnichol3/Coding/glm-cases/resources/tl_2016_40_cousub/tl_2016_40_cousub.shp'
+
+    wwa_reader = shpreader.Reader(abs_path)
+
+    filtered_wwa_sv = [rec.geometry for rec in wwa_reader.records() if (rec.attributes['GTYPE'] == 'P')
+                    and (valid_wwa_time(rec.attributes['ISSUED'], rec.attributes['EXPIRED'], datetime))
+                    and (rec.attributes['PHENOM'] == 'SV')]
+    filtered_wwa_to = [rec.geometry for rec in wwa_reader.records() if (rec.attributes['GTYPE'] == 'P')
+                    and (valid_wwa_time(rec.attributes['ISSUED'], rec.attributes['EXPIRED'], datetime))
+                    and (rec.attributes['PHENOM'] == 'TO')]
+
+    sv_polys = cfeature.ShapelyFeature(filtered_wwa_sv, ccrs.PlateCarree())
+    to_polys = cfeature.ShapelyFeature(filtered_wwa_to, ccrs.PlateCarree())
+
+    tx_counties_reader = shpreader.Reader(tx_county_path)
+    tx_counties_list = list(tx_counties_reader.geometries())
+    tx_counties = cfeature.ShapelyFeature(tx_counties_list, ccrs.PlateCarree())
+
+    ok_counties_reader = shpreader.Reader(ok_county_path)
+    ok_counties_list = list(ok_counties_reader.geometries())
+    ok_counties = cfeature.ShapelyFeature(ok_counties_list, ccrs.PlateCarree())
+
+    fig = plt.figure(figsize=(10, 5))
+
+    ax = fig.add_subplot(111, projection=ccrs.Mercator())
+
+    states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='black',
+                             name='admin_1_states_provinces_shp', zorder=0)
+
+    ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=1)
+
+    ax.add_feature(tx_counties, linewidth=.6, facecolor='none', edgecolor='gray', zorder=1)
+    ax.add_feature(ok_counties, linewidth=.6, facecolor='none', edgecolor='gray', zorder=1)
+    ax.add_feature(sv_polys, linewidth=.8, facecolor='none', edgecolor='yellow', zorder=1)
+    ax.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red', zorder=1)
+
+    #ax.set_extent([-102.5, -100, 35, 36.5], crs=ccrs.PlateCarree())
+    ax.set_extent([-103, -99, 34, 37], crs=ccrs.PlateCarree())
+
+    lon_ticks = [x for x in np.arange(-180, 181, 0.5)]
+    lat_ticks = [x for x in np.arange(-90, 91, 0.5)]
+
+    gl = ax.gridlines(crs=ccrs.PlateCarree(), linewidth=1, color='gray',
+                      alpha=0.5, linestyle='--', draw_labels=True)
+    gl.xlabels_top = False
+    gl.ylabels_right=False
+    gl.xlocator = mticker.FixedLocator(lon_ticks)
+    gl.ylocator = mticker.FixedLocator(lat_ticks)
+    gl.xformatter = LONGITUDE_FORMATTER
+    gl.yformatter = LATITUDE_FORMATTER
+    gl.xlabel_style = {'color': 'red', 'weight': 'bold'}
+    gl.ylabel_style = {'color': 'red', 'weight': 'bold'}
+
+    plt.tight_layout()
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.show()
+
+
+
+def valid_wwa_time(issued, expired, target):
+    target = int(target)
+    expired = int(expired)
+    issued = int(issued)
+    return (target >= issued and target <= expired)
+
+
 
 f1 = 'IXTR99_KNES_232107_40255.2019052321'
 f2 = 'IXTR99_KNES_232107_14608.2019052322'
 base_path = '/media/mnichol3/pmeyers1/MattNicholson/glm/glm20190523'
-abs_path = join(base_path, f1)
-test_glm_plot(abs_path)
+wwa_base = '/home/mnichol3/Coding/glm-cases/resources/wwa_201905230000_201905240000'
+wwa_fname = 'wwa_201905230000_201905240000.shp'
+wwa_abs_path = join(wwa_base, wwa_fname)
+plot_wwa(wwa_abs_path, '201905232106')
+#abs_path = join(base_path, f1)
+#test_glm_plot(abs_path)
 #are_equal(f1, f2, base_path)

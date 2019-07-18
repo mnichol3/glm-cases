@@ -136,7 +136,7 @@ def main():
     local_mrms_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
     memmap_path = '/media/mnichol3/pmeyers1/MattNicholson/data'
 
-
+    """
     case_coords = '/home/mnichol3/Coding/glm-cases/resources/05232019-coords.txt'
     d_dict = {'date': str, 'wsr-time': str, 'mrms-time': str, 'lat1': float,
               'lon1': float, 'lat2': float, 'lon2': float}
@@ -154,7 +154,7 @@ def main():
         if (step['mrms-time'] == '2112'): # MISSING FILE
             #make_mrms_glm_plot(local_mrms_path, local_glm_path, local_wtlma_path, step['date'], step['mrms-time'], point1, point2, memmap_path)
             make_mrms_xsect2(local_mrms_path, local_wtlma_path, step['date'], step['mrms-time'], point1, point2)
-
+    """
 
 
 
@@ -164,7 +164,9 @@ def main():
     #plotting_funcs.plot_mercator_dual(glm_data, (point1, point2), wtlma_data)
     #plotting_funcs.plot_mercator_dual_2(glm_data, (point1, point2), wtlma_data)
 
-    #abi_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L2-CMIPM', '5-23-2019-20:00', '5-23-2019-20:00', 'M1', '13', prompt=False)
+    abi_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L2-CMIPM', '5-23-2019-20:00', '5-23-2019-20:00', 'M1', '13', prompt=True)
+    for file in abi_files:
+        print(file)
     # TODO: test this --> goes_utils.read_file(abi_files[0], [35, 36.5, -102.5, -100])
 
 
