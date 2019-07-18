@@ -16,6 +16,9 @@ from grib import fetch_scans, get_grib_objs
 from mrmscomposite import MRMSComposite
 
 
+WWA_SHP_PATH = '/home/mnichol3/Coding/glm-cases/resources/wwa_201905230000_201905240000'
+
+
 def to_file(out_path, f_name, data):
     """
     Writes a numpy 2d array to a text file
@@ -645,3 +648,30 @@ def geodesic_point_buffer(lat, lon, km):
     buf = Point(0, 0).buffer(km * 1000)  # distance in metres
 
     return transform(project, buf).exterior
+
+
+
+def get_wwa_polys(fname, date, time, wwa_type=['SV', 'TO']):
+    polys = {}
+    abs_path = join(WWA_SHP_PATH, fname)
+    wwa_reader = shpreader.Reader(abs_path)
+
+    if ('SV' in wwa_type):
+        filtered_wwa_sv = [rec.geometry for rec in wwa_reader.records() if (rec.attributes['GTYPE'] == 'P')
+                        and (valid_wwa_time(rec.attributes['ISSUED'], rec.attributes['EXPIRED'], datetime))
+                        and (rec.attributes['PHENOM'] == 'SV')]
+        polys['SV'] = filtered_wwa_sv
+    if ('TO' in wwa_type):
+        filtered_wwa_to = [rec.geometry for rec in wwa_reader.records() if (rec.attributes['GTYPE'] == 'P')
+                        and (valid_wwa_time(rec.attributes['ISSUED'], rec.attributes['EXPIRED'], datetime))
+                        and (rec.attributes['PHENOM'] == 'TO')]
+        polys['TO'] = filtered_wwa_sv
+    return polys
+
+
+
+def _valid_wwa_time(issued, expired, target):
+    target = int(target)
+    expired = int(expired)
+    issued = int(issued)
+    return (target >= issued and target <= expired)
