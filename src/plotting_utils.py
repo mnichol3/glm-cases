@@ -11,6 +11,7 @@ from shapely.ops import transform
 import pyproj
 import sys
 import math
+import datetime
 
 from grib import fetch_scans, get_grib_objs
 from mrmscomposite import MRMSComposite
@@ -649,17 +650,40 @@ def geodesic_point_buffer(lat, lon, km):
 
 
 def get_wwa_polys(abs_path, date, time, wwa_type=['SV', 'TO']):
+    """
+    Gets NWS WWA polygons for a specified date & time
+
+    Parameters
+    ----------
+    abs_path : str
+        Absolute path of the WWA shapefile
+    date : str
+        Format: MMDDYYYY
+    time : str
+        Format: HHMM
+    wwa_type : list of str, optional
+        Types of warnings to get. Default: SV (Severe Thunderstorm) & TO (Tornado)
+
+    Returns
+    -------
+    polys : dict; key : str, value : polygon
+
+    Notes
+    -----
+    Native shapefile datetime format: 201905232120
+    """
     polys = {}
+    target_dt = _format_wwa_time(date, time)
     wwa_reader = shpreader.Reader(abs_path)
 
     if ('SV' in wwa_type):
         filtered_wwa_sv = [rec.geometry for rec in wwa_reader.records() if (rec.attributes['GTYPE'] == 'P')
-                        and (_valid_wwa_time(rec.attributes['ISSUED'], rec.attributes['EXPIRED'], datetime))
+                        and (_valid_wwa_time(rec.attributes['ISSUED'], rec.attributes['EXPIRED'], target_dt))
                         and (rec.attributes['PHENOM'] == 'SV')]
         polys['SV'] = filtered_wwa_sv
     if ('TO' in wwa_type):
         filtered_wwa_to = [rec.geometry for rec in wwa_reader.records() if (rec.attributes['GTYPE'] == 'P')
-                        and (_valid_wwa_time(rec.attributes['ISSUED'], rec.attributes['EXPIRED'], datetime))
+                        and (_valid_wwa_time(rec.attributes['ISSUED'], rec.attributes['EXPIRED'], target_dt))
                         and (rec.attributes['PHENOM'] == 'TO')]
         polys['TO'] = filtered_wwa_sv
     return polys
@@ -671,3 +695,25 @@ def _valid_wwa_time(issued, expired, target):
     expired = int(expired)
     issued = int(issued)
     return (target >= issued and target <= expired)
+
+
+
+def _format_wwa_time(date, time):
+    """
+    Formats a datetime string to filter WWA polygons
+
+    Parameters
+    ----------
+    date : str
+        Format: MMDDYYYY
+    time : str
+        Format: HHMM
+
+    Returns
+    -------
+    str
+        WWA polygon datetime
+        Format: YYYYMMDDHHMM
+    """
+    dt = datetime.datetime.strptime(date + time,'%m%d%Y%H%M')
+    return datetime.datetime.strftime(dt, '%Y%m%d%H%M')
