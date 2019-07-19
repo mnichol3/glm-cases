@@ -48,7 +48,7 @@ def make_wtlma_plot(base_path, start, stop, points_to_plot=None):
 
 
 
-def make_mrms_glm_plot(local_mrms_path, local_glm_path, local_wtlma_path, date, time, point1, point2, memmap_path):
+def make_mrms_glm_plot(local_mrms_path, local_glm_path, local_wtlma_path, date, time, point1, point2, memmap_path, wwa_fname):
     """
     Contains helper-function calls needed for plot_mrms_glm()
 
@@ -82,8 +82,9 @@ def make_mrms_glm_plot(local_mrms_path, local_glm_path, local_wtlma_path, date, 
     glm_scans = localglminterface.get_files_in_range(local_glm_path, t1, t1)
     # 2 files for each time, apparently from 2 diff sources but same data
     glm_obj = glm_utils.read_file(glm_scans[1].abs_path, meta=True)
-    # sig : plot_mrms_glm(grb_obj, glm_obj, wtlma_obj=None, points_to_plot=None)
-    plotting_funcs.plot_mrms_glm(mrms_obj, glm_obj, wtlma_obj=wtlma_data, points_to_plot=[point1, point2])
+    wwa_polys = plotting_utils.get_wwa_polys(wwa_fname, date, time, wwa_type=['SV', 'TO'])
+    # func sig : plot_mrms_glm(grb_obj, glm_obj, wtlma_obj=None, points_to_plot=None, wwa_polys=None)
+    plotting_funcs.plot_mrms_glm(mrms_obj, glm_obj, wtlma_obj=wtlma_data, points_to_plot=[point1, point2], wwa_polys=wwa_polys)
     del mrms_obj    # Probably not needed but yolo
 
 
@@ -137,6 +138,7 @@ def main():
     memmap_path = '/media/mnichol3/pmeyers1/MattNicholson/data'
 
     """
+    wwa_fname = '/home/mnichol3/Coding/glm-cases/resources/wwa_201905230000_201905240000/wwa_201905230000_201905240000.shp'
     case_coords = '/home/mnichol3/Coding/glm-cases/resources/05232019-coords.txt'
     d_dict = {'date': str, 'wsr-time': str, 'mrms-time': str, 'lat1': float,
               'lon1': float, 'lat2': float, 'lon2': float}
