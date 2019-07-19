@@ -672,6 +672,10 @@ def get_wwa_polys(abs_path, date, time, wwa_type=['SV', 'TO']):
     Notes
     -----
     Native shapefile datetime format: 201905232120
+    WWA shapefile download link:
+        http://mesonet.agron.iastate.edu/request/gis/watchwarn.phtml
+    WWA shapefile docs:
+        http://mesonet.agron.iastate.edu/info/datasets/vtec.html
     """
     polys = {}
     target_dt = _format_wwa_time(date, time)

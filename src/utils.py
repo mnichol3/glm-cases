@@ -96,16 +96,20 @@ def are_equal(file1, file2, base_path):
 
 
 def dump_shp(abs_path, pretty=False):
+    count = 0
     reader = shpreader.Reader(abs_path)
     if (pretty):
         for rec in reader.records():
+            count += 1
             for key, val in rec.attributes.items():
                 print('{}: {}'.format(key, val))
             print('-'*25)
     else:
         for rec in reader.records():
+            count += 1
             print(rec.attributes)
             print('-'*25)
+    print('\nTotal records: {}\n'.format(count))
 
 
 
