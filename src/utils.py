@@ -95,6 +95,20 @@ def are_equal(file1, file2, base_path):
 
 
 
+def dump_shp(abs_path, pretty=False):
+    reader = shpreader.Reader(abs_path)
+    if (pretty):
+        for rec in reader.records():
+            for key, val in rec.attributes.items():
+                print('{}: {}'.format(key, val))
+            print('-'*25)
+    else:
+        for rec in reader.records():
+            print(rec.attributes)
+            print('-'*25)
+
+
+
 def plot_wwa(abs_path, datetime):
     """
     To plot warning polygons and not county/zone/parish, must filter wwa records by
@@ -175,7 +189,9 @@ base_path = '/media/mnichol3/pmeyers1/MattNicholson/glm/glm20190523'
 wwa_base = '/home/mnichol3/Coding/glm-cases/resources/wwa_201905230000_201905240000'
 wwa_fname = 'wwa_201905230000_201905240000.shp'
 wwa_abs_path = join(wwa_base, wwa_fname)
-plot_wwa(wwa_abs_path, '201905232120')
+#plot_wwa(wwa_abs_path, '201905232120')
+dump_shp(wwa_abs_path, pretty=True)
+
 #abs_path = join(base_path, f1)
 #test_glm_plot(abs_path)
 #are_equal(f1, f2, base_path)
