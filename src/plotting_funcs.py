@@ -756,7 +756,7 @@ def plot_wtlma(wtlma_obj_list, grid_extent=None, nbins=1000, points_to_plot=None
 
 
 
-def plot_mrms_glm(grb_obj, glm_obj, wtlma_obj=None, points_to_plot=None):
+def plot_mrms_glm(grb_obj, glm_obj, wtlma_obj=None, points_to_plot=None, wwa_polys=None):
     """
     Plots MRMS and GLM data on a Mercator projection
 
@@ -770,6 +770,8 @@ def plot_mrms_glm(grb_obj, glm_obj, wtlma_obj=None, points_to_plot=None):
         WTLMA object to plot
     points_to_plot : tuple of tuples or list of tuples, optional
         Format: [(lat1, lon1), (lat2, lon2)]
+    wwa_polys : dict; key : str, value : polygon; optional
+        NWS Severe Thunderstorm and/or Tornado warning polygons
 
     Notes
     -----
@@ -828,6 +830,14 @@ def plot_mrms_glm(grb_obj, glm_obj, wtlma_obj=None, points_to_plot=None):
     if (points_to_plot is not None):
         plt.plot([points_to_plot[0][1], points_to_plot[1][1]], [points_to_plot[0][0], points_to_plot[1][0]],
                            marker='o', color='black', zorder=4, transform=ccrs.PlateCarree())
+
+    if (wwa_polys is not None):
+        wwa_keys = wwa_polys.keys()
+
+        if ('SV' in wwa_keys):
+            ax.add_feature(wwa_polys['SV'], linewidth=.8, facecolor='none', edgecolor='yellow', zorder=5)
+        if ('TO' in wwa_keys):
+            ax.add_feature(wwa_polys['TO'], linewidth=.8, facecolor='none', edgecolor='red', zorder=5)
 
     lon_ticks = [x for x in np.arange(-180, 181, 0.5)]
     lat_ticks = [x for x in np.arange(-90, 91, 0.5)]
