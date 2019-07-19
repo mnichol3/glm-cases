@@ -12,6 +12,7 @@ import pyproj
 import sys
 import math
 import datetime
+import cartopy.io.shapereader as shpreader
 
 from grib import fetch_scans, get_grib_objs
 from mrmscomposite import MRMSComposite
