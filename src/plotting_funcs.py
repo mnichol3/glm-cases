@@ -26,7 +26,7 @@ TX_SHP_PATH = '/home/mnichol3/Coding/glm-cases/resources/Texas_County_Boundaries
 OK_SHP_PATH = '//home/mnichol3/Coding/glm-cases/resources/tl_2016_40_cousub/tl_2016_40_cousub.shp'
 
 
-def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None, range_rings=False):
+def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None, range_rings=False, wwa_polys=None):
     """
     Plots both GLM FED, as a colormesh, and WTLMA sources, as points.
 
@@ -42,6 +42,8 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
     range_rings : bool, optional
         If true, plots color-coded WTLMA range-rings to indicate the possibly
         decrease in data quality due to distance
+    wwa_polys : dict; key : str, value : polygon; optional
+        NWS Severe Thunderstorm and/or Tornado warning polygons
     """
     tx_counties_reader = shpreader.Reader(TX_SHP_PATH)
     tx_counties_list = list(tx_counties_reader.geometries())
@@ -117,6 +119,16 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
                                linewidth=1.25, zorder=2)
             ax.add_patch(mpl_poly)
 
+    if (wwa_polys is not None):
+        wwa_keys = wwa_polys.keys()
+
+        if ('SV' in wwa_keys):
+            sv_polys = cfeature.ShapelyFeature(wwa_polys['SV'], ccrs.PlateCarree())
+            ax.add_feature(sv_polys, linewidth=.8, facecolor='none', edgecolor='yellow', zorder=5)
+        if ('TO' in wwa_keys):
+            to_polys = cfeature.ShapelyFeature(wwa_polys['TO'], ccrs.PlateCarree())
+            ax.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red', zorder=5)
+
     plt.title('GLM FED {} {}\n WTLMA Sources {}'.format(glm_obj.scan_date, glm_obj.scan_time, wtlma_obj._start_time_pp()), loc='right')
     plt.tight_layout()
     plt.gca().set_aspect('equal', adjustable='box')
@@ -124,7 +136,7 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
 
 
 
-def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None, range_rings=False):
+def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None, range_rings=False, wwa_polys=None):
     """
     Same as plot_mercator_dual(), except it plots the wtlma strokes as
     power densities
@@ -141,6 +153,8 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
     range_rings : bool, optional
         If true, plots color-coded WTLMA range-rings to indicate the possibly
         decrease in data quality due to distance
+    wwa_polys : dict; key : str, value : polygon; optional
+        NWS Severe Thunderstorm and/or Tornado warning polygons
     """
     tx_counties_reader = shpreader.Reader(TX_SHP_PATH)
     tx_counties_list = list(tx_counties_reader.geometries())
@@ -223,6 +237,16 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
             mpl_poly = Polygon(np.array(coord_list), ec=clrs[idx], fc="none", transform=ccrs.PlateCarree(),
                                linewidth=1.25, zorder=2)
             ax.add_patch(mpl_poly)
+
+    if (wwa_polys is not None):
+        wwa_keys = wwa_polys.keys()
+
+        if ('SV' in wwa_keys):
+            sv_polys = cfeature.ShapelyFeature(wwa_polys['SV'], ccrs.PlateCarree())
+            ax.add_feature(sv_polys, linewidth=.8, facecolor='none', edgecolor='yellow', zorder=5)
+        if ('TO' in wwa_keys):
+            to_polys = cfeature.ShapelyFeature(wwa_polys['TO'], ccrs.PlateCarree())
+            ax.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red', zorder=5)
 
     plt.title('GLM FED {} {}\n WTLMA Sources {}'.format(glm_obj.scan_date, glm_obj.scan_time, wtlma_obj._start_time_pp()), loc='right')
     plt.tight_layout()
