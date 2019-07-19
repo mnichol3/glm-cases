@@ -122,10 +122,11 @@ def make_mrms_xsect2(local_mrms_path, local_wtlma_path, date, time, point1, poin
 
 
 """
-def make_wtlma_glm_mercator_dual():
+def make_wtlma_glm_mercator_dual(local_wtlma_path, local_glm_path, date, time, point1, point2, wwa_fname):
     glm_data = glm_utils.read_file(abs_path_glm, meta=True, window=False)
     wtlma_data = wtlma.parse_file(abs_path_wtlma, sub_t='21:21')
-    plotting_funcs.plot_mercator_dual_2(glm_data, wtlma_data, points_to_plot=(point1, point2), range_rings=True)
+    wwa_polys = plotting_utils.get_wwa_polys(wwa_fname, date, time, wwa_type=['SV', 'TO'])
+    plotting_funcs.plot_mercator_dual_2(glm_data, wtlma_data, points_to_plot=(point1, point2), range_rings=True, wwa_polys=wwa_polys)
 """
 
 
