@@ -243,6 +243,7 @@ class GoesAWSInterface(object):
         jul_day = date.timetuple().tm_yday
 
         prefix = self._build_prefix(product=product, year=year, julian_day=jul_day, hour=hour, sector=sector)
+        
         resp = self._get_sat_bucket(satellite, prefix)
 
         for each in list(resp['Contents']):

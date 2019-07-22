@@ -10,6 +10,7 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import matplotlib.cm as cm
 from cartopy.feature import NaturalEarthFeature
 import sys
+import re
 
 import goesawsinterface
 from glm_utils import georeference
@@ -88,10 +89,28 @@ def read_file(abi_file, extent=None):
     data_dict : dictionary of str
         Dictionar of ABI image data & metadata from the netCDF file
     """
-
     data_dict = {}
+    product_re = r'OR_ABI-L\d\w?-(\w{3,5})\d?-M\d'
+
+    prod_match = re.search(product_re, abi_file)
+    if (prod_match):
+        prod = prod_match.group(0)
+    else:
+        raise ValueError('Unable to parse ABI file product')
 
     fh = Dataset(abi_file, mode='r')
+
+    if ('Rad' in prod):
+        prod_key = 'Rad'
+        data_dict['min_data_val'] = fh.variables['min_radiance_value_of_valid_pixels'][0]
+        data_dict['max_data_val'] = fh.variables['max_radiance_value_of_valid_pixels'][0]
+    elif ('CMIP' in prod):
+        prod_key = 'CMI'
+        data_dict['min_data_val'] = fh.variables['min_brightness_temperature'][0]
+        data_dict['max_data_val'] = fh.variables['max_brightness_temperature'][0]
+    else:
+        raise ValueError('Invalid ABI product key')
+
 
     data_dict['band_id'] = fh.variables['band_id'][0]
 
@@ -101,7 +120,8 @@ def read_file(abi_file, extent=None):
     data_dict['inverse_flattening'] = fh.variables['goes_imager_projection'].inverse_flattening
     #data_dict['latitude_of_projection_origin'] = fh.variables['goes_imager_projection'].latitude_of_projection_origin
     #data_dict['longitude_of_projection_origin'] = fh.variables['goes_imager_projection'].longitude_of_projection_origin
-    data_dict['data_units'] = fh.variables['CMI'].units
+
+    data_dict['data_units'] = fh.variables[prod_key].units
 
     # Seconds since 2000-01-01 12:00:00
     add_seconds = fh.variables['t'][0]
@@ -134,14 +154,20 @@ def read_file(abi_file, extent=None):
     Y = fh.variables['y'][:]
 
     if (extent is not None):
-        Xs, Ys = georeference(X, Y, sat_lon, sat_height, sat_sweep)
-        min_y, max_y, min_x, max_x = subset_grid(extent, Xs, Ys)
+        #Xs, Ys = georeference(X, Y, sat_lon, sat_height, sat_sweep, data=fh.variables[prod_key][:])
 
-        data = fh.variables['CMI'][min_y : max_y, min_x : max_x].data # might not work idk
-        Xs = Xs[min_x : max_x]
-        Ys = Ys[min_y : max_y]
+        min_y, max_y, min_x, max_x = subset_grid(extent, X, Y)
+
+        data = fh.variables[prod_key][max_y : min_y, max_x : min_x]
+        X = X[max_x : min_x]
+        Y = Y[max_y : min_y]
+        data_dict['x'] = X
+        data_dict['y'] = Y
     else:
-        print('WARNING: Not subsetting ABI data!\n')
+        print('\nWARNING: Not subsetting ABI data!\n')
+        data = fh.variables[prod_key][:].data
+        data_dict['x'] = X
+        data_dict['y'] = Y
 
     fh.close()
     fh = None
@@ -152,8 +178,6 @@ def read_file(abi_file, extent=None):
     data_dict['sat_lat'] = sat_lat
     data_dict['lat_lon_extent'] = lat_lon_extent
     data_dict['sat_sweep'] = sat_sweep
-    data_dict['x'] = Xs
-    data_dict['y'] = Ys
     data_dict['data'] = data
 
     return data_dict
@@ -185,32 +209,25 @@ def plot_geos(data_dict):
     sat_lon = data_dict['sat_lon']
     sat_sweep = data_dict['sat_sweep']
     scan_date = data_dict['scan_date']
-    data = data_dict['data']
 
-    Xs = data_dict['x'] * sat_height
-    Ys = data_dict['y'] * sat_height
-
-    X, Y = np.meshgrid(Xs,Ys)
+    X, Y = georeference(data_dict['x'], data_dict['y'], sat_lon, sat_height,
+                        sat_sweep, data=data_dict['data'])
 
     fig = plt.figure(figsize=(10, 5))
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.Geostationary(central_longitude=sat_lon,
                                 satellite_height=sat_height,false_easting=0,false_northing=0,
                                 globe=None, sweep_axis=sat_sweep))
 
-    ax.set_xlim(min(Xs), max(Xs))
-    ax.set_ylim(min(Ys), max(Ys))
 
+    #ax.set_xlim(int(data_dict['lat_lon_extent']['w']), int(data_dict['lat_lon_extent']['e']))
+    #ax.set_ylim(int(data_dict['lat_lon_extent']['s']), int(data_dict['lat_lon_extent']['n']))
 
     ax.coastlines(resolution='10m', color='gray')
+    plt.pcolormesh(X, Y, data_dict['data'], cmap=cm.binary_r, vmin=data_dict['min_data_val'], vmax=data_dict['max_data_val'])
+
     plt.title('GOES-16 Imagery', fontweight='semibold', fontsize=15)
     plt.title('%s' % scan_date.strftime('%H:%M UTC %d %B %Y'), loc='right')
-    plt.pcolormesh(X, Y, data, cmap=cm.Greys_r)
-
-    cent_lat = 29.93
-    cent_lon = -71.35
-
-    plt.scatter(cent_lon,cent_lat, marker="+", color="r", transform=ccrs.PlateCarree(),
-                s = 200)
+    ax.axis('equal')
 
     plt.show()
 
@@ -243,7 +260,9 @@ def plot_mercator(data_dict, out_path):
     globe = ccrs.Globe(semimajor_axis=data_dict['semimajor_ax'], semiminor_axis=data_dict['semiminor_ax'],
                        flattening=None, inverse_flattening=data_dict['inverse_flattening'])
 
-    Xs, Ys = georeference(data_dict)
+    X, Y = georeference(data_dict['x'], data_dict['y'], data_dict['sat_lon'],
+                        data_dict['sat_height'], sat_sweep = data_dict['sat_sweep'],
+                        data=data_dict['data'])
 
     fig = plt.figure(figsize=(10, 5))
 
@@ -259,8 +278,8 @@ def plot_mercator(data_dict, out_path):
     plt.title('GOES-16 Ch.' + str(data_dict['band_id']),
               fontweight='semibold', fontsize=10, loc='left')
 
-    cent_lat = float(center_coords[1])
-    cent_lon = float(center_coords[0])
+    #cent_lat = float(center_coords[1])
+    #cent_lon = float(center_coords[0])
 
     """
     lim_coords = geodesic_point_buffer(cent_lat, cent_lon, 400)
@@ -287,7 +306,7 @@ def plot_mercator(data_dict, out_path):
 
     #color = cm.hsv
     # cmap hsv looks the coolest
-    cmesh = plt.pcolormesh(Xs, Ys, data, transform=ccrs.PlateCarree(), cmap=color)
+    cmesh = plt.pcolormesh(X, Y, data, transform=ccrs.PlateCarree(), cmap=color)
 
     # Set lat & lon grid tick marks
     lon_ticks = [x for x in range(-180, 181) if x % 2 == 0]

@@ -155,7 +155,7 @@ def read_file(abs_path, window=False, meta=False):
 
 
 
-def georeference(x, y, sat_lon, sat_height, sat_sweep):
+def georeference(x, y, sat_lon, sat_height, sat_sweep, data=None):
     """
     Calculates the longitude and latitude coordinates of each data point
 
@@ -163,10 +163,10 @@ def georeference(x, y, sat_lon, sat_height, sat_sweep):
     ------------
     x : list
     y : list
-    data : 2d array
     sat_lon : something
     sat_height : a number of some sort
     sat_sweep : i honestly dont know
+    data : 2d array
 
 
     Returns
@@ -176,13 +176,17 @@ def georeference(x, y, sat_lon, sat_height, sat_sweep):
         data latitude coordinates
     """
 
-    Xs = x * sat_height
-    Ys = y * sat_height
+    Xs = [i * sat_height for i in x]
+    Ys = [j * sat_height for j in y]
 
     p = pyproj.Proj(proj='geos', h=sat_height, lon_0=sat_lon, sweep=sat_sweep)
 
     lons, lats = np.meshgrid(Xs, Ys)
     lons, lats = p(lons, lats, inverse=True)
+
+    if (data is not None):
+        lats[np.isnan(data)] = 57
+        lons[np.isnan(data)] = -152
 
     return (lons, lats)
 

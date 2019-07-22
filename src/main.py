@@ -132,18 +132,35 @@ def make_wtlma_glm_mercator_dual(local_wtlma_path, local_glm_path, date, time, p
 
 
 def main():
-    local_abi_path = '/media/mnichol3/pmeyers1/MattNicholson/goes'
+    local_abi_path = '/media/mnichol3/pmeyers1/MattNicholson/abi'
     local_wtlma_path = '/media/mnichol3/pmeyers1/MattNicholson/wtlma'
     local_glm_path = '/media/mnichol3/pmeyers1/MattNicholson/glm'
     local_mrms_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
     memmap_path = '/media/mnichol3/pmeyers1/MattNicholson/data'
 
+
+    # wwa_fname = '/home/mnichol3/Coding/glm-cases/resources/wwa_201905230000_201905240000/wwa_201905230000_201905240000.shp'
+    # case_coords = '/home/mnichol3/Coding/glm-cases/resources/05232019-coords.txt'
+    # d_dict = {'date': str, 'wsr-time': str, 'mrms-time': str, 'lat1': float,
+    #           'lon1': float, 'lat2': float, 'lon2': float}
+    # case_steps = pd.read_csv(case_coords, sep=',', header=0, dtype=d_dict)
+
+    # # Pull the ABI files
+    # first_dt = _format_date_time(case_steps.iloc[0]['date'], case_steps.iloc[0]['mrms-time'])
+    # last_dt = _format_date_time(case_steps.iloc[-1]['date'], case_steps.iloc[-1]['mrms-time'])
+    # #abi_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L2-CMIPM', first_dt, last_dt, 'M1', '13', prompt=False)
+    # abi_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L1b-Rad', first_dt, first_dt[:-5] + '20:55', 'M1', '2', prompt=False)
+
+    # Read & subset ABI data
+    #abi_data = goes_utils.read_file(abi_files[0], extent=[35, 36.5, -102.5, -100])
+    #abi_data = goes_utils.read_file(abi_files[0], extent=[35, 36.5, -102.5, -100])
+
+    fname = 'OR_ABI-L1b-RadM1-M6C02_G16_s20191432055429_e20191432055486_c20191432055520.nc'
+    abs_path = '/media/mnichol3/pmeyers1/MattNicholson/abi/' + fname
+    #abi_data = goes_utils.read_file(abs_path, extent=[35, 36.5, -102.5, -100])
+    abi_data = goes_utils.read_file(abs_path, extent=[35, 36.5, -72, -73.5])
+    goes_utils.plot_geos(abi_data)
     """
-    wwa_fname = '/home/mnichol3/Coding/glm-cases/resources/wwa_201905230000_201905240000/wwa_201905230000_201905240000.shp'
-    case_coords = '/home/mnichol3/Coding/glm-cases/resources/05232019-coords.txt'
-    d_dict = {'date': str, 'wsr-time': str, 'mrms-time': str, 'lat1': float,
-              'lon1': float, 'lat2': float, 'lon2': float}
-    case_steps = pd.read_csv(case_coords, sep=',', header=0, dtype=d_dict)
 
 
     for idx, step in case_steps.iterrows():
@@ -167,9 +184,9 @@ def main():
     #plotting_funcs.plot_mercator_dual(glm_data, (point1, point2), wtlma_data)
     #plotting_funcs.plot_mercator_dual_2(glm_data, (point1, point2), wtlma_data)
 
-    abi_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L2-CMIPM', '5-23-2019-20:00', '5-23-2019-20:00', 'M1', '13', prompt=True)
-    for file in abi_files:
-        print(file)
+    #abi_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L2-CMIPM', '5-23-2019-20:00', '5-23-2019-20:00', 'M1', '13', prompt=True)
+    #for file in abi_files:
+    #    print(file)
     # TODO: test this --> goes_utils.read_file(abi_files[0], [35, 36.5, -102.5, -100])
 
 
