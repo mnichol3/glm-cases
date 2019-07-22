@@ -1,9 +1,3 @@
-"""
-Author: Matt Nicholson
-
-Class for a local GOES-16/-17 netCDF file downloaded from NOAA's Amazon Web Service
-S3 bucket
-"""
 import os
 import re
 
