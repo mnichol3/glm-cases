@@ -430,6 +430,18 @@ def get_geospatial_extent(abs_path):
 
 
 def plot_sammich_geos(visual, infrared):
+    """
+    Plots visual & infrared "sandwich" on a geostationary projection. The visual
+    imagery provided cloud texture & structure details and the infrared provided
+    cloud top temps
+
+    Parameters
+    ----------
+    visual : dict
+        Dictionary of visual satellite data returned by read_file(). Use band 2
+    infrared : dict
+        Dictionary of infrared satellite data returned by read_file(). Use band 13
+    """
     sat_height = visual['sat_height']
     sat_lon = visual['sat_lon']
     sat_sweep = visual['sat_sweep']
@@ -473,6 +485,18 @@ def plot_sammich_geos(visual, infrared):
 
 
 def plot_sammich_mercator(visual, infrared):
+    """
+    Plots visual & infrared "sandwich" on a Mercator projection. The visual
+    imagery provided cloud texture & structure details and the infrared provided
+    cloud top temps
+
+    Parameters
+    ----------
+    visual : dict
+        Dictionary of visual satellite data returned by read_file(). Use band 2
+    infrared : dict
+        Dictionary of infrared satellite data returned by read_file(). Use band 13
+    """
     sat_height = visual['sat_height']
     sat_lon = visual['sat_lon']
     sat_sweep = visual['sat_sweep']
