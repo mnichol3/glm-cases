@@ -441,6 +441,10 @@ def plot_sammich_geos(visual, infrared):
         Dictionary of visual satellite data returned by read_file(). Use band 2
     infrared : dict
         Dictionary of infrared satellite data returned by read_file(). Use band 13
+
+    Notes
+    -----
+    - Uses imshow instead of pcolormesh
     """
     sat_height = visual['sat_height']
     sat_lon = visual['sat_lon']
@@ -496,6 +500,10 @@ def plot_sammich_mercator(visual, infrared):
         Dictionary of visual satellite data returned by read_file(). Use band 2
     infrared : dict
         Dictionary of infrared satellite data returned by read_file(). Use band 13
+
+    Notes
+    -----
+    - Uses imshow instead of pcolormesh
     """
     sat_height = visual['sat_height']
     sat_lon = visual['sat_lon']
