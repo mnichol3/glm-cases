@@ -156,10 +156,10 @@ def read_file(abi_file, extent=None):
         min_y, max_y, min_x, max_x = subset_grid(extent, X, Y)
 
         data = fh.variables[prod_key][max_y : min_y, max_x : min_x]
-        X = X[max_x : min_x]
-        Y = Y[max_y : min_y]
-        data_dict['x'] = X
-        data_dict['y'] = Y
+        # X = X[max_x : min_x]
+        # Y = Y[max_y : min_y]
+        # data_dict['x'] = X
+        # data_dict['y'] = Y
 
         lat_lon_extent['n'] = extent[1]
         lat_lon_extent['s'] = extent[0]
@@ -169,8 +169,8 @@ def read_file(abi_file, extent=None):
     else:
         print('\nWARNING: Not subsetting ABI data!\n')
         data = fh.variables[prod_key][:].data
-        data_dict['x'] = X
-        data_dict['y'] = Y
+        # data_dict['x'] = X
+        # data_dict['y'] = Y
 
         lat_lon_extent['n'] = fh.variables['geospatial_lat_lon_extent'].geospatial_northbound_latitude
         lat_lon_extent['s'] = fh.variables['geospatial_lat_lon_extent'].geospatial_southbound_latitude
@@ -517,7 +517,10 @@ def plot_sammich_mercator(visual, infrared):
     ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=3)
 
     # visual & infrared arrays are different dimensions
-    viz_img = plt.imshow(visual['data'], cmap=cm.binary_r, extent=extent, origin='upper',
+    # vis_data = _rad_to_ref(visual['data'])
+    # viz_img = plt.imshow(vis_data, cmap=cm.Greys_r, extent=extent, origin='upper',
+    #                      vmin=0, vmax=1, zorder=1, transform=ccrs.PlateCarree())
+    viz_img = plt.imshow(visual['data'], cmap=cm.Greys_r, extent=extent, origin='upper',
                          vmin=visual['min_data_val'], vmax=visual['max_data_val'],
                          zorder=1, transform=ccrs.PlateCarree())
 
@@ -535,6 +538,63 @@ def plot_sammich_mercator(visual, infrared):
     ax.axis('equal')
 
     plt.show()
+
+
+
+def _rad_to_ref(radiance, channel=2, correct=True):
+    """
+    Performs a linear conversion of spectral radiance to reflectance factor
+
+    Parameters
+    ----------
+    radiance : numpy 2d array
+        2D array of radiance values
+        Units: mW / (m**2 sr cm**-1)
+    correct : bool, optional
+        If True, the reflectance array is gamma-corrected
+    channel : int, optional
+        ABI channel pertaining to the radiance data. Default: 2
+
+    Returns
+    -------
+    ref : numpy 2D array
+        2D array of reflectance values with the same dimensions as 'radiance'
+    """
+    constants = {1: 726.721072, 2: 663.274497, 3: 441.868715}
+    d2 = 0.3
+
+    if (channel not in constants.keys()):
+        raise ValueError('Invalid ABI channel')
+
+    ref = (radiance * np.pi / d2) / constants[channel]
+
+    # Ensure the data is nominal
+    ref = np.maximum(ref, 0.0)
+    ref = np.minimum(ref, 1.0)
+
+    if (correct):
+        ref = _gamma_corr(ref)
+
+    return ref
+
+
+
+def _gamma_corr(ref):
+    """
+    Adjusts the reflectance array. Results in a brighter image when plotted
+
+    Parameters
+    ----------
+    ref : numpy 2d array
+        2D array of reflectance
+
+    Returns
+    -------
+    gamma_ref : numpy 2d array
+        2D array of gamma-corrected reflectance values
+    """
+    gamma_ref = np.sqrt(ref)
+    return gamma_ref
 
 
 
