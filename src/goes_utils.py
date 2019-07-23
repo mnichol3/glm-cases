@@ -434,31 +434,29 @@ def plot_sammich_geos(visual, infrared):
     sat_lon = visual['sat_lon']
     sat_sweep = visual['sat_sweep']
     scan_date = visual['scan_date']
-
-    X_viz, Y_viz = georeference(visual['x'], visual['y'], sat_lon, sat_height,
-                                sat_sweep, data=visual['data'])
-
-    X_inf, Y_inf = georeference(infrared['x'], infrared['y'], sat_lon, sat_height,
-                                sat_sweep, data=infrared['data'])
+    extent = [visual['lat_lon_extent']['w'], visual['lat_lon_extent']['e'],
+              visual['lat_lon_extent']['s'], visual['lat_lon_extent']['n']]
 
     fig = plt.figure(figsize=(10, 5))
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.Geostationary(central_longitude=sat_lon,
                                 satellite_height=sat_height,false_easting=0,false_northing=0,
                                 globe=None, sweep_axis=sat_sweep))
 
+    states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='none',
+                                 name='admin_1_states_provinces_shp')
 
-    #ax.set_xlim(int(data_dict['lat_lon_extent']['w']), int(data_dict['lat_lon_extent']['e']))
-    #ax.set_ylim(int(data_dict['lat_lon_extent']['s']), int(data_dict['lat_lon_extent']['n']))
-
-    ax.coastlines(resolution='10m', color='gray')
+    ax.set_extent(extent, crs=ccrs.PlateCarree())
+    ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=3)
 
     # visual & infrared arrays are different dimensions
-    # viz_img = plt.imshow(visual['data'], cmap=cm.binary_r, extent=visual['lat_lon_extent'],
+    # viz_img = plt.imshow(visual['data'], cmap=cm.binary_r, extent=extent,
     #                      vmin=visual['min_data_val'], vmax=visual['max_data_val'], zorder=1)
     viz_img = plt.imshow(visual['data'], cmap=cm.binary_r, vmin=visual['min_data_val'],
                          vmax=visual['max_data_val'], zorder=1)
 
     infrared_norm = colors.LogNorm(vmin=190, vmax=270)
+    # inf_img = plt.imshow(infrared['data'], cmap=cm.nipy_spectral_r, norm=infrared_norm,
+    #            extent=extent, zorder=2, alpha=0.4)
     inf_img = plt.imshow(infrared['data'], cmap=cm.nipy_spectral_r, norm=infrared_norm,
                extent=viz_img.get_extent(), zorder=2, alpha=0.4)
 
@@ -479,33 +477,30 @@ def plot_sammich_mercator(visual, infrared):
     sat_lon = visual['sat_lon']
     sat_sweep = visual['sat_sweep']
     scan_date = visual['scan_date']
+    extent = [visual['lat_lon_extent']['w'], visual['lat_lon_extent']['e'],
+              visual['lat_lon_extent']['s'], visual['lat_lon_extent']['n']]
 
-    X_viz, Y_viz = georeference(visual['x'], visual['y'], sat_lon, sat_height,
-                                sat_sweep, data=visual['data'])
+    globe = ccrs.Globe(semimajor_axis=visual['semimajor_ax'], semiminor_axis=visual['semiminor_ax'],
+                       flattening=None, inverse_flattening=visual['inverse_flattening'])
 
-    X_inf, Y_inf = georeference(infrared['x'], infrared['y'], sat_lon, sat_height,
-                                sat_sweep, data=infrared['data'])
+    states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='none',
+                                 name='admin_1_states_provinces_shp')
 
     fig = plt.figure(figsize=(10, 5))
-    ax = fig.add_subplot(1, 1, 1, projection=ccrs.Geostationary(central_longitude=sat_lon,
-                                satellite_height=sat_height,false_easting=0,false_northing=0,
-                                globe=None, sweep_axis=sat_sweep))
+    ax = fig.add_subplot(1, 1, 1, projection=ccrs.Mercator(globe=globe))
+    ax.set_extent(extent, crs=ccrs.PlateCarree())
 
-
-    #ax.set_xlim(int(data_dict['lat_lon_extent']['w']), int(data_dict['lat_lon_extent']['e']))
-    #ax.set_ylim(int(data_dict['lat_lon_extent']['s']), int(data_dict['lat_lon_extent']['n']))
-
-    ax.coastlines(resolution='10m', color='gray')
+    ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=3)
 
     # visual & infrared arrays are different dimensions
-    # viz_img = plt.imshow(visual['data'], cmap=cm.binary_r, extent=visual['lat_lon_extent'],
-    #                      vmin=visual['min_data_val'], vmax=visual['max_data_val'], zorder=1)
-    viz_img = plt.imshow(visual['data'], cmap=cm.binary_r, vmin=visual['min_data_val'],
-                         vmax=visual['max_data_val'], zorder=1)
+    viz_img = plt.imshow(visual['data'], cmap=cm.binary_r, extent=extent, origin='upper',
+                         vmin=visual['min_data_val'], vmax=visual['max_data_val'],
+                         zorder=1, transform=ccrs.PlateCarree())
 
     infrared_norm = colors.LogNorm(vmin=190, vmax=270)
-    inf_img = plt.imshow(infrared['data'], cmap=cm.nipy_spectral_r, norm=infrared_norm,
-               extent=viz_img.get_extent(), zorder=2, alpha=0.4)
+    inf_img = plt.imshow(infrared['data'], cmap=cm.nipy_spectral_r, origin='upper',
+                         norm=infrared_norm, extent=extent, zorder=2, alpha=0.4,
+                         transform=ccrs.PlateCarree())
 
     cbar_bounds = np.arange(190, 270, 10)
     cbar = plt.colorbar(inf_img, ticks=cbar_bounds, spacing='proportional')
