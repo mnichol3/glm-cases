@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import pyproj
 import cartopy.crs as ccrs
 import matplotlib.ticker as mticker
+import matplotlib.colors as colors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import matplotlib.cm as cm
@@ -443,9 +444,23 @@ def plot_sammich_geos(visual, infrared):
     #ax.set_ylim(int(data_dict['lat_lon_extent']['s']), int(data_dict['lat_lon_extent']['n']))
 
     ax.coastlines(resolution='10m', color='gray')
-    plt.pcolormesh(X_viz, Y_viz, visual['data'], cmap=cm.binary_r, vmin=visual['min_data_val'], vmax=visual['max_data_val'], zorder=1)
-    plt.pcolormesh(X_inf, Y_inf, infrared['data'], cmap=cm.jet, vmin=infrared['min_data_val'], vmax=infrared['max_data_val'], zorder=2, alpha=0.25)
+    # plt.pcolormesh(X_viz, Y_viz, visual['data'], cmap=cm.binary_r, vmin=visual['min_data_val'],
+    #                vmax=visual['max_data_val'], zorder=1)
+    # plt.pcolormesh(X_inf, Y_inf, infrared['data'], cmap=cm.jet, vmin=infrared['min_data_val'],
+    #                vmax=infrared['max_data_val'], zorder=2, alpha=0.25)
 
+    # visual & infrared arrays are different dimensions :(
+    viz_img = plt.imshow(visual['data'], cmap=cm.binary_r, vmin=visual['min_data_val'],
+                         vmax=visual['max_data_val'], zorder=1)
+
+    infrared_norm = colors.LogNorm(vmin=190, vmax=270)
+    inf_img = plt.imshow(infrared['data'], cmap=cm.nipy_spectral_r, norm=infrared_norm,
+               extent=viz_img.get_extent(), zorder=2, alpha=0.4)
+
+    cbar_bounds = np.arange(190, 270, 10)
+    cbar = plt.colorbar(inf_img, ticks=cbar_bounds, spacing='proportional')
+    cbar.ax.set_yticklabels([str(x) for x in cbar_bounds])
+    
     plt.title('GOES-16 Imagery', fontweight='semibold', fontsize=15)
     plt.title('%s' % scan_date.strftime('%H:%M UTC %d %B %Y'), loc='right')
     ax.axis('equal')
