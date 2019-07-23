@@ -151,15 +151,11 @@ def read_file(abi_file, extent=None):
     Y = fh.variables['y'][:]
 
     if (extent is not None):
-        #Xs, Ys = georeference(X, Y, sat_lon, sat_height, sat_sweep, data=fh.variables[prod_key][:])
 
         min_y, max_y, min_x, max_x = subset_grid(extent, X, Y)
 
-        data = fh.variables[prod_key][max_y : min_y, max_x : min_x]
-        # X = X[max_x : min_x]
-        # Y = Y[max_y : min_y]
-        # data_dict['x'] = X
-        # data_dict['y'] = Y
+        data = fh.variables[prod_key][min(min_y, max_y) : max(min_y, max_y),
+                                      min(min_x, max_x) : max(min_x, max_x)]
 
         lat_lon_extent['n'] = extent[1]
         lat_lon_extent['s'] = extent[0]
@@ -169,8 +165,6 @@ def read_file(abi_file, extent=None):
     else:
         print('\nWARNING: Not subsetting ABI data!\n')
         data = fh.variables[prod_key][:].data
-        # data_dict['x'] = X
-        # data_dict['y'] = Y
 
         lat_lon_extent['n'] = fh.variables['geospatial_lat_lon_extent'].geospatial_northbound_latitude
         lat_lon_extent['s'] = fh.variables['geospatial_lat_lon_extent'].geospatial_southbound_latitude
@@ -528,6 +522,7 @@ def plot_sammich_mercator(visual, infrared):
     # vis_data = _rad_to_ref(visual['data'])
     # viz_img = plt.imshow(vis_data, cmap=cm.Greys_r, extent=extent, origin='upper',
     #                      vmin=0, vmax=1, zorder=1, transform=ccrs.PlateCarree())
+
     viz_img = plt.imshow(visual['data'], cmap=cm.Greys_r, extent=extent, origin='upper',
                          vmin=visual['min_data_val'], vmax=visual['max_data_val'],
                          zorder=1, transform=ccrs.PlateCarree())
