@@ -421,6 +421,38 @@ def get_geospatial_extent(abs_path):
 
 
 
+def plot_sammich_geos(visual, infrared):
+    sat_height = visual['sat_height']
+    sat_lon = visual['sat_lon']
+    sat_sweep = visual['sat_sweep']
+    scan_date = visual['scan_date']
+
+    X_viz, Y_viz = georeference(visual['x'], visual['y'], sat_lon, sat_height,
+                                sat_sweep, data=visual['data'])
+
+    X_inf, Y_inf = georeference(infrared['x'], infrared['y'], sat_lon, sat_height,
+                                sat_sweep, data=infrared['data'])
+
+    fig = plt.figure(figsize=(10, 5))
+    ax = fig.add_subplot(1, 1, 1, projection=ccrs.Geostationary(central_longitude=sat_lon,
+                                satellite_height=sat_height,false_easting=0,false_northing=0,
+                                globe=None, sweep_axis=sat_sweep))
+
+
+    #ax.set_xlim(int(data_dict['lat_lon_extent']['w']), int(data_dict['lat_lon_extent']['e']))
+    #ax.set_ylim(int(data_dict['lat_lon_extent']['s']), int(data_dict['lat_lon_extent']['n']))
+
+    ax.coastlines(resolution='10m', color='gray')
+    plt.pcolormesh(X_viz, Y_viz, visual['data'], cmap=cm.binary_r, vmin=visual['min_data_val'], vmax=visual['max_data_val'], zorder=1)
+    plt.pcolormesh(X_inf, Y_inf, infrared['data'], cmap=cm.jet, vmin=infrared['min_data_val'], vmax=infrared['max_data_val'], zorder=2, alpha=0.25)
+
+    plt.title('GOES-16 Imagery', fontweight='semibold', fontsize=15)
+    plt.title('%s' % scan_date.strftime('%H:%M UTC %d %B %Y'), loc='right')
+    ax.axis('equal')
+
+    plt.show()
+
+
 
 
 def _find_nearest_idx(array, value):
