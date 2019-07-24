@@ -10,13 +10,20 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import matplotlib.cm as cm
 from cartopy.feature import NaturalEarthFeature
+import cartopy.io.shapereader as shpreader
+import cartopy.feature as cfeature
 import sys
 import re
+from shapely.geometry.polygon import Polygon
+from shapely.geometry import Point
 
 import goesawsinterface
 from glm_utils import georeference
 from proj_utils import geod_to_scan
 
+
+STATES_PATH = '/home/mnichol3/Coding/glm-cases/resources/nws_s_11au16/s_11au16.shp'
+COUNTIES_PATH = '/home/mnichol3/Coding/glm-cases/resources/nws_c_02ap19/c_02ap19.shp'
 
 
 def get_abi_files(base_path, satellite, product, t_start, t_end, sector, channel, prompt=False):
@@ -255,7 +262,9 @@ def plot_mercator(data_dict, out_path):
     the scanning angle (in radians) multiplied by the satellite height
     (http://proj4.org/projections/geos.html)
     """
-
+    print('Warning: goes_utils.plot_mercator has depricated')
+    print('Matts too lazy to modify this function to use imshow')
+    sys.exit(0)
     scan_date = data_dict['scan_date']
     data = data_dict['data']
 
@@ -452,11 +461,12 @@ def plot_sammich_geos(visual, infrared):
                                 satellite_height=sat_height,false_easting=0,false_northing=0,
                                 globe=None, sweep_axis=sat_sweep))
 
-    states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='none',
-                                 name='admin_1_states_provinces_shp')
+    states = shpreader.Reader(STATES_PATH)
+    states = list(states.geometries())
+    states = cfeature.ShapelyFeature(states, ccrs.PlateCarree())
 
     ax.set_extent(extent, crs=ccrs.PlateCarree())
-    ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=3)
+    ax.add_feature(states, linewidth=.8, facecolor='none', edgecolor='gray', zorder=3)
 
     # visual & infrared arrays are different dimensions
     # viz_img = plt.imshow(visual['data'], cmap=cm.binary_r, extent=extent,
@@ -476,7 +486,7 @@ def plot_sammich_geos(visual, infrared):
 
     plt.title('GOES-16 Imagery', fontweight='semibold', fontsize=15)
     plt.title('%s' % scan_date.strftime('%H:%M UTC %d %B %Y'), loc='right')
-    ax.axis('equal')
+    #ax.axis('equal')  # May cause shapefile to extent beyond borders of figure
 
     plt.show()
 
@@ -509,14 +519,22 @@ def plot_sammich_mercator(visual, infrared):
     globe = ccrs.Globe(semimajor_axis=visual['semimajor_ax'], semiminor_axis=visual['semiminor_ax'],
                        flattening=None, inverse_flattening=visual['inverse_flattening'])
 
-    states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='none',
-                                 name='admin_1_states_provinces_shp')
+    # states = shpreader.Reader(STATES_PATH)
+    polys = _filter_polys(STATES_PATH, extent)
+    # states = list(polys.geometries())
+    states = cfeature.ShapelyFeature(polys, ccrs.PlateCarree())
+
+    # counties = shpreader.Reader(COUNTIES_PATH)
+    polys = _filter_polys(COUNTIES_PATH, extent)
+    # counties = list(polys.geometries())
+    counties = cfeature.ShapelyFeature(polys, ccrs.PlateCarree())
 
     fig = plt.figure(figsize=(10, 5))
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.Mercator(globe=globe))
     ax.set_extent(extent, crs=ccrs.PlateCarree())
 
-    ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=3)
+    ax.add_feature(states, linewidth=.8, facecolor='none', edgecolor='gray', zorder=3)
+    ax.add_feature(counties, linewidth=.2, facecolor='none', edgecolor='gray', zorder=3)
 
     # visual & infrared arrays are different dimensions
     # vis_data = _rad_to_ref(visual['data'])
@@ -538,9 +556,52 @@ def plot_sammich_mercator(visual, infrared):
 
     plt.title('GOES-16 Imagery', fontweight='semibold', fontsize=15)
     plt.title('%s' % scan_date.strftime('%H:%M UTC %d %B %Y'), loc='right')
-    ax.axis('equal')
+    #ax.axis('equal')  # May cause shapefile to extent beyond borders of figure
 
     plt.show()
+
+
+
+def _filter_polys(shp_fname, extent):
+    w = extent[0]
+    e = extent[1]
+    s = extent[2]
+    n = extent[3]
+    filtered_polys = []
+    view_bbox = Polygon([(w, s), (e, s), (e, n), (w, n)])
+
+    shp_poly = shpreader.Reader(shp_fname)
+    for rec in shp_poly.records():
+        bounds = rec.geometry.bounds  # (minx, miny, maxx, maxy)
+        # Make sure the lat & lon signs are correct, many cases they aren't
+        if (np.sign(w) != np.sign(bounds[0])):
+            bound_w = -1 * bounds[0]
+        else:
+            bound_w = bounds[0]
+        if (np.sign(e) != np.sign(bounds[2])):
+            bound_e = -1 * bounds[2]
+        else:
+            bound_e = bounds[2]
+        if (np.sign(s) != np.sign(bounds[1])):
+            bound_s = -1 * bounds[1]
+        else:
+            bound_s = bounds[1]
+        if (np.sign(n) != np.sign(bounds[3])):
+            bound_n = -1 * bounds[3]
+        else:
+            bound_n = bounds[3]
+
+        points = [Point(bound_w, bound_s), Point(bound_e, bound_s),
+                  Point(bound_e, bound_n), Point(bound_w, bound_n)]
+
+        for p in points:
+            if (view_bbox.contains(p)):
+                filtered_polys.append(rec.geometry)
+                #yield rec.geometry
+                break
+    return filtered_polys
+
+
 
 
 
