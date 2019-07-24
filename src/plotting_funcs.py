@@ -26,7 +26,8 @@ TX_SHP_PATH = '/home/mnichol3/Coding/glm-cases/resources/Texas_County_Boundaries
 OK_SHP_PATH = '/home/mnichol3/Coding/glm-cases/resources/tl_2016_40_cousub/tl_2016_40_cousub.shp'
 
 
-def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None, range_rings=False, wwa_polys=None):
+def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None,
+                       range_rings=False, wwa_polys=None, satellite_data=None):
     """
     Plots both GLM FED, as a colormesh, and WTLMA sources, as points.
 
@@ -45,6 +46,7 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
     wwa_polys : dict; key : str, value : polygon; optional
         NWS Severe Thunderstorm and/or Tornado warning polygons
     """
+    z_ord = {'map': 9, 'sat_vis': 2, 'sat_inf': 3, 'glm': 4, 'lma': 5, 'wwa': 6, 'top': 10}
     tx_counties_reader = shpreader.Reader(TX_SHP_PATH)
     tx_counties_list = list(tx_counties_reader.geometries())
     tx_counties = cfeature.ShapelyFeature(tx_counties_list, ccrs.PlateCarree())
@@ -64,12 +66,11 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
     ax = fig.add_subplot(111, projection=ccrs.Mercator(globe=globe))
 
     states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='black',
-                             name='admin_1_states_provinces_shp', zorder=0)
+                             name='admin_1_states_provinces_shp')
 
-    ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=1)
-
-    ax.add_feature(tx_counties, linewidth=.6, facecolor='none', edgecolor='gray', zorder=1)
-    ax.add_feature(ok_counties, linewidth=.6, facecolor='none', edgecolor='gray', zorder=1)
+    ax.add_feature(states, facecolor='none', linewidth=.8, edgecolor='gray', zorder=z_ord['map'])
+    ax.add_feature(tx_counties, linewidth=.2, facecolor='none', edgecolor='gray', zorder=z_ord['map'])
+    ax.add_feature(ok_counties, linewidth=.2, facecolor='none', edgecolor='gray', zorder=z_ord['map'])
 
     cent_lat = float(wtlma_obj.coord_center[0])
     cent_lon = float(wtlma_obj.coord_center[1])
@@ -92,20 +93,20 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
     bounds = [5, 10, 20, 50, 100, 150, 200, 300, 400]
     glm_norm = colors.LogNorm(vmin=1, vmax=max(bounds))
 
-    cmesh = plt.pcolormesh(Xs, Ys, glm_obj.data['data'], norm=glm_norm, transform=ccrs.PlateCarree(), cmap=cm.jet, zorder=2)
+    cmesh = plt.pcolormesh(Xs, Ys, glm_obj.data['data'], norm=glm_norm, transform=ccrs.PlateCarree(), cmap=cm.jet, zorder=z_ord['glm'])
 
     cbar1 = plt.colorbar(cmesh, norm=glm_norm, ticks=bounds, spacing='proportional', fraction=0.046, pad=0.04)
     cbar1.ax.set_yticklabels([str(x) for x in bounds])
     cbar1.set_label('GLM Flash Extent Density')
 
-    scat = plt.scatter(wtlma_obj.data['lon'], wtlma_obj.data['lat'], c=wtlma_obj.data['P'],
-                       marker='o', s=100, cmap=cm.gist_ncar_r, vmin=-20, vmax=100, zorder=3, transform=ccrs.PlateCarree())
-    cbar2 = plt.colorbar(scat, fraction=0.046, pad=0.04)
-    cbar2.set_label('WTLMA Source Power (dBW)')
+    # scat = plt.scatter(wtlma_obj.data['lon'], wtlma_obj.data['lat'], c=wtlma_obj.data['P'],
+    #                    marker='o', s=20, cmap=cm.gist_ncar_r, vmin=-20, vmax=100, zorder=z_ord['lma'], transform=ccrs.PlateCarree())
+    # cbar2 = plt.colorbar(scat, fraction=0.046, pad=0.04)
+    # cbar2.set_label('WTLMA Source Power (dBW)')
 
     if (points_to_plot is not None):
         plt.plot([points_to_plot[0][1], points_to_plot[1][1]], [points_to_plot[0][0], points_to_plot[1][0]],
-                           marker='o', color='r', zorder=4, transform=ccrs.PlateCarree())
+                           marker='o', color='r', zorder=z_ord['top'], transform=ccrs.PlateCarree())
 
     if (range_rings):
         clrs = ['g', 'y']
@@ -116,27 +117,48 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
 
             # https://stackoverflow.com/questions/27574897/plotting-disconnected-entities-with-shapely-descartes-and-matplotlib
             mpl_poly = Polygon(np.array(coord_list), ec=clrs[idx], fc="none", transform=ccrs.PlateCarree(),
-                               linewidth=1.25, zorder=2)
+                               linewidth=1.25, zorder=z_ord['map'])
             ax.add_patch(mpl_poly)
+
+    if (satellite_data):
+        if (len(satellite_data) != 2):
+            print('Error: Invalid satellite data params to produce sandwhich image')
+        else:
+            visual = satellite_data[0]
+            infrared = satellite_data[1]
+
+            # ext = [extent['min_lon'], extent['max_lon'], extent['min_lat'], extent['max_lat']]
+            ext = [visual['lat_lon_extent']['w'], visual['lat_lon_extent']['e'],
+                          visual['lat_lon_extent']['s'], visual['lat_lon_extent']['n']]
+
+            viz_img = plt.imshow(visual['data'], cmap=cm.Greys_r, extent=ext, origin='upper',
+                                 vmin=visual['min_data_val'], vmax=visual['max_data_val'],
+                                 zorder=z_ord['sat_vis'], transform=ccrs.PlateCarree())
+
+            infrared_norm = colors.LogNorm(vmin=190, vmax=270)
+            inf_img = plt.imshow(infrared['data'], cmap=cm.nipy_spectral_r, origin='upper',
+                                 norm=infrared_norm, extent=ext, zorder=z_ord['sat_inf'],
+                                 alpha=0.4, transform=ccrs.PlateCarree())
 
     if (wwa_polys is not None):
         wwa_keys = wwa_polys.keys()
 
         if ('SV' in wwa_keys):
             sv_polys = cfeature.ShapelyFeature(wwa_polys['SV'], ccrs.PlateCarree())
-            ax.add_feature(sv_polys, linewidth=.8, facecolor='none', edgecolor='yellow', zorder=5)
+            ax.add_feature(sv_polys, linewidth=.8, facecolor='none', edgecolor='yellow', zorder=z_ord['wwa'])
         if ('TO' in wwa_keys):
             to_polys = cfeature.ShapelyFeature(wwa_polys['TO'], ccrs.PlateCarree())
-            ax.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red', zorder=5)
+            ax.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red', zorder=z_ord['wwa'])
 
     plt.title('GLM FED {} {}\n WTLMA Sources {}'.format(glm_obj.scan_date, glm_obj.scan_time, wtlma_obj._start_time_pp()), loc='right')
     plt.tight_layout()
-    plt.gca().set_aspect('equal', adjustable='box')
+    #plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
 
 
 
-def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None, range_rings=False, wwa_polys=None):
+def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None,
+                         range_rings=False, wwa_polys=None, satellite_data=None):
     """
     Same as plot_mercator_dual(), except it plots the wtlma strokes as
     power densities
@@ -156,6 +178,7 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
     wwa_polys : dict; key : str, value : polygon; optional
         NWS Severe Thunderstorm and/or Tornado warning polygons
     """
+    z_ord = {'map': 1, 'sat_vis': 2, 'sat_inf': 3, 'glm': 4, 'lma': 5, 'wwa': 6, 'top': 10}
     tx_counties_reader = shpreader.Reader(TX_SHP_PATH)
     tx_counties_list = list(tx_counties_reader.geometries())
     tx_counties = cfeature.ShapelyFeature(tx_counties_list, ccrs.PlateCarree())
@@ -237,6 +260,24 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
             mpl_poly = Polygon(np.array(coord_list), ec=clrs[idx], fc="none", transform=ccrs.PlateCarree(),
                                linewidth=1.25, zorder=2)
             ax.add_patch(mpl_poly)
+
+    if (satellite_data):
+        if (len(satellite_data) != 2):
+            print('Error: Invalid satellite data params to produce sandwhich image')
+        else:
+            visual = satellite_data[0]
+            infrared = satellite_data[1]
+
+            ext = [extent['min_lon'], extent['max_lon'], extent['min_lat'], extent['max_lat']]
+
+            viz_img = plt.imshow(visual['data'], cmap=cm.Greys_r, extent=ext, origin='upper',
+                                 vmin=visual['min_data_val'], vmax=visual['max_data_val'],
+                                 zorder=z_ord['sat_vis'], transform=ccrs.PlateCarree())
+
+            infrared_norm = colors.LogNorm(vmin=190, vmax=270)
+            inf_img = plt.imshow(infrared['data'], cmap=cm.nipy_spectral_r, origin='upper',
+                                 norm=infrared_norm, extent=ext, zorder=z_ord['sat_inf'],
+                                 alpha=0.4, transform=ccrs.PlateCarree())
 
     if (wwa_polys is not None):
         wwa_keys = wwa_polys.keys()
@@ -707,7 +748,6 @@ def plot_wtlma(wtlma_obj_list, grid_extent=None, nbins=1000, points_to_plot=None
         Coordinate pairs to plot
         Format: [(lat1, lon1), (lat2, lon2)]
     """
-
     if (not isinstance(wtlma_obj_list, list)):
         wtlma_obj_list = [wtlma_obj_list]
 
@@ -724,7 +764,7 @@ def plot_wtlma(wtlma_obj_list, grid_extent=None, nbins=1000, points_to_plot=None
     ax = fig.add_subplot(111, projection=ccrs.Mercator())
 
     states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='black',
-                             name='admin_1_states_provinces_shp', zorder=0)
+                             name='admin_1_states_provinces_shp')
 
     ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=1)
 
@@ -801,6 +841,8 @@ def plot_mrms_glm(grb_obj, glm_obj, wtlma_obj=None, points_to_plot=None, wwa_pol
     -----
     Axis extent set by subsetted MRMS lat & lon extent
     """
+    z_ord = {'map': 1, 'mrms': 2, 'sat_vis': 3, 'sat_inf': 4, 'glm': 5, 'lma': 6, 'wwa': 7, 'top': 10}
+
     tx_counties_reader = shpreader.Reader(TX_SHP_PATH)
     tx_counties_list = list(tx_counties_reader.geometries())
     tx_counties = cfeature.ShapelyFeature(tx_counties_list, ccrs.PlateCarree())
@@ -820,11 +862,11 @@ def plot_mrms_glm(grb_obj, glm_obj, wtlma_obj=None, points_to_plot=None, wwa_pol
     ax = fig.add_subplot(111, projection=ccrs.Mercator(globe=globe))
 
     states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='black',
-                             name='admin_1_states_provinces_shp', zorder=0)
+                             name='admin_1_states_provinces_shp')
 
-    ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=1)
-    ax.add_feature(tx_counties, linewidth=.6, facecolor='none', edgecolor='gray', zorder=1)
-    ax.add_feature(ok_counties, linewidth=.6, facecolor='none', edgecolor='gray', zorder=1)
+    ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=z_ord['map'])
+    ax.add_feature(tx_counties, linewidth=.6, facecolor='none', edgecolor='gray', zorder=z_ord['map'])
+    ax.add_feature(ok_counties, linewidth=.6, facecolor='none', edgecolor='gray', zorder=z_ord['map'])
 
     ax.set_extent([min(grb_obj.grid_lons), max(grb_obj.grid_lons), min(grb_obj.grid_lats), max(grb_obj.grid_lats)], crs=ccrs.PlateCarree())
 
@@ -833,12 +875,12 @@ def plot_mrms_glm(grb_obj, glm_obj, wtlma_obj=None, points_to_plot=None, wwa_pol
     mrms_ref = mrms_ref.astype('float')
     mrms_ref[mrms_ref == 0] = np.nan
 
-    refl = plt.pcolormesh(grb_obj.grid_lons, grb_obj.grid_lats, mrms_ref, transform=ccrs.PlateCarree(), cmap=cm.gist_ncar, zorder=2)
+    refl = plt.pcolormesh(grb_obj.grid_lons, grb_obj.grid_lats, mrms_ref, transform=ccrs.PlateCarree(), cmap=cm.gist_ncar, zorder=z_ord['mrms'])
 
     bounds = [5, 10, 20, 50, 100, 150, 200, 300, 400]
     glm_norm = colors.LogNorm(vmin=1, vmax=max(bounds))
 
-    cmesh = plt.pcolormesh(Xs, Ys, glm_obj.data['data'], norm=glm_norm, transform=ccrs.PlateCarree(), cmap=cm.jet, zorder=3)
+    cmesh = plt.pcolormesh(Xs, Ys, glm_obj.data['data'], norm=glm_norm, transform=ccrs.PlateCarree(), cmap=cm.jet, zorder=z_ord['glm'])
     cbar2 = plt.colorbar(refl,fraction=0.046, pad=0.04)
     plt.setp(cbar2.ax.yaxis.get_ticklabels(), fontsize=12)
     cbar2.set_label('Reflectivity (dbz)', fontsize = 14, labelpad = 20)
@@ -849,19 +891,19 @@ def plot_mrms_glm(grb_obj, glm_obj, wtlma_obj=None, points_to_plot=None, wwa_pol
 
     if (wtlma_obj is not None):
         scat = plt.scatter(wtlma_obj.data['lon'], wtlma_obj.data['lat'], c='gray',
-                           marker='o', s=50, zorder=3, transform=ccrs.PlateCarree(), alpha=0.5)
+                           marker='o', s=50, zorder=z_ord['lma'], transform=ccrs.PlateCarree(), alpha=0.5)
 
     if (points_to_plot is not None):
         plt.plot([points_to_plot[0][1], points_to_plot[1][1]], [points_to_plot[0][0], points_to_plot[1][0]],
-                           marker='o', color='black', zorder=4, transform=ccrs.PlateCarree())
+                           marker='o', color='black', zorder=z_ord['top'], transform=ccrs.PlateCarree())
 
     if (wwa_polys is not None):
         wwa_keys = wwa_polys.keys()
 
         if ('SV' in wwa_keys):
-            ax.add_feature(wwa_polys['SV'], linewidth=.8, facecolor='none', edgecolor='yellow', zorder=5)
+            ax.add_feature(wwa_polys['SV'], linewidth=.8, facecolor='none', edgecolor='yellow', zorder=z_ord['wwa'])
         if ('TO' in wwa_keys):
-            ax.add_feature(wwa_polys['TO'], linewidth=.8, facecolor='none', edgecolor='red', zorder=5)
+            ax.add_feature(wwa_polys['TO'], linewidth=.8, facecolor='none', edgecolor='red', zorder=z_ord['wwa'])
 
     lon_ticks = [x for x in np.arange(-180, 181, 0.5)]
     lat_ticks = [x for x in np.arange(-90, 91, 0.5)]
