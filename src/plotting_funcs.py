@@ -23,7 +23,7 @@ from plotting_utils import geodesic_point_buffer
 
 
 TX_SHP_PATH = '/home/mnichol3/Coding/glm-cases/resources/Texas_County_Boundaries/Texas_County_Boundaries.shp'
-OK_SHP_PATH = '//home/mnichol3/Coding/glm-cases/resources/tl_2016_40_cousub/tl_2016_40_cousub.shp'
+OK_SHP_PATH = '/home/mnichol3/Coding/glm-cases/resources/tl_2016_40_cousub/tl_2016_40_cousub.shp'
 
 
 def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None, range_rings=False, wwa_polys=None):
