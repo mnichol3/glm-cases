@@ -65,6 +65,16 @@ def scan_to_geod(y, x):
     lon1 = atan(s_y / (H - s_x))
     lon = lambda_0 - lon1
 
+    ################### For debugging ###################
+    # print('a ', a)
+    # print('b ', b)
+    # print('c ', c)
+    # print('r_s ', r_s)
+    # print('s_x ', s_x)
+    # print('s_y ', s_y)
+    # print('s_z ', s_z)
+    #####################################################
+
     lon = degrees(lon)
     lat = degrees(lat)
 
@@ -168,7 +178,7 @@ def _calc_b(x, y, H):
     -------
     float
     """
-    f = -2 * H * (cos(x)**2) * (cos(y)**2)
+    f = -2 * H * (cos(x)) * (cos(y))
     return f
 
 
@@ -416,6 +426,9 @@ def _calc_sz_inv(r_c, theta_c):
     return s_z
 
 
+
+
+# print(scan_to_geod(0.095340, -0.024052))
 # print(geod_to_scan(48.0563, -70.1242)) # (0.12390027294128181, 0.00950246171751412)
 # print(geod_to_scan(33.943546, -84.52599)) # (0.09557181243071429, -0.023614853364253407)
 # print(geod_to_scan(33.8461, -84.6909)) # (0.09533985706770494, -0.024049622722219145)
