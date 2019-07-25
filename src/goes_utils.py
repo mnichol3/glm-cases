@@ -19,7 +19,7 @@ from shapely.geometry import Point
 
 import goesawsinterface
 from glm_utils import georeference
-from proj_utils import geod_to_scan
+from proj_utils import geod_to_scan, scan_to_geod
 
 
 STATES_PATH = '/home/mnichol3/Coding/glm-cases/resources/nws_s_11au16/s_11au16.shp'
@@ -137,7 +137,7 @@ def read_file(abi_file, extent=None):
     # Datetime of scan
     scan_date = datetime(2000, 1, 1, 12) + timedelta(seconds=float(add_seconds))
 
-    # Satellite height
+    # Satellite height in meters
     sat_height = fh.variables['goes_imager_projection'].perspective_point_height
 
     # Satellite longitude & latitude
@@ -153,6 +153,12 @@ def read_file(abi_file, extent=None):
 
     # Satellite sweep
     sat_sweep = fh.variables['goes_imager_projection'].sweep_angle_axis
+
+    # Y image bounds in scan radians. Format: (North, South)
+    data_dict['y_image_bounds'] = fh.variables['y_image_bounds'][:]
+
+    # X image bounds in scan radians. Format: (west, East)
+    data_dict['x_image_bounds'] = fh.variables['x_image_bounds'][:]
 
     X = fh.variables['x'][:]
     Y = fh.variables['y'][:]
@@ -453,32 +459,47 @@ def plot_sammich_geos(visual, infrared):
     sat_lon = visual['sat_lon']
     sat_sweep = visual['sat_sweep']
     scan_date = visual['scan_date']
-    extent = [visual['lat_lon_extent']['w'], visual['lat_lon_extent']['e'],
-              visual['lat_lon_extent']['s'], visual['lat_lon_extent']['n']]
+
+    y_min, x_min = scan_to_geod(min(visual['y_image_bounds']), min(visual['x_image_bounds']))
+    y_max, x_max = scan_to_geod(max(visual['y_image_bounds']), max(visual['x_image_bounds']))
+
+    globe = ccrs.Globe(semimajor_axis=visual['semimajor_ax'], semiminor_axis=visual['semiminor_ax'],
+                       flattening=None, inverse_flattening=visual['inverse_flattening'])
+
+    crs_geos = ccrs.Geostationary(central_longitude=sat_lon,
+                                satellite_height=sat_height,false_easting=0,false_northing=0,
+                                globe=globe, sweep_axis=sat_sweep)
+
+    trans_pts = crs_geos.transform_points(ccrs.PlateCarree(), np.array([x_min, x_max]), np.array([y_min, y_max]))
+    proj_extent = (min(trans_pts[0][0], trans_pts[1][0]), max(trans_pts[0][0], trans_pts[1][0]),
+                   min(trans_pts[0][1], trans_pts[1][1]), max(trans_pts[0][1], trans_pts[1][1]))
 
     fig = plt.figure(figsize=(10, 5))
-    ax = fig.add_subplot(1, 1, 1, projection=ccrs.Geostationary(central_longitude=sat_lon,
-                                satellite_height=sat_height,false_easting=0,false_northing=0,
-                                globe=None, sweep_axis=sat_sweep))
+    ax = fig.add_subplot(1, 1, 1, projection=crs_geos)
 
     states = shpreader.Reader(STATES_PATH)
     states = list(states.geometries())
     states = cfeature.ShapelyFeature(states, ccrs.PlateCarree())
 
-    ax.set_extent(extent, crs=ccrs.PlateCarree())
+    counties = shpreader.Reader(COUNTIES_PATH)
+    counties = list(counties.geometries())
+    counties = cfeature.ShapelyFeature(counties, ccrs.PlateCarree())
+
+    #ax.set_extent(extent, crs=ccrs.PlateCarree())
     ax.add_feature(states, linewidth=.8, facecolor='none', edgecolor='gray', zorder=3)
+    ax.add_feature(counties, linewidth=.3, facecolor='none', edgecolor='gray', zorder=3)
 
     # visual & infrared arrays are different dimensions
     # viz_img = plt.imshow(visual['data'], cmap=cm.binary_r, extent=extent,
     #                      vmin=visual['min_data_val'], vmax=visual['max_data_val'], zorder=1)
     viz_img = plt.imshow(visual['data'], cmap=cm.binary_r, vmin=visual['min_data_val'],
-                         vmax=visual['max_data_val'], zorder=1)
+                         vmax=visual['max_data_val'], zorder=1, transform=crs_geos, extent=proj_extent)
 
     infrared_norm = colors.LogNorm(vmin=190, vmax=270)
     # inf_img = plt.imshow(infrared['data'], cmap=cm.nipy_spectral_r, norm=infrared_norm,
     #            extent=extent, zorder=2, alpha=0.4)
     inf_img = plt.imshow(infrared['data'], cmap=cm.nipy_spectral_r, norm=infrared_norm,
-               extent=viz_img.get_extent(), zorder=2, alpha=0.4)
+                         zorder=2, alpha=0.4, transform=crs_geos, extent=proj_extent)
 
     cbar_bounds = np.arange(190, 270, 10)
     cbar = plt.colorbar(inf_img, ticks=cbar_bounds, spacing='proportional')
@@ -513,42 +534,56 @@ def plot_sammich_mercator(visual, infrared):
     sat_lon = visual['sat_lon']
     sat_sweep = visual['sat_sweep']
     scan_date = visual['scan_date']
+
+    # Left, Right, Bottom, Top
     extent = [visual['lat_lon_extent']['w'], visual['lat_lon_extent']['e'],
               visual['lat_lon_extent']['s'], visual['lat_lon_extent']['n']]
+
+    y_min, x_min = scan_to_geod(min(visual['y_image_bounds']), min(visual['x_image_bounds']))
+    y_max, x_max = scan_to_geod(max(visual['y_image_bounds']), max(visual['x_image_bounds']))
 
     globe = ccrs.Globe(semimajor_axis=visual['semimajor_ax'], semiminor_axis=visual['semiminor_ax'],
                        flattening=None, inverse_flattening=visual['inverse_flattening'])
 
-    # states = shpreader.Reader(STATES_PATH)
-    polys = _filter_polys(STATES_PATH, extent)
-    # states = list(polys.geometries())
-    states = cfeature.ShapelyFeature(polys, ccrs.PlateCarree())
+    crs_geos = ccrs.Geostationary(central_longitude=sat_lon, satellite_height=sat_height,
+                                   false_easting=0, false_northing=0, globe=globe, sweep_axis=sat_sweep)
 
-    # counties = shpreader.Reader(COUNTIES_PATH)
-    polys = _filter_polys(COUNTIES_PATH, extent)
-    # counties = list(polys.geometries())
-    counties = cfeature.ShapelyFeature(polys, ccrs.PlateCarree())
+    crs_plt = ccrs.PlateCarree(globe=globe)
+
+    trans_pts = crs_geos.transform_points(crs_plt, np.array([x_min, x_max]), np.array([y_min, y_max]))
+    proj_extent = (min(trans_pts[0][0], trans_pts[1][0]), max(trans_pts[0][0], trans_pts[1][0]),
+                   min(trans_pts[0][1], trans_pts[1][1]), max(trans_pts[0][1], trans_pts[1][1]))
+
+    ################## Filter WWA polygons ##################
+    # polys = _filter_polys(STATES_PATH, extent)
+    # states = cfeature.ShapelyFeature(polys, ccrs.PlateCarree())
+
+    # polys = _filter_polys(COUNTIES_PATH, extent)
+    # counties = cfeature.ShapelyFeature(polys, ccrs.PlateCarree())
+
+    states = shpreader.Reader(STATES_PATH)
+    states = list(states.geometries())
+    states = cfeature.ShapelyFeature(states, crs_plt)
+
+    counties = shpreader.Reader(COUNTIES_PATH)
+    counties = list(counties.geometries())
+    counties = cfeature.ShapelyFeature(counties, crs_plt)
+    ######################################################################
 
     fig = plt.figure(figsize=(10, 5))
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.Mercator(globe=globe))
-    ax.set_extent(extent, crs=ccrs.PlateCarree())
+    ax.set_extent(extent, crs=crs_plt)
 
     ax.add_feature(states, linewidth=.8, facecolor='none', edgecolor='gray', zorder=3)
     ax.add_feature(counties, linewidth=.2, facecolor='none', edgecolor='gray', zorder=3)
 
-    # visual & infrared arrays are different dimensions
-    # vis_data = _rad_to_ref(visual['data'])
-    # viz_img = plt.imshow(vis_data, cmap=cm.Greys_r, extent=extent, origin='upper',
-    #                      vmin=0, vmax=1, zorder=1, transform=ccrs.PlateCarree())
-
-    viz_img = plt.imshow(visual['data'], cmap=cm.Greys_r, extent=extent, origin='upper',
+    viz_img = plt.imshow(visual['data'], cmap=cm.Greys_r, extent=proj_extent, origin='upper',
                          vmin=visual['min_data_val'], vmax=visual['max_data_val'],
-                         zorder=1, transform=ccrs.PlateCarree())
+                         zorder=1, transform=crs_geos)
 
     infrared_norm = colors.LogNorm(vmin=190, vmax=270)
-    inf_img = plt.imshow(infrared['data'], cmap=cm.nipy_spectral_r, origin='upper',
-                         norm=infrared_norm, extent=extent, zorder=2, alpha=0.4,
-                         transform=ccrs.PlateCarree())
+    inf_img = plt.imshow(infrared['data'], cmap=cm.nipy_spectral_r, extent=proj_extent, origin='upper',
+                         norm=infrared_norm, zorder=2, alpha=0.4, transform=crs_geos)
 
     cbar_bounds = np.arange(190, 270, 10)
     cbar = plt.colorbar(inf_img, ticks=cbar_bounds, spacing='proportional')
