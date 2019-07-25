@@ -56,6 +56,7 @@ def scan_to_geod(y, x):
     r_s = _calc_rs(a, b, c)
     s_x = _calc_sx(r_s, x, y)
     s_y = _calc_sy(r_s, x)
+    s_z = _calc_sz(r_s, x, y)
 
     lat1 = (r_eq**2) / (r_pol**2)
     lat2 = s_z / (sqrt((H - s_x)**2 + s_y**2))
@@ -63,6 +64,9 @@ def scan_to_geod(y, x):
 
     lon1 = atan(s_y / (H - s_x))
     lon = lambda_0 - lon1
+
+    lon = degrees(lon)
+    lat = degrees(lat)
 
     return (lat, lon)
 
@@ -208,7 +212,12 @@ def _calc_rs(a, b, c):
     float
         distance of the satellite from point P, in meters
     """
-    num = -b - sqrt((b**2) - 4*a*c)
+    try:
+        num = -b - sqrt((b**2) - 4*a*c)
+    except ValueError:
+        print('\nWarning: ValueError caught in _calc_rs')
+        print('Attempting again with the absolute value\n')
+        num = -b - sqrt(abs((b**2) - 4*a*c))
     den = 2 * a
     return num / den
 
@@ -282,6 +291,7 @@ def _calc_sz(r_s, x, y):
         z-axis of the satellite coordinate frame
     """
     s_z = r_s * cos(x) * sin(y)
+    return s_z
 
 
 
@@ -409,3 +419,7 @@ def _calc_sz_inv(r_c, theta_c):
 # print(geod_to_scan(48.0563, -70.1242)) # (0.12390027294128181, 0.00950246171751412)
 # print(geod_to_scan(33.943546, -84.52599)) # (0.09557181243071429, -0.023614853364253407)
 # print(geod_to_scan(33.8461, -84.6909)) # (0.09533985706770494, -0.024049622722219145)
+# print('NW: ', scan_to_geod(0.11088, -0.0728))
+# print('NE: ', scan_to_geod(0.11088, -0.0448))
+# print('SW: ', scan_to_geod(0.08288, -0.0728))
+# print('SE: ', scan_to_geod(0.08288, -0.0448))
