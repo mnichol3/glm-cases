@@ -185,7 +185,10 @@ def main():
     first_dt = _format_date_time(case_steps.iloc[0]['date'], case_steps.iloc[0]['mrms-time'])
     viz_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L1b-Rad', first_dt, first_dt, 'M2', '2', prompt=False) # first_dt[:-5] + '20:55'
     inf_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L2-CMIP', first_dt, first_dt, 'M2', '13', prompt=False)
-    viz_data = goes_utils.read_file(viz_files[0]) # , extent=[36.62, 40.78, -80.36, -72.03]
+    # Maryland --> extent=[36.62, 40.78, -80.36, -72.03]
+    # viz_data = goes_utils.read_file(viz_files[0], extent=[33.66, 37.7, -103.735, -97.87])
+    # inf_data = goes_utils.read_file(inf_files[0], extent=[33.66, 37.7, -103.735, -97.87])
+    viz_data = goes_utils.read_file(viz_files[0])
     inf_data = goes_utils.read_file(inf_files[0])
     #goes_utils.plot_sammich_geos(viz_data, inf_data)
     goes_utils.plot_sammich_mercator(viz_data, inf_data)
