@@ -473,7 +473,7 @@ def plot_sammich_geos(visual, infrared):
     trans_pts = crs_geos.transform_points(ccrs.PlateCarree(), np.array([x_min, x_max]), np.array([y_min, y_max]))
     proj_extent = (min(trans_pts[0][0], trans_pts[1][0]), max(trans_pts[0][0], trans_pts[1][0]),
                    min(trans_pts[0][1], trans_pts[1][1]), max(trans_pts[0][1], trans_pts[1][1]))
-
+    
     fig = plt.figure(figsize=(10, 5))
     ax = fig.add_subplot(1, 1, 1, projection=crs_geos)
 
@@ -548,42 +548,49 @@ def plot_sammich_mercator(visual, infrared):
     crs_geos = ccrs.Geostationary(central_longitude=sat_lon, satellite_height=sat_height,
                                    false_easting=0, false_northing=0, globe=globe, sweep_axis=sat_sweep)
 
-    crs_plt = ccrs.PlateCarree(globe=globe)
+    crs_plt = ccrs.PlateCarree() # Globe keyword was messing everything up
 
     trans_pts = crs_geos.transform_points(crs_plt, np.array([x_min, x_max]), np.array([y_min, y_max]))
+
     proj_extent = (min(trans_pts[0][0], trans_pts[1][0]), max(trans_pts[0][0], trans_pts[1][0]),
                    min(trans_pts[0][1], trans_pts[1][1]), max(trans_pts[0][1], trans_pts[1][1]))
 
-    ################## Filter WWA polygons ##################
+    ##################### Filter WWA polygons ######################
+    # print('Processing state shapefiles...\n')
     # polys = _filter_polys(STATES_PATH, extent)
     # states = cfeature.ShapelyFeature(polys, ccrs.PlateCarree())
-
+    #
+    # print('Processing county shapefiles...\n')
     # polys = _filter_polys(COUNTIES_PATH, extent)
     # counties = cfeature.ShapelyFeature(polys, ccrs.PlateCarree())
 
+    print('Processing state shapefiles...\n')
     states = shpreader.Reader(STATES_PATH)
     states = list(states.geometries())
     states = cfeature.ShapelyFeature(states, crs_plt)
 
+    print('Processing county shapefiles...\n')
     counties = shpreader.Reader(COUNTIES_PATH)
     counties = list(counties.geometries())
     counties = cfeature.ShapelyFeature(counties, crs_plt)
-    ######################################################################
+    ################################################################
 
     fig = plt.figure(figsize=(10, 5))
-    ax = fig.add_subplot(1, 1, 1, projection=ccrs.Mercator(globe=globe))
+    ax = fig.add_subplot(1, 1, 1, projection=crs_plt)
     ax.set_extent(extent, crs=crs_plt)
+
+    print('Creating map...\n')
 
     ax.add_feature(states, linewidth=.8, facecolor='none', edgecolor='gray', zorder=3)
     ax.add_feature(counties, linewidth=.2, facecolor='none', edgecolor='gray', zorder=3)
 
     viz_img = plt.imshow(visual['data'], cmap=cm.Greys_r, extent=proj_extent, origin='upper',
                          vmin=visual['min_data_val'], vmax=visual['max_data_val'],
-                         zorder=1, transform=crs_geos)
+                         zorder=1, transform=crs_geos, interpolation='none')
 
     infrared_norm = colors.LogNorm(vmin=190, vmax=270)
     inf_img = plt.imshow(infrared['data'], cmap=cm.nipy_spectral_r, extent=proj_extent, origin='upper',
-                         norm=infrared_norm, zorder=2, alpha=0.4, transform=crs_geos)
+                         norm=infrared_norm, zorder=2, alpha=0.4, transform=crs_geos, interpolation='none')
 
     cbar_bounds = np.arange(190, 270, 10)
     cbar = plt.colorbar(inf_img, ticks=cbar_bounds, spacing='proportional')
