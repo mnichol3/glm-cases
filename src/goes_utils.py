@@ -154,35 +154,44 @@ def read_file(abi_file, extent=None):
     # Satellite sweep
     sat_sweep = fh.variables['goes_imager_projection'].sweep_angle_axis
 
-    # Y image bounds in scan radians. Format: (North, South)
-    data_dict['y_image_bounds'] = fh.variables['y_image_bounds'][:]
-
-    # X image bounds in scan radians. Format: (west, East)
-    data_dict['x_image_bounds'] = fh.variables['x_image_bounds'][:]
-
-    X = fh.variables['x'][:]
-    Y = fh.variables['y'][:]
-
     if (extent is not None):
 
-        min_y, max_y, min_x, max_x = subset_grid(extent, X, Y)
+        # Get the indices of the x & y arrays that define the data subset
+        min_y, max_y, min_x, max_x = subset_grid(extent, fh.variables['x'][:], fh.variables['y'][:])
 
-        data = fh.variables[prod_key][min(min_y, max_y) : max(min_y, max_y),
-                                      min(min_x, max_x) : max(min_x, max_x)]
+        # Ensure the min & max values are correct
+        y_min = min(min_y, max_y)
+        y_max = max(min_y, max_y)
+        x_min = min(min_x, max_x)
+        x_max = max(min_x, max_x)
 
+        data = fh.variables[prod_key][y_min : y_max, x_min : x_max]
+
+        # KEEP!!!!! Determines the plot axis extent
         lat_lon_extent['n'] = extent[1]
         lat_lon_extent['s'] = extent[0]
         lat_lon_extent['e'] = extent[3]
         lat_lon_extent['w'] = extent[2]
 
+        # Y image bounds in scan radians
+        # X image bounds in scan radians
+        data_dict['y_image_bounds'] = [fh.variables['y'][y_min], fh.variables['y'][y_max]]
+        data_dict['x_image_bounds'] = [fh.variables['x'][x_min], fh.variables['x'][x_max]]
+
     else:
         print('\nWARNING: Not subsetting ABI data!\n')
-        data = fh.variables[prod_key][:].data
+        data = fh.variables[prod_key][:]
 
         lat_lon_extent['n'] = fh.variables['geospatial_lat_lon_extent'].geospatial_northbound_latitude
         lat_lon_extent['s'] = fh.variables['geospatial_lat_lon_extent'].geospatial_southbound_latitude
         lat_lon_extent['e'] = fh.variables['geospatial_lat_lon_extent'].geospatial_eastbound_longitude
         lat_lon_extent['w'] = fh.variables['geospatial_lat_lon_extent'].geospatial_westbound_longitude
+
+        # Y image bounds in scan radians. Format: (North, South)
+        data_dict['y_image_bounds'] = fh.variables['y_image_bounds'][:]
+
+        # X image bounds in scan radians. Format: (west, East)
+        data_dict['x_image_bounds'] = fh.variables['x_image_bounds'][:]
 
     fh.close()
     fh = None
@@ -455,7 +464,7 @@ def plot_sammich_geos(visual, infrared):
     -----
     - Uses imshow instead of pcolormesh
     - Passing the Globe object created with ABI metadata to the PlateCarree
-      projection causes the shapefiles to not plot properly 
+      projection causes the shapefiles to not plot properly
     """
     sat_height = visual['sat_height']
     sat_lon = visual['sat_lon']
@@ -568,7 +577,7 @@ def plot_sammich_mercator(visual, infrared):
     # polys = _filter_polys(COUNTIES_PATH, extent)
     # counties = cfeature.ShapelyFeature(polys, ccrs.PlateCarree())
 
-    print('Processing state shapefiles...\n')
+    print('\nProcessing state shapefiles...\n')
     states = shpreader.Reader(STATES_PATH)
     states = list(states.geometries())
     states = cfeature.ShapelyFeature(states, crs_plt)
