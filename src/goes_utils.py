@@ -454,6 +454,8 @@ def plot_sammich_geos(visual, infrared):
     Notes
     -----
     - Uses imshow instead of pcolormesh
+    - Passing the Globe object created with ABI metadata to the PlateCarree
+      projection causes the shapefiles to not plot properly 
     """
     sat_height = visual['sat_height']
     sat_lon = visual['sat_lon']
@@ -473,7 +475,7 @@ def plot_sammich_geos(visual, infrared):
     trans_pts = crs_geos.transform_points(ccrs.PlateCarree(), np.array([x_min, x_max]), np.array([y_min, y_max]))
     proj_extent = (min(trans_pts[0][0], trans_pts[1][0]), max(trans_pts[0][0], trans_pts[1][0]),
                    min(trans_pts[0][1], trans_pts[1][1]), max(trans_pts[0][1], trans_pts[1][1]))
-    
+
     fig = plt.figure(figsize=(10, 5))
     ax = fig.add_subplot(1, 1, 1, projection=crs_geos)
 
@@ -529,6 +531,8 @@ def plot_sammich_mercator(visual, infrared):
     Notes
     -----
     - Uses imshow instead of pcolormesh
+    - Passing the Globe object created with ABI metadata to the PlateCarree
+      projection causes the shapefiles to not plot properly
     """
     sat_height = visual['sat_height']
     sat_lon = visual['sat_lon']
@@ -576,7 +580,7 @@ def plot_sammich_mercator(visual, infrared):
     ################################################################
 
     fig = plt.figure(figsize=(10, 5))
-    ax = fig.add_subplot(1, 1, 1, projection=crs_plt)
+    ax = fig.add_subplot(1, 1, 1, projection=ccrs.Mercator())
     ax.set_extent(extent, crs=crs_plt)
 
     print('Creating map...\n')
