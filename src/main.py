@@ -153,11 +153,24 @@ def make_wtlma_glm_mercator_dual(local_wtlma_path, local_glm_path, date, time, p
 
 
 def main():
-    local_abi_path = '/media/mnichol3/pmeyers1/MattNicholson/abi'
-    local_wtlma_path = '/media/mnichol3/pmeyers1/MattNicholson/wtlma'
-    local_glm_path = '/media/mnichol3/pmeyers1/MattNicholson/glm'
-    local_mrms_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
-    memmap_path = '/media/mnichol3/pmeyers1/MattNicholson/data'
+    ########################## Data Paths ##########################
+
+    ## Pat's EHD
+    # local_abi_path = '/media/mnichol3/pmeyers1/MattNicholson/abi'
+    # local_wtlma_path = '/media/mnichol3/pmeyers1/MattNicholson/wtlma'
+    # local_glm_path = '/media/mnichol3/pmeyers1/MattNicholson/glm'
+    # local_mrms_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
+    # memmap_path = '/media/mnichol3/pmeyers1/MattNicholson/data'
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    ## My EHD
+    local_abi_path = '/media/mnichol3/tsb1/data/abi'
+    local_wtlma_path = '/media/mnichol3/tsb1/data/wtlma'
+    local_glm_path = '/media/mnichol3/tsb1/data/glm'
+    local_mrms_path = '/media/mnichol3/tsb1/data/mrms/201905'
+    memmap_path = '/media/mnichol3/tsb1/data/data'
+    ################################################################
 
 
     wwa_fname = '/home/mnichol3/Coding/glm-cases/resources/wwa_201905230000_201905240000/wwa_201905230000_201905240000.shp'
@@ -174,6 +187,7 @@ def main():
     inf_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L2-CMIP', first_dt, first_dt, 'M2', '13', prompt=False)
     viz_data = goes_utils.read_file(viz_files[0]) # , extent=[36.62, 40.78, -80.36, -72.03]
     inf_data = goes_utils.read_file(inf_files[0])
+    #goes_utils.plot_sammich_geos(viz_data, inf_data)
     goes_utils.plot_sammich_mercator(viz_data, inf_data)
     #######################################################################
 
