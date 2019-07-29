@@ -14,6 +14,10 @@ import math
 import datetime
 import cartopy.io.shapereader as shpreader
 
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib.colors import LinearSegmentedColormap
+
 from grib import fetch_scans, get_grib_objs
 from mrmscomposite import MRMSComposite
 
@@ -695,6 +699,46 @@ def get_wwa_polys(abs_path, date, time, wwa_type=['SV', 'TO']):
 
 
 
+def custom_cmap():
+
+    # gist_ncar = {'red': ((0.0, 0.0, 0.0), (0.3098, 0.0, 0.0), (0.3725, 0.3993, 0.3993),
+    #                     (0.4235, 0.5003, 0.5003), (0.5333, 1.0, 1.0), (0.7922, 1.0, 1.0),
+    #                     (0.8471, 0.6218, 0.6218), (0.898, 0.9235, 0.9235), (1.0, 0.9961, 0.9961)),
+    #             'green': ((0.0, 0.0, 0.0), (0.051, 0.3722, 0.3722), (0.1059, 0.0, 0.0),
+    #                     (0.1569, 0.7202, 0.7202), (0.1608, 0.7537, 0.7537), (0.1647, 0.7752, 0.7752),
+    #                     (0.2157, 1.0, 1.0), (0.2588, 0.9804, 0.9804), (0.2706, 0.9804, 0.9804),
+    #                     (0.3176, 1.0, 1.0), (0.3686, 0.8081, 0.8081), (0.4275, 1.0, 1.0),
+    #                     (0.5216, 1.0, 1.0), (0.6314, 0.7292, 0.7292), (0.6863, 0.2796, 0.2796),
+    #                     (0.7451, 0.0, 0.0), (0.7922, 0.0, 0.0), (0.8431, 0.1753, 0.1753),
+    #                     (0.898, 0.5, 0.5), (1.0, 0.9725, 0.9725)),
+    #             'blue': ((0.0, 0.502, 0.502), (0.051, 0.0222, 0.0222), (0.1098, 1.0, 1.0),
+    #                     (0.2039, 1.0, 1.0), (0.2627, 0.6145, 0.6145), (0.3216, 0.0, 0.0),
+    #                     (0.4157, 0.0, 0.0), (0.4745, 0.2342, 0.2342), (0.5333, 0.0, 0.0),
+    #                     (0.5804, 0.0, 0.0), (0.6314, 0.0549, 0.0549), (0.6902, 0.0, 0.0),
+    #                     (0.7373, 0.0, 0.0), (0.7922, 0.9738, 0.9738), (0.8, 1.0, 1.0),
+    #                     (0.8431, 1.0, 1.0), (0.898, 0.9341, 0.9341), (1.0, 0.9961, 0.9961))}
+
+    new_cm = LinearSegmentedColormap.from_list('new_cm',
+                ['darkgray', 'royalblue', 'cyan', 'limegreen', 'yellow', 'red',
+                 'black', 'lavenderblush'])
+    new_cm = new_cm.reversed()
+
+    # cms = [LinearSegmentedColormap('gist_ncar', segmentdata=gist_ncar),
+    #        LinearSegmentedColormap('new_cm', segmentdata=new_cm)]
+
+    # cms = [LinearSegmentedColormap('gist_ncar', segmentdata=gist_ncar), new_cm]
+    #
+    # np.random.seed(19680801)
+    # data = np.random.randn(30, 30)
+    # fig, axs = plt.subplots(1, 2, figsize=(6, 3), constrained_layout=True)
+    # for [ax, cmap] in zip(axs, cms):
+    #     psm = ax.pcolormesh(data, cmap=cmap, rasterized=True, vmin=-4, vmax=4)
+    #     fig.colorbar(psm, ax=ax)
+    # plt.show()
+    return new_cm
+
+
+
 def _valid_wwa_time(issued, expired, target):
     target = int(target)
     expired = int(expired)
@@ -722,3 +766,5 @@ def _format_wwa_time(date, time):
     """
     dt = datetime.datetime.strptime(date + time,'%m%d%Y%H%M')
     return datetime.datetime.strftime(dt, '%Y%m%d%H%M')
+
+custom_cmap()
