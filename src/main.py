@@ -164,7 +164,7 @@ def make_wtlma_glm_mercator_dual(local_wtlma_path, local_glm_path, date, time,
 def main():
     ########################## Data Paths ##########################
 
-    ## Pat's EHD
+    ## Pat's drive
     local_abi_path = '/media/mnichol3/pmeyers1/MattNicholson/abi'
     local_wtlma_path = '/media/mnichol3/pmeyers1/MattNicholson/wtlma'
     local_glm_path = '/media/mnichol3/pmeyers1/MattNicholson/glm'
@@ -173,7 +173,7 @@ def main():
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    ## My EHD
+    ## My drive
     # local_abi_path = '/media/mnichol3/tsb1/data/abi'
     # local_wtlma_path = '/media/mnichol3/tsb1/data/wtlma'
     # local_glm_path = '/media/mnichol3/tsb1/data/glm'
@@ -209,13 +209,12 @@ def main():
     first_dt = _format_date_time(case_steps.iloc[0]['date'], case_steps.iloc[0]['mrms-time'])
     last_dt = _format_date_time(case_steps.iloc[-1]['date'], case_steps.iloc[-1]['mrms-time'])
 
-    viz_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L1b-Rad', first_dt, first_dt, 'M2', '2', prompt=False)
-    inf_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L2-CMIP', first_dt, first_dt, 'M2', '13', prompt=False)
-    # LMA centered extent: extent=[35, 36.5, -102.5, -100]
-    viz_data = goes_utils.read_file(viz_files[0], extent=[33.66, 37.7, -103.735, -97.87])
-    inf_data = goes_utils.read_file(inf_files[0], extent=[33.66, 37.7, -103.735, -97.87])
-    # viz_data = goes_utils.read_file(viz_files[0])
-    # inf_data = goes_utils.read_file(inf_files[0])
+    viz_files = goes_utils.get_abi_files_dict(local_abi_path, 'goes16', 'ABI-L1b-Rad', first_dt, last_dt, 'M2', '2', prompt=False)
+    inf_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L2-CMIP', first_dt, last_dt, 'M2', '13', prompt=False)
+
+    extent = [33.66, 37.7, -103.735, -97.87]
+    # LMA centered extent: extent=None
+    # extent = [35, 36.5, -102.5, -100]
 
     for idx, step in case_steps.iterrows():
         point1 = (step['lat1'], step['lon1'])
@@ -224,25 +223,21 @@ def main():
         point1 = grib.trunc(point1, 3)
         point2 = grib.trunc(point2, 3)
 
-        viz_data = goes_utils.read_file(viz_files[0]) #extent=[step['lat1'], step['lat2'], step['lon1'], step['lon2']]
-        inf_data = goes_utils.read_file(inf_files[0])
+        step_date = step['date']
+        step_time = step['mrms-time']
+
+        viz_data = goes_utils.read_file(viz_files[step_time]) #extent=[step['lat1'], step['lat2'], step['lon1'], step['lon2']]
+        inf_data = goes_utils.read_file(inf_files[step_time])
 
         sat_data = (viz_data, inf_data)
-        if (step['mrms-time'] != '2206'): # MISSING FILE
-            #make_mrms_glm_plot(local_mrms_path, local_glm_path, local_wtlma_path, step['date'], step['mrms-time'], point1, point2, memmap_path)
-            #make_mrms_xsect2(local_mrms_path, local_wtlma_path, step['date'], step['mrms-time'], point1, point2)
-            make_wtlma_glm_mercator_dual(local_wtlma_path, local_glm_path, step['date'],
-                                         step['mrms-time'], point1, point2, wwa_fname,
-                                         sat_data, 2, [33.66, 37.7, -103.735, -97.87])
+        if (step_time != '2206'): # MISSING FILE
+            #make_mrms_glm_plot(local_mrms_path, local_glm_path, local_wtlma_path, step_date, step_time, point1, point2, memmap_path)
+            #make_mrms_xsect2(local_mrms_path, local_wtlma_path, step_date, step_time, point1, point2)
+            make_wtlma_glm_mercator_dual(local_wtlma_path, local_glm_path, step_date,
+                                         step_time, point1, point2, wwa_fname,
+                                         sat_data, 2, extent)
         exit(0)
     #####################################################################
-
-
-    #glm_data = glm_utils.read_file(abs_path_glm, meta=True, window=True)
-    #glm_data = glm_utils.read_file(abs_path_glm, meta=True, window=True)
-
-    #plotting_funcs.plot_mercator_dual(glm_data, (point1, point2), wtlma_data)
-    #plotting_funcs.plot_mercator_dual_2(glm_data, (point1, point2), wtlma_data)
 
 
 def _format_date_time(date, time):
