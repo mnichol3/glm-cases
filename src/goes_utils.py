@@ -20,6 +20,7 @@ from shapely.geometry import Point
 import goesawsinterface
 from glm_utils import georeference
 from proj_utils import geod_to_scan, scan_to_geod
+import plotting_utils
 
 
 STATES_PATH = '/home/mnichol3/Coding/glm-cases/resources/nws_s_11au16/s_11au16.shp'
@@ -594,15 +595,16 @@ def plot_sammich_mercator(visual, infrared):
 
     print('Creating map...\n')
 
-    ax.add_feature(states, linewidth=.8, facecolor='none', edgecolor='gray', zorder=3)
-    ax.add_feature(counties, linewidth=.2, facecolor='none', edgecolor='gray', zorder=3)
+    ax.add_feature(states, linewidth=.3, facecolor='none', edgecolor='black', zorder=3)
+    ax.add_feature(counties, linewidth=.1, facecolor='none', edgecolor='black', zorder=3)
 
     viz_img = plt.imshow(visual['data'], cmap=cm.Greys_r, extent=proj_extent, origin='upper',
                          vmin=visual['min_data_val'], vmax=visual['max_data_val'],
                          zorder=1, transform=crs_geos, interpolation='none')
 
     infrared_norm = colors.LogNorm(vmin=190, vmax=270)
-    inf_img = plt.imshow(infrared['data'], cmap=cm.nipy_spectral_r, extent=proj_extent, origin='upper',
+    custom_cmap = plotting_utils.custom_cmap()
+    inf_img = plt.imshow(infrared['data'], cmap=custom_cmap, extent=proj_extent, origin='upper',
                          norm=infrared_norm, zorder=2, alpha=0.4, transform=crs_geos, interpolation='none')
 
     cbar_bounds = np.arange(190, 270, 10)
