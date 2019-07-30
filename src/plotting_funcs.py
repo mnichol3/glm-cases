@@ -154,14 +154,24 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
                                  vmin=visual['min_data_val'], vmax=visual['max_data_val'],
                                  zorder=z_ord['sat_vis'], transform=crs_geos)
 
-            infrared_norm = colors.LogNorm(vmin=190, vmax=270)
+            # infrared_norm = colors.LogNorm(vmin=190, vmax=270)
+            # inf_img = plt.imshow(infrared['data'], cmap=cm.nipy_spectral_r, origin='upper',
+            #                      norm=infrared_norm, extent=proj_extent, zorder=z_ord['sat_inf'],
+            #                      alpha=0.4, transform=crs_geos)
+            #
+            # cbar_bounds = np.arange(190, 270, 10)
+            # cbar_sat = plt.colorbar(inf_img, ticks=cbar_bounds, spacing='proportional', fraction=0.046, pad=0.04)
+            # cbar_sat.ax.set_yticklabels([str(x) for x in cbar_bounds])
+            # cbar_sat.set_label('Cloud-top Temperature (K)')
+
             inf_img = plt.imshow(infrared['data'], cmap=cm.nipy_spectral_r, origin='upper',
-                                 norm=infrared_norm, extent=proj_extent, zorder=z_ord['sat_inf'],
+                                 vmin=190, vmax=270, extent=proj_extent, zorder=z_ord['sat_inf'],
                                  alpha=0.4, transform=crs_geos)
 
             cbar_bounds = np.arange(190, 270, 10)
-            cbar_sat = plt.colorbar(inf_img, ticks=cbar_bounds, spacing='proportional')
-            cbar_sat.ax.set_yticklabels([str(x) for x in cbar_bounds])
+            cbar_sat = plt.colorbar(inf_img, ticks=[x for x in cbar_bounds], spacing='proportional', fraction=0.046, pad=0.06)
+            cbar_sat.set_ticklabels([str(x) for x in cbar_bounds], update_ticks=True)
+            cbar_sat.set_label('Cloud-top Temperature (K)')
 
     if (wwa_polys is not None):
         wwa_keys = wwa_polys.keys()
@@ -317,14 +327,15 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
                                  vmin=visual['min_data_val'], vmax=visual['max_data_val'],
                                  zorder=z_ord['sat_vis'], transform=crs_geos)
 
-            infrared_norm = colors.LogNorm(vmin=190, vmax=270)
             inf_img = plt.imshow(infrared['data'], cmap=cm.nipy_spectral_r, origin='upper',
-                                 norm=infrared_norm, extent=proj_extent, zorder=z_ord['sat_inf'],
+                                 vmin=190, vmax=270, extent=proj_extent, zorder=z_ord['sat_inf'],
                                  alpha=0.4, transform=crs_geos)
 
+
             cbar_bounds = np.arange(190, 270, 10)
-            cbar_sat = plt.colorbar(inf_img, ticks=cbar_bounds, spacing='proportional')
-            cbar_sat.ax.set_yticklabels([str(x) for x in cbar_bounds])
+            cbar_sat = plt.colorbar(inf_img, ticks=[x for x in cbar_bounds], spacing='proportional', fraction=0.046, pad=0.06)
+            cbar_sat.set_ticklabels([str(x) for x in cbar_bounds], update_ticks=True)
+            cbar_sat.set_label('Cloud-top Temperature (K)')
 
     if (wwa_polys is not None):
         wwa_keys = wwa_polys.keys()
