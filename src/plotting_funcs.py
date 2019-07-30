@@ -114,7 +114,7 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
     if (points_to_plot is not None):
         plt.plot([points_to_plot[0][1], points_to_plot[1][1]], [points_to_plot[0][0], points_to_plot[1][0]],
                            marker='o', color='r', zorder=z_ord['top'], transform=crs_plt)
-    
+
     if (range_rings):
         clrs = ['g', 'y']
         for idx, x in enumerate([100, 250]):
@@ -174,7 +174,7 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
             ax.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red', zorder=z_ord['wwa'])
 
     plt.title('GLM FED {} {}\n WTLMA Sources {}'.format(glm_obj.scan_date, glm_obj.scan_time, wtlma_obj._start_time_pp()), loc='right')
-    plt.tight_layout()
+    #plt.tight_layout()
     #plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
 
@@ -337,7 +337,7 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
             ax.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red', zorder=z_ord['wwa'])
 
     plt.title('GLM FED {} {}\n WTLMA Sources {}'.format(glm_obj.scan_date, glm_obj.scan_time, wtlma_obj._start_time_pp()), loc='right')
-    plt.tight_layout()
+    #plt.tight_layout()
     plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
 
