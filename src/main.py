@@ -210,7 +210,7 @@ def main():
     last_dt = _format_date_time(case_steps.iloc[-1]['date'], case_steps.iloc[-1]['mrms-time'])
 
     viz_files = goes_utils.get_abi_files_dict(local_abi_path, 'goes16', 'ABI-L1b-Rad', first_dt, last_dt, 'M2', '2', prompt=False)
-    inf_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L2-CMIP', first_dt, last_dt, 'M2', '13', prompt=False)
+    inf_files = goes_utils.get_abi_files_dict(local_abi_path, 'goes16', 'ABI-L2-CMIP', first_dt, last_dt, 'M2', '13', prompt=False)
 
     extent = [33.66, 37.7, -103.735, -97.87]
     # LMA centered extent: extent=None
