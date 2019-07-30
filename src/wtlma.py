@@ -81,7 +81,7 @@ def parse_file(abs_path, sub_t=None):
         if (len(sub_t) != 5):
             raise ValueError('Invalid time subset argument')
         else:
-            subs_df = data_df.loc[lambda data_df: data_df['time'] == sub_t]
+            subs_df = data_df.loc[lambda data_df: ((data_df['time'] == sub_t) & (data_df['r chi2'] <= 1))]
             new_file_obj._set_data(subs_df)
             new_file_obj.start_time = new_file_obj.start_time.split('-')[0] + '-' + sub_t[:2] + sub_t[3:]
     else:
