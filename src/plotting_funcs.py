@@ -15,6 +15,7 @@ import matplotlib.colors as colors
 import scipy.ndimage
 import re
 from matplotlib.patches import Polygon
+from os.path import join
 
 from glm_utils import georeference
 import grib
@@ -28,7 +29,8 @@ OK_SHP_PATH = '/home/mnichol3/Coding/glm-cases/resources/tl_2016_40_cousub/tl_20
 
 
 def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None,
-                       range_rings=False, wwa_polys=None, satellite_data=None):
+                       range_rings=False, wwa_polys=None, satellite_data=None,
+                       show=True, save=False, outpath=None):
     """
     Plots both GLM FED, as a colormesh, and WTLMA sources, as points.
 
@@ -186,12 +188,21 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
     plt.title('GLM FED {} {}\n WTLMA Sources {}'.format(glm_obj.scan_date, glm_obj.scan_time, wtlma_obj._start_time_pp()), loc='right')
     #plt.tight_layout()
     #plt.gca().set_aspect('equal', adjustable='box')
-    plt.show()
+    if (save):
+        if (outpath is not None):
+            fname = 'plan-{}-{}z.png'.format(glm_obj.scan_date, glm_obj.scan_time)
+            path = join(outpath, fname)
+            plt.savefig(path)
+        else:
+            raise ValueError('Error: Outpath cannot be None')
+    if (show):
+        plt.show()
 
 
 
 def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None,
-                         range_rings=False, wwa_polys=None, satellite_data=None):
+                         range_rings=False, wwa_polys=None, satellite_data=None,
+                         show=True, save=False, outpath=None):
     """
     Same as plot_mercator_dual(), except it plots the wtlma strokes as
     power densities
@@ -273,7 +284,7 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
     lma_norm = colors.LogNorm(vmin=1, vmax=400)
 
     H, X_edges, Y_edges = np.histogram2d(wtlma_obj.data['lon'], wtlma_obj.data['lat'],
-                          bins=250, range=[[extent['min_lon'], extent['max_lon']], [extent['min_lat'], extent['max_lat']]],
+                          bins=100, range=[[extent['min_lon'], extent['max_lon']], [extent['min_lat'], extent['max_lat']]],
                           weights=wtlma_obj.data['P']) # bins=[len(grid_lons), len(grid_lats)]
 
     lma_mesh = plt.pcolormesh(X_edges, Y_edges, H.T, norm=lma_norm, transform=crs_plt, cmap=cm.inferno, zorder=z_ord['lma'])
@@ -350,7 +361,15 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
     plt.title('GLM FED {} {}\n WTLMA Sources {}'.format(glm_obj.scan_date, glm_obj.scan_time, wtlma_obj._start_time_pp()), loc='right')
     #plt.tight_layout()
     plt.gca().set_aspect('equal', adjustable='box')
-    plt.show()
+    if (save):
+        if (outpath is not None):
+            fname = 'plan-{}-{}z.png'.format(glm_obj.scan_date, glm_obj.scan_time)
+            path = join(outpath, fname)
+            plt.savefig(path)
+        else:
+            raise ValueError('Error: Outpath cannot be None')
+    if (show):
+        plt.show()
 
 
 

@@ -6,6 +6,7 @@ import sys
 import six
 import pandas as pd
 from sys import exit
+from datetime import datetime
 
 import wtlma
 import goesawsinterface
@@ -124,7 +125,7 @@ def make_mrms_xsect2(local_mrms_path, local_wtlma_path, date, time, point1, poin
 
 
 def make_wtlma_glm_mercator_dual(local_wtlma_path, local_glm_path, date, time,
-                                 point1, point2, wwa_fname, sat_data, func, plot_extent):
+         point1, point2, wwa_fname, sat_data, func, plot_extent, show=True, save=False, outpath=None):
 
     dt = _format_date_time(date, time)
     sub_time = _format_time_wtlma(time)
@@ -133,10 +134,13 @@ def make_wtlma_glm_mercator_dual(local_wtlma_path, local_glm_path, date, time,
     grid_extent = {'min_lat': plot_extent[0], 'max_lat': plot_extent[1],
                    'min_lon': plot_extent[2], 'max_lon': plot_extent[3]}
 
-    print('Fetching GLM data...\n')
+    print('Fetching GLM data...')
+    # Set GLM FED window bool
+    window = False
+    print('GLM 5-min window: {}\n'.format(window))
     glm_scans = localglminterface.get_files_in_range(local_glm_path, dt, dt)
     # 2 files for each time, apparently from 2 diff sources but same data
-    glm_data = glm_utils.read_file(glm_scans[0].abs_path, meta=True, window=True)
+    glm_data = glm_utils.read_file(glm_scans[0].abs_path, meta=True, window=window)
 
     print('Fetching LMA data...\n')
     files = wtlma.get_files_in_range(local_wtlma_path, dt, dt)
@@ -150,11 +154,55 @@ def make_wtlma_glm_mercator_dual(local_wtlma_path, local_glm_path, date, time,
     if (func == 1):
         plotting_funcs.plot_mercator_dual(glm_data, wtlma_data, points_to_plot=(point1, point2),
                                             range_rings=True, wwa_polys=wwa_polys,
-                                            satellite_data=sat_data, grid_extent=grid_extent)
+                                            satellite_data=sat_data, grid_extent=grid_extent,
+                                            show=show, save=save, outpath=outpath)
     elif (func == 2):
         plotting_funcs.plot_mercator_dual_2(glm_data, wtlma_data, points_to_plot=(point1, point2),
                                             range_rings=True, wwa_polys=wwa_polys,
-                                            satellite_data=sat_data, grid_extent=grid_extent)
+                                            satellite_data=sat_data, grid_extent=grid_extent,
+                                            show=show, save=save, outpath=outpath)
+    else:
+        raise ValueError('Invalid func param, must be 1 or 2')
+
+
+
+def make_wtlma_glm_mercator_dual_hitemp(local_wtlma_path, local_glm_path, date, time,
+         wwa_fname, sat_data, func, plot_extent, show=True, save=False, outpath=None):
+
+    dt = _format_date_time(date, time)
+    sub_time = _format_time_wtlma(time)
+
+    # grid_extent = None
+    grid_extent = {'min_lat': plot_extent[0], 'max_lat': plot_extent[1],
+                   'min_lon': plot_extent[2], 'max_lon': plot_extent[3]}
+
+    print('Fetching GLM data...')
+    # Set GLM FED window bool
+    window = False
+    print('GLM 5-min window: {}\n'.format(window))
+    glm_scans = localglminterface.get_files_in_range(local_glm_path, dt, dt)
+    # 2 files for each time, apparently from 2 diff sources but same data
+    glm_data = glm_utils.read_file(glm_scans[0].abs_path, meta=True, window=window)
+
+    print('Fetching LMA data...\n')
+    files = wtlma.get_files_in_range(local_wtlma_path, dt, dt)
+    wtlma_abs_path = wtlma._parse_abs_path(local_wtlma_path, files[0])
+    wtlma_data = wtlma.parse_file(wtlma_abs_path, sub_t=sub_time)
+
+    print('Fetching WWA Polygons...\n')
+    wwa_polys = plotting_utils.get_wwa_polys(wwa_fname, date, time, wwa_type=['SV', 'TO'])
+
+    print('Plotting...\n')
+    if (func == 1):
+        plotting_funcs.plot_mercator_dual(glm_data, wtlma_data, points_to_plot=None,
+                                            range_rings=True, wwa_polys=wwa_polys,
+                                            satellite_data=sat_data, grid_extent=grid_extent,
+                                            show=show, save=save, outpath=outpath)
+    elif (func == 2):
+        plotting_funcs.plot_mercator_dual_2(glm_data, wtlma_data, points_to_plot=None,
+                                            range_rings=True, wwa_polys=wwa_polys,
+                                            satellite_data=sat_data, grid_extent=grid_extent,
+                                            show=show, save=save, outpath=outpath)
     else:
         raise ValueError('Invalid func param, must be 1 or 2')
 
@@ -170,7 +218,8 @@ def main():
     local_glm_path = '/media/mnichol3/pmeyers1/MattNicholson/glm'
     local_mrms_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
     memmap_path = '/media/mnichol3/pmeyers1/MattNicholson/data'
-
+    img_outpath = '/home/mnichol3/Coding/glm-cases/imgs/05232019/auto-out'
+    
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     ## My drive
@@ -179,6 +228,7 @@ def main():
     # local_glm_path = '/media/mnichol3/tsb1/data/glm'
     # local_mrms_path = '/media/mnichol3/tsb1/data/mrms/201905'
     # memmap_path = '/media/mnichol3/tsb1/data/data'
+    # img_outpath = '/home/mnichol3/Coding/glm-cases/imgs/05232019/auto-out'
     ################################################################
 
 
@@ -188,6 +238,70 @@ def main():
               'lon1': float, 'lat2': float, 'lon2': float}
     case_steps = pd.read_csv(case_coords, sep=',', header=0, dtype=d_dict)
 
+
+    ######################## Mercator Hi-Temp plot ########################
+    extent = [35.362, 36.992, -102.443, -100.00]
+
+    first_dt = _format_date_time(case_steps.iloc[0]['date'], case_steps.iloc[0]['mrms-time'])
+    last_dt = _format_date_time(case_steps.iloc[-1]['date'], case_steps.iloc[-1]['mrms-time'])
+
+    viz_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L1b-Rad', first_dt, last_dt, 'M2', '2', prompt=False)
+    inf_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L2-CMIP', first_dt, last_dt, 'M2', '13', prompt=False)
+
+    for idx, viz_file in enumerate(viz_files):
+        viz_data = goes_utils.read_file(viz_file)
+        inf_data = goes_utils.read_file(inf_files[idx])
+        scan_time = viz_data['scan_date']
+        time = datetime.strftime(scan_time, '%H%M')
+        date = datetime.strftime(scan_time, '%m%d%Y')
+
+        sat_data = (viz_data, inf_data)
+
+        make_wtlma_glm_mercator_dual_hitemp(local_wtlma_path, local_glm_path, date, time,
+                                                wwa_fname, sat_data, 2, extent, show=True,
+                                                save=False, outpath=img_outpath)
+        exit(0)
+
+    #######################################################################
+
+
+    ############################# Main loop ###############################
+    # # Pull the ABI files
+    # first_dt = _format_date_time(case_steps.iloc[0]['date'], case_steps.iloc[0]['mrms-time'])
+    # last_dt = _format_date_time(case_steps.iloc[-1]['date'], case_steps.iloc[-1]['mrms-time'])
+
+    # #extent = [33.66, 37.7, -103.735, -97.87]
+    # extent = [35.362, 36.992, -102.443, -100.00]
+    # LMA centered extent: extent=None
+    # extent = [35, 36.5, -102.5, -100]
+
+    # viz_files = goes_utils.get_abi_files_dict(local_abi_path, 'goes16', 'ABI-L1b-Rad', first_dt, last_dt, 'M2', '2', prompt=False)
+    # inf_files = goes_utils.get_abi_files_dict(local_abi_path, 'goes16', 'ABI-L2-CMIP', first_dt, last_dt, 'M2', '13', prompt=False)
+
+    # for idx, step in case_steps.iterrows():
+    #     point1 = (step['lat1'], step['lon1'])
+    #     point2 = (step['lat2'], step['lon2'])
+    #
+    #     point1 = grib.trunc(point1, 3)
+    #     point2 = grib.trunc(point2, 3)
+    #
+    #     step_date = step['date']          # Format: MMDDYYYY
+    #     step_time = step['mrms-time']     # Format: HHMM
+    #
+    #     print('\nProcessing {}-{}z\n'.format(step_date, step_time))
+    #
+    #     viz_data = goes_utils.read_file(viz_files[step_time]) #extent=[step['lat1'], step['lat2'], step['lon1'], step['lon2']]
+    #     inf_data = goes_utils.read_file(inf_files[step_time])
+    #
+    #     sat_data = (viz_data, inf_data)
+    #     if (step_time != '2206'): # MISSING FILE
+    #         #make_mrms_glm_plot(local_mrms_path, local_glm_path, local_wtlma_path, step_date, step_time, point1, point2, memmap_path)
+    #         #make_mrms_xsect2(local_mrms_path, local_wtlma_path, step_date, step_time, point1, point2)
+    #         make_wtlma_glm_mercator_dual(local_wtlma_path, local_glm_path, step_date,
+    #                                      step_time, point1, point2, wwa_fname,
+    #                                      sat_data, 2, extent, show=True, save=False, outpath=img_outpath)
+    #     #exit(0)
+    #######################################################################
 
 
     ######################## plot_sammich_mercator ########################
@@ -202,42 +316,6 @@ def main():
     # #goes_utils.plot_sammich_geos(viz_data, inf_data)
     # goes_utils.plot_sammich_mercator(viz_data, inf_data)
     #######################################################################
-
-
-    ############################# Main loop #############################
-    # Pull the ABI files
-    first_dt = _format_date_time(case_steps.iloc[0]['date'], case_steps.iloc[0]['mrms-time'])
-    last_dt = _format_date_time(case_steps.iloc[-1]['date'], case_steps.iloc[-1]['mrms-time'])
-
-    viz_files = goes_utils.get_abi_files_dict(local_abi_path, 'goes16', 'ABI-L1b-Rad', first_dt, last_dt, 'M2', '2', prompt=False)
-    inf_files = goes_utils.get_abi_files_dict(local_abi_path, 'goes16', 'ABI-L2-CMIP', first_dt, last_dt, 'M2', '13', prompt=False)
-
-    extent = [33.66, 37.7, -103.735, -97.87]
-    # LMA centered extent: extent=None
-    # extent = [35, 36.5, -102.5, -100]
-
-    for idx, step in case_steps.iterrows():
-        point1 = (step['lat1'], step['lon1'])
-        point2 = (step['lat2'], step['lon2'])
-
-        point1 = grib.trunc(point1, 3)
-        point2 = grib.trunc(point2, 3)
-
-        step_date = step['date']
-        step_time = step['mrms-time']
-
-        viz_data = goes_utils.read_file(viz_files[step_time]) #extent=[step['lat1'], step['lat2'], step['lon1'], step['lon2']]
-        inf_data = goes_utils.read_file(inf_files[step_time])
-
-        sat_data = (viz_data, inf_data)
-        if (step_time != '2206'): # MISSING FILE
-            #make_mrms_glm_plot(local_mrms_path, local_glm_path, local_wtlma_path, step_date, step_time, point1, point2, memmap_path)
-            #make_mrms_xsect2(local_mrms_path, local_wtlma_path, step_date, step_time, point1, point2)
-            make_wtlma_glm_mercator_dual(local_wtlma_path, local_glm_path, step_date,
-                                         step_time, point1, point2, wwa_fname,
-                                         sat_data, 2, extent)
-        exit(0)
-    #####################################################################
 
 
 def _format_date_time(date, time):
