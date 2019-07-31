@@ -187,14 +187,26 @@ def _valid_wwa_time(issued, expired, target):
 
 
 
-f1 = 'IXTR99_KNES_232107_40255.2019052321'
-f2 = 'IXTR99_KNES_232107_14608.2019052322'
-base_path = '/media/mnichol3/pmeyers1/MattNicholson/glm/glm20190523'
-wwa_base = '/home/mnichol3/Coding/glm-cases/resources/wwa_201905230000_201905240000'
-wwa_fname = 'wwa_201905230000_201905240000.shp'
-wwa_abs_path = join(wwa_base, wwa_fname)
-#plot_wwa(wwa_abs_path, '201905232120')
-dump_shp(wwa_abs_path, pretty=True)
+def _dump_garbage():
+    import gc
+
+    print('\nGARBAGE')
+    gc.collect()
+    print('\nGARBAGE OBJECTS')
+    for x in gc.garbage:
+        s = str(x)
+        if (len(s > 80)):
+            s = s[:80]
+        print('{} \n {}'.format(type(x), s))
+
+# f1 = 'IXTR99_KNES_232107_40255.2019052321'
+# f2 = 'IXTR99_KNES_232107_14608.2019052322'
+# base_path = '/media/mnichol3/pmeyers1/MattNicholson/glm/glm20190523'
+# wwa_base = '/home/mnichol3/Coding/glm-cases/resources/wwa_201905230000_201905240000'
+# wwa_fname = 'wwa_201905230000_201905240000.shp'
+# wwa_abs_path = join(wwa_base, wwa_fname)
+# #plot_wwa(wwa_abs_path, '201905232120')
+# dump_shp(wwa_abs_path, pretty=True)
 
 #abs_path = join(base_path, f1)
 #test_glm_plot(abs_path)

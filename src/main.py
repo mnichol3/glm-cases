@@ -5,7 +5,7 @@ Author: Matt Nicholson
 import sys
 import six
 import pandas as pd
-from sys import exit
+from sys import exit, getrefcount
 from datetime import datetime
 
 import wtlma
@@ -87,7 +87,6 @@ def make_mrms_glm_plot(local_mrms_path, local_glm_path, local_wtlma_path, date,
     wwa_polys = plotting_utils.get_wwa_polys(wwa_fname, date, time, wwa_type=['SV', 'TO'])
     # func sig : plot_mrms_glm(grb_obj, glm_obj, wtlma_obj=None, points_to_plot=None, wwa_polys=None)
     plotting_funcs.plot_mrms_glm(mrms_obj, glm_obj, wtlma_obj=wtlma_data, points_to_plot=[point1, point2], wwa_polys=wwa_polys)
-    del mrms_obj    # Probably not needed but yolo
 
 
 
@@ -210,7 +209,12 @@ def make_wtlma_glm_mercator_dual_hitemp(local_wtlma_path, local_glm_path, date, 
 
 
 def main():
-    ########################## Data Paths ##########################
+    ############################ DEBUG ####################################
+    # from pympler.tracker import SummaryTracker
+    # tracker =  SummaryTracker()
+    #######################################################################
+
+    ############################# Data Paths ##############################
 
     ## Pat's drive
     local_abi_path = '/media/mnichol3/pmeyers1/MattNicholson/abi'
@@ -219,7 +223,7 @@ def main():
     local_mrms_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
     memmap_path = '/media/mnichol3/pmeyers1/MattNicholson/data'
     img_outpath = '/home/mnichol3/Coding/glm-cases/imgs/05232019/auto-out'
-    
+
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     ## My drive
@@ -229,7 +233,7 @@ def main():
     # local_mrms_path = '/media/mnichol3/tsb1/data/mrms/201905'
     # memmap_path = '/media/mnichol3/tsb1/data/data'
     # img_outpath = '/home/mnichol3/Coding/glm-cases/imgs/05232019/auto-out'
-    ################################################################
+    #######################################################################
 
 
     wwa_fname = '/home/mnichol3/Coding/glm-cases/resources/wwa_201905230000_201905240000/wwa_201905230000_201905240000.shp'
@@ -240,6 +244,8 @@ def main():
 
 
     ######################## Mercator Hi-Temp plot ########################
+    from time import sleep
+
     extent = [35.362, 36.992, -102.443, -100.00]
 
     first_dt = _format_date_time(case_steps.iloc[0]['date'], case_steps.iloc[0]['mrms-time'])
@@ -247,7 +253,7 @@ def main():
 
     viz_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L1b-Rad', first_dt, last_dt, 'M2', '2', prompt=False)
     inf_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L2-CMIP', first_dt, last_dt, 'M2', '13', prompt=False)
-
+    count = 0
     for idx, viz_file in enumerate(viz_files):
         viz_data = goes_utils.read_file(viz_file)
         inf_data = goes_utils.read_file(inf_files[idx])
@@ -255,13 +261,10 @@ def main():
         time = datetime.strftime(scan_time, '%H%M')
         date = datetime.strftime(scan_time, '%m%d%Y')
 
-        sat_data = (viz_data, inf_data)
-
         make_wtlma_glm_mercator_dual_hitemp(local_wtlma_path, local_glm_path, date, time,
-                                                wwa_fname, sat_data, 2, extent, show=True,
-                                                save=False, outpath=img_outpath)
-        exit(0)
-
+                  wwa_fname, (viz_data, inf_data), 2, extent, show=False, save=True, outpath=img_outpath)
+        # tracker.print_diff()
+        # sleep(10)
     #######################################################################
 
 
