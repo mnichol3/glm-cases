@@ -67,7 +67,7 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
     Xs, Ys = georeference(glm_obj.data['x'], glm_obj.data['y'], glm_obj.data['lon_0'], glm_obj.data['height'],
                           glm_obj.data['sweep_ang_axis'])
 
-    fig = plt.figure(figsize=(10, 5))
+    fig = plt.figure(figsize=(8, 8))
 
     ax = fig.add_subplot(111, projection=ccrs.Mercator())
 
@@ -100,16 +100,19 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
     bounds = [5, 10, 20, 50, 100, 150, 200, 300, 400]
     glm_norm = colors.LogNorm(vmin=1, vmax=max(bounds))
 
-    cmesh = plt.pcolormesh(Xs, Ys, glm_obj.data['data'], norm=glm_norm, transform=crs_plt, cmap=cm.jet, zorder=z_ord['glm'])
+    cmesh = plt.pcolormesh(Xs, Ys, glm_obj.data['data'], norm=glm_norm, transform=crs_plt,
+                        cmap=cm.jet, zorder=z_ord['glm'])
 
-    cbar1 = plt.colorbar(cmesh, norm=glm_norm, ticks=bounds, spacing='proportional', fraction=0.046, pad=0.04)
+    cbar1 = plt.colorbar(cmesh, norm=glm_norm, ticks=bounds, spacing='proportional',
+                        fraction=0.046, pad=0.08, shrink=0.85)
     cbar1.ax.set_yticklabels([str(x) for x in bounds])
     cbar1.set_label('GLM Flash Extent Density')
 
     ############################## Plot LMA data ##############################
     scat = plt.scatter(wtlma_obj.data['lon'], wtlma_obj.data['lat'], c=wtlma_obj.data['P'],
-                       marker='o', s=20, cmap=cm.gist_ncar_r, vmin=-20, vmax=100, zorder=z_ord['lma'], transform=crs_plt)
-    cbar2 = plt.colorbar(scat, fraction=0.046, pad=0.04)
+                       marker='o', s=20, cmap=cm.gist_ncar_r, vmin=-20, vmax=100,
+                       zorder=z_ord['lma'], transform=crs_plt)
+    cbar2 = plt.colorbar(scat, fraction=0.046, pad=0.08, shrink=0.85)
     cbar2.set_label('WTLMA Source Power (dBW)')
 
     ############################ Plot x-sect coords ############################
@@ -171,7 +174,8 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
                                  alpha=0.4, transform=crs_geos)
 
             cbar_bounds = np.arange(190, 270, 10)
-            cbar_sat = plt.colorbar(inf_img, ticks=[x for x in cbar_bounds], spacing='proportional', fraction=0.046, pad=0.06)
+            cbar_sat = plt.colorbar(inf_img, ticks=[x for x in cbar_bounds], spacing='proportional',
+                            fraction=0.046, pad=0.08, shrink=0.85)
             cbar_sat.set_ticklabels([str(x) for x in cbar_bounds], update_ticks=True)
             cbar_sat.set_label('Cloud-top Temperature (K)')
 
@@ -185,18 +189,20 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
             to_polys = cfeature.ShapelyFeature(wwa_polys['TO'], crs_plt)
             ax.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red', zorder=z_ord['wwa'])
 
-    plt.title('GLM FED {} {}\n WTLMA Sources {}'.format(glm_obj.scan_date, glm_obj.scan_time, wtlma_obj._start_time_pp()), loc='right')
+    plt.title('GLM FED {} {}\n WTLMA Sources {}'.format(glm_obj.scan_date, glm_obj.scan_time,
+                        wtlma_obj._start_time_pp()), loc='right')
     #plt.tight_layout()
-    #plt.gca().set_aspect('equal', adjustable='box')
+    plt.gca().set_aspect('equal', adjustable='box')
     if (save):
         if (outpath is not None):
             fname = 'plan-{}-{}z.png'.format(glm_obj.scan_date, glm_obj.scan_time)
             path = join(outpath, fname)
-            plt.savefig(path)
+            plt.savefig(path, dpi=500)
         else:
             raise ValueError('Error: Outpath cannot be None')
     if (show):
         plt.show()
+    plt.close('all')
 
 
 
@@ -240,7 +246,7 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
     Xs, Ys = georeference(glm_obj.data['x'], glm_obj.data['y'], glm_obj.data['lon_0'], glm_obj.data['height'],
                           glm_obj.data['sweep_ang_axis'])
 
-    fig = plt.figure(figsize=(10, 5))
+    fig = plt.figure(figsize=(12, 8))
 
     ax = fig.add_subplot(111, projection=ccrs.Mercator())
 
@@ -274,9 +280,11 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
     bounds = [5, 10, 20, 50, 100, 150, 200, 300, 400]
     glm_norm = colors.LogNorm(vmin=1, vmax=max(bounds))
 
-    cmesh = plt.pcolormesh(Xs, Ys, glm_obj.data['data'], norm=glm_norm, transform=crs_plt, cmap=cm.jet, zorder=z_ord['glm'])
+    cmesh = plt.pcolormesh(Xs, Ys, glm_obj.data['data'], norm=glm_norm, transform=crs_plt,
+                        cmap=cm.jet, zorder=z_ord['glm'])
 
-    cbar1 = plt.colorbar(cmesh, norm=glm_norm, ticks=bounds, spacing='proportional', fraction=0.046, pad=0.04)
+    cbar1 = plt.colorbar(cmesh, norm=glm_norm, ticks=bounds, spacing='proportional',
+                        fraction=0.046, pad=0.08, shrink=0.85)
     cbar1.ax.set_yticklabels([str(x) for x in bounds])
     cbar1.set_label('GLM Flash Extent Density')
 
@@ -287,10 +295,12 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
                           bins=100, range=[[extent['min_lon'], extent['max_lon']], [extent['min_lat'], extent['max_lat']]],
                           weights=wtlma_obj.data['P']) # bins=[len(grid_lons), len(grid_lats)]
 
-    lma_mesh = plt.pcolormesh(X_edges, Y_edges, H.T, norm=lma_norm, transform=crs_plt, cmap=cm.inferno, zorder=z_ord['lma'])
+    lma_mesh = plt.pcolormesh(X_edges, Y_edges, H.T, norm=lma_norm, transform=crs_plt,
+                        cmap=cm.inferno, zorder=z_ord['lma'])
 
     lma_bounds = [5, 10, 15, 20, 25, 50, 100, 200, 300, 400]
-    cbar2 = plt.colorbar(lma_mesh, ticks=lma_bounds, spacing='proportional',fraction=0.046, pad=0.04)
+    cbar2 = plt.colorbar(lma_mesh, ticks=lma_bounds, spacing='proportional',fraction=0.046,
+                        pad=0.08, shrink=0.85)
     cbar2.ax.set_yticklabels([str(x) for x in lma_bounds])
     cbar2.set_label('WTLMA Source Power Density (dBW)')
 
@@ -344,7 +354,8 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
 
 
             cbar_bounds = np.arange(190, 270, 10)
-            cbar_sat = plt.colorbar(inf_img, ticks=[x for x in cbar_bounds], spacing='proportional', fraction=0.046, pad=0.06)
+            cbar_sat = plt.colorbar(inf_img, ticks=[x for x in cbar_bounds], spacing='proportional',
+                                fraction=0.046, pad=0.08, shrink=0.85)
             cbar_sat.set_ticklabels([str(x) for x in cbar_bounds], update_ticks=True)
             cbar_sat.set_label('Cloud-top Temperature (K)')
 
@@ -358,18 +369,20 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
             to_polys = cfeature.ShapelyFeature(wwa_polys['TO'], ccrs.PlateCarree())
             ax.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red', zorder=z_ord['wwa'])
 
-    plt.title('GLM FED {} {}\n WTLMA Sources {}'.format(glm_obj.scan_date, glm_obj.scan_time, wtlma_obj._start_time_pp()), loc='right')
-    #plt.tight_layout()
+    plt.title('GLM FED {} {}\n WTLMA Sources {}'.format(glm_obj.scan_date, glm_obj.scan_time,
+                        wtlma_obj._start_time_pp()), loc='right')
+    # plt.tight_layout()
     plt.gca().set_aspect('equal', adjustable='box')
     if (save):
         if (outpath is not None):
             fname = 'plan-{}-{}z.png'.format(glm_obj.scan_date, glm_obj.scan_time)
             path = join(outpath, fname)
-            plt.savefig(path)
+            plt.savefig(path, dpi=500, bbox_inches='tight')
         else:
             raise ValueError('Error: Outpath cannot be None')
     if (show):
         plt.show()
+    plt.close('all')
 
 
 
