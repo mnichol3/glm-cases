@@ -67,7 +67,7 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
     Xs, Ys = georeference(glm_obj.data['x'], glm_obj.data['y'], glm_obj.data['lon_0'], glm_obj.data['height'],
                           glm_obj.data['sweep_ang_axis'])
 
-    fig = plt.figure(figsize=(8, 8))
+    fig = plt.figure(figsize=(12, 8))
 
     ax = fig.add_subplot(111, projection=ccrs.Mercator())
 
@@ -639,7 +639,8 @@ def plot_mrms_cross_section(data=None, abs_path=None, lons=None, lats=None):
 
 
 
-def plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtlma_obj=None, wtlma_coords=None):
+def plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtlma_obj=None,
+            wtlma_coords=None, show=False, save=False, outpath=None):
     """
     Plots a cross-section of MRMS reflectivity data from all scan angles, with WTLMA
     events overlayed. If the 'data' parameter is given, then that data is plotted.
@@ -694,7 +695,7 @@ def plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtl
     if (wtlma_obj is None):
         raise ValueError('Missing wtlma_obj param')
 
-    fig = plt.figure()
+    fig = plt.figure(figsize=(12, 8))
     ax = plt.gca()
 
     ax.set_ylim([500, 19000]) # 500 to 19000 meters
@@ -733,7 +734,16 @@ def plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtl
 
     fig.tight_layout()
 
-    plt.show()
+    if (save):
+        if (outpath):
+            fname = 'xsect-{}z.png'.format(wtlma_obj.start_time)
+            path = join(outpath, fname)
+            plt.savefig(path, dpi=500)
+        else:
+            raise ValueError('Error: Outpath cannot be None')
+    if (show):
+        plt.show()
+    plt.close('all')
 
 
 
@@ -1044,7 +1054,8 @@ def run_mrms_xsect(base_path, slice_time, point1, point2):
 
 
 
-def run_mrms_xsect2(base_path, slice_time, point1, point2, wtlma_obj, wtlma_coords):
+def run_mrms_xsect2(base_path, slice_time, point1, point2, wtlma_obj, wtlma_coords,
+        show=False, save=False, outpath=None):
     """
     Preforms some function calls needed to execute plot_mrms_cross_section2()
 
@@ -1065,7 +1076,8 @@ def run_mrms_xsect2(base_path, slice_time, point1, point2, wtlma_obj, wtlma_coor
         Format: (lat, lon)
     """
     cross_data, lats, lons = process_slice(base_path, slice_time, point1, point2)
-    plot_mrms_cross_section2(data=cross_data, lons=lons, lats=lats, wtlma_obj=wtlma_obj, wtlma_coords=wtlma_coords)
+    plot_mrms_cross_section2(data=cross_data, lons=lons, lats=lats, wtlma_obj=wtlma_obj,
+            wtlma_coords=wtlma_coords, show=show, save=save, outpath=outpath)
 
 
 
