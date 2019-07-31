@@ -124,7 +124,7 @@ def make_mrms_xsect2(local_mrms_path, local_wtlma_path, date, time, point1, poin
 
 
 def make_wtlma_glm_mercator_dual(local_wtlma_path, local_glm_path, date, time,
-         point1, point2, wwa_fname, sat_data, func, plot_extent, show=True, save=False, outpath=None):
+         point1, point2, wwa_fname, sat_data, func, plot_extent, window=False, show=True, save=False, outpath=None):
 
     dt = _format_date_time(date, time)
     sub_time = _format_time_wtlma(time)
@@ -134,8 +134,7 @@ def make_wtlma_glm_mercator_dual(local_wtlma_path, local_glm_path, date, time,
                    'min_lon': plot_extent[2], 'max_lon': plot_extent[3]}
 
     print('Fetching GLM data...')
-    # Set GLM FED window bool
-    window = False
+
     print('GLM 5-min window: {}\n'.format(window))
     glm_scans = localglminterface.get_files_in_range(local_glm_path, dt, dt)
     # 2 files for each time, apparently from 2 diff sources but same data
@@ -166,7 +165,7 @@ def make_wtlma_glm_mercator_dual(local_wtlma_path, local_glm_path, date, time,
 
 
 def make_wtlma_glm_mercator_dual_hitemp(local_wtlma_path, local_glm_path, date, time,
-         wwa_fname, sat_data, func, plot_extent, show=True, save=False, outpath=None):
+         wwa_fname, sat_data, func, plot_extent, window=False, show=True, save=False, outpath=None):
 
     dt = _format_date_time(date, time)
     sub_time = _format_time_wtlma(time)
@@ -176,9 +175,9 @@ def make_wtlma_glm_mercator_dual_hitemp(local_wtlma_path, local_glm_path, date, 
                    'min_lon': plot_extent[2], 'max_lon': plot_extent[3]}
 
     print('Fetching GLM data...')
-    # Set GLM FED window bool
-    window = False
+
     print('GLM 5-min window: {}\n'.format(window))
+
     glm_scans = localglminterface.get_files_in_range(local_glm_path, dt, dt)
     # 2 files for each time, apparently from 2 diff sources but same data
     glm_data = glm_utils.read_file(glm_scans[0].abs_path, meta=True, window=window)
@@ -253,16 +252,17 @@ def main():
 
     viz_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L1b-Rad', first_dt, last_dt, 'M2', '2', prompt=False)
     inf_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L2-CMIP', first_dt, last_dt, 'M2', '13', prompt=False)
-    count = 0
+    total_files = len(viz_files)
     for idx, viz_file in enumerate(viz_files):
         viz_data = goes_utils.read_file(viz_file)
         inf_data = goes_utils.read_file(inf_files[idx])
         scan_time = viz_data['scan_date']
+        print('Processing: {} ({}/{})\n'.format(scan_time, idx, total_files))
         time = datetime.strftime(scan_time, '%H%M')
         date = datetime.strftime(scan_time, '%m%d%Y')
 
         make_wtlma_glm_mercator_dual_hitemp(local_wtlma_path, local_glm_path, date, time,
-                  wwa_fname, (viz_data, inf_data), 2, extent, show=False, save=True, outpath=img_outpath)
+                  wwa_fname, (viz_data, inf_data), 2, extent, window=True, show=False, save=True, outpath=img_outpath)
         # tracker.print_diff()
         # sleep(10)
     #######################################################################
