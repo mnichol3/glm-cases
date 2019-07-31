@@ -238,7 +238,7 @@ def read_file(abi_file, extent=None):
         data_dict['x_image_bounds'] = [fh.variables['x'][x_min], fh.variables['x'][x_max]]
 
     else:
-        print('\nWARNING: Not subsetting ABI data!\n')
+        print('WARNING: Not subsetting ABI data!')
         data = fh.variables[prod_key][:]
 
         lat_lon_extent['n'] = fh.variables['geospatial_lat_lon_extent'].geospatial_northbound_latitude
