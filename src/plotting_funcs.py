@@ -386,6 +386,210 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
 
 
 
+def plot_merc_glm_lma_sbs(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None,
+                         range_rings=False, wwa_polys=None, satellite_data=None,
+                         show=True, save=False, outpath=None):
+    from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+    z_ord = {'map':6 , 'sat_vis': 1, 'sat_inf': 2, 'glm': 3, 'lma': 4, 'wwa': 5, 'top': 10}
+    tx_counties_reader = shpreader.Reader(TX_SHP_PATH)
+    tx_counties_list = list(tx_counties_reader.geometries())
+    tx_counties = cfeature.ShapelyFeature(tx_counties_list, ccrs.PlateCarree())
+
+    ok_counties_reader = shpreader.Reader(OK_SHP_PATH)
+    ok_counties_list = list(ok_counties_reader.geometries())
+    ok_counties = cfeature.ShapelyFeature(ok_counties_list, ccrs.PlateCarree())
+
+    cent_lat = float(wtlma_obj.coord_center[0])
+    cent_lon = float(wtlma_obj.coord_center[1])
+
+    if (grid_extent is None):
+        bounds = geodesic_point_buffer(cent_lat, cent_lon, 300)
+        lats = [float(x[1]) for x in bounds.coords[:]]
+        lons = [float(x[0]) for x in bounds.coords[:]]
+        extent = {'min_lon': min(lons), 'max_lon': max(lons), 'min_lat': min(lats), 'max_lat': max(lats)}
+        del lats
+        del lons
+    else:
+        extent = grid_extent
+
+    globe = ccrs.Globe(semimajor_axis=glm_obj.data['semi_major_axis'], semiminor_axis=glm_obj.data['semi_minor_axis'],
+                       flattening=None, inverse_flattening=glm_obj.data['inv_flattening'])
+
+    crs_plt = ccrs.PlateCarree() # Globe keyword was messing everything up
+
+    Xs, Ys = georeference(glm_obj.data['x'], glm_obj.data['y'], glm_obj.data['lon_0'], glm_obj.data['height'],
+                          glm_obj.data['sweep_ang_axis'])
+
+    # fig = plt.figure(figsize=(12, 8))
+    #
+    # ax1 = fig.add_subplot(121, projection=ccrs.Mercator())
+    # ax2 = fig.add_subplot(122, projection=ccrs.Mercator())
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, subplot_kw={'projection': ccrs.Mercator()},
+                        figsize=(12, 8))
+
+    states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='black',
+                             name='admin_1_states_provinces_shp', zorder=0)
+
+    for ax in [ax1, ax2]:
+        ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=1)
+        ax.add_feature(tx_counties, linewidth=.6, facecolor='none', edgecolor='gray', zorder=z_ord['map'])
+        ax.add_feature(ok_counties, linewidth=.6, facecolor='none', edgecolor='gray', zorder=z_ord['map'])
+        ax.set_extent([extent['min_lon'], extent['max_lon'], extent['min_lat'], extent['max_lat']], crs=crs_plt)
+
+    grid_lons = np.arange(extent['min_lon'], extent['max_lon'], 0.01)
+    grid_lats = np.arange(extent['min_lat'], extent['max_lat'], 0.01)
+
+    ############################## Plot GLM data ##############################
+    bounds = [5, 10, 20, 50, 100, 150, 200, 300, 400]
+    glm_norm = colors.LogNorm(vmin=1, vmax=max(bounds))
+
+    cmesh = ax1.pcolormesh(Xs, Ys, glm_obj.data['data'], norm=glm_norm, transform=crs_plt,
+                        cmap=cm.jet, zorder=z_ord['glm'])
+
+    axins1 = inset_axes(ax1,
+                   width="5%",  # width = 5% of parent_bbox width
+                   height="100%",  # height : 50%
+                   loc='lower left',
+                   bbox_to_anchor=(1, 0., 1, 1),
+                   bbox_transform=ax1.transAxes,
+                   borderpad=0,
+                   )
+
+    cbar1 = plt.colorbar(cmesh, norm=glm_norm, ticks=bounds, spacing='proportional',
+                        fraction=0.046, pad=0, cax=axins1)
+
+    cbar1.ax.set_yticklabels([str(x) for x in bounds])
+    cbar1.ax.tick_params(labelsize=6)
+    cbar1.set_label('GLM Flash Extent Density', fontsize=8)
+
+    ############################## Plot LMA data ##############################
+    lma_norm = colors.LogNorm(vmin=1, vmax=400)
+
+    H, X_edges, Y_edges = np.histogram2d(wtlma_obj.data['lon'], wtlma_obj.data['lat'],
+                          bins=100, range=[[extent['min_lon'], extent['max_lon']], [extent['min_lat'], extent['max_lat']]],
+                          weights=wtlma_obj.data['P']) # bins=[len(grid_lons), len(grid_lats)]
+
+    lma_mesh = ax2.pcolormesh(X_edges, Y_edges, H.T, norm=lma_norm, transform=crs_plt,
+                        cmap=cm.inferno, zorder=z_ord['lma'])
+
+    lma_bounds = [5, 10, 15, 20, 25, 50, 100, 200, 300, 400]
+
+    axins2 = inset_axes(ax2,
+                   width="5%",  # width = 5% of parent_bbox width
+                   height="100%",  # height : 50%
+                   loc='lower left',
+                   bbox_to_anchor=(1, 0., 1, 1),
+                   bbox_transform=ax2.transAxes,
+                   borderpad=0,
+                   )
+
+    cbar2 = plt.colorbar(lma_mesh, ticks=lma_bounds, spacing='proportional',fraction=0.046,
+                        pad=0.02, cax=axins2)
+
+    cbar2.ax.set_yticklabels([str(x) for x in lma_bounds])
+    cbar2.ax.tick_params(labelsize=6)
+    cbar2.set_label('WTLMA Source Power Density (dBW)', fontsize=8)
+
+    ############################ Plot x-sect coords ############################
+    if (points_to_plot is not None):
+        ax1.plot([points_to_plot[0][1], points_to_plot[1][1]], [points_to_plot[0][0], points_to_plot[1][0]],
+                           marker='o', color='r', zorder=z_ord['wwa'], transform=crs_plt)
+        ax2.plot([points_to_plot[0][1], points_to_plot[1][1]], [points_to_plot[0][0], points_to_plot[1][0]],
+                           marker='o', color='r', zorder=z_ord['wwa'], transform=crs_plt)
+
+    if (range_rings):
+        clrs = ['g', 'y']
+        for idx, x in enumerate([100, 250]):
+            coord_list = geodesic_point_buffer(cent_lat, cent_lon, x)
+            lats = [float(x[1]) for x in coord_list.coords[:]]
+            max_lat = max(lats)
+
+            # https://stackoverflow.com/questions/27574897/plotting-disconnected-entities-with-shapely-descartes-and-matplotlib
+            mpl_poly = Polygon(np.array(coord_list), ec=clrs[idx], fc="none", transform=crs_plt,
+                               linewidth=1.25, zorder=z_ord['map'])
+            ax1.add_patch(mpl_poly)
+            #ax2.add_patch(mpl_poly)
+
+    if (satellite_data):
+        if (len(satellite_data) != 2):
+            print('Error: Invalid satellite data params to produce sandwhich image')
+        else:
+            visual = satellite_data[0]
+            infrared = satellite_data[1]
+
+            sat_height = visual['sat_height']
+            sat_lon = visual['sat_lon']
+            sat_sweep = visual['sat_sweep']
+            scan_date = visual['scan_date']
+
+            y_min, x_min = scan_to_geod(min(visual['y_image_bounds']), min(visual['x_image_bounds']))
+            y_max, x_max = scan_to_geod(max(visual['y_image_bounds']), max(visual['x_image_bounds']))
+
+            crs_geos = ccrs.Geostationary(central_longitude=sat_lon, satellite_height=sat_height,
+                                           false_easting=0, false_northing=0, globe=globe, sweep_axis=sat_sweep)
+
+            trans_pts = crs_geos.transform_points(crs_plt, np.array([x_min, x_max]), np.array([y_min, y_max]))
+
+            proj_extent = (min(trans_pts[0][0], trans_pts[1][0]), max(trans_pts[0][0], trans_pts[1][0]),
+                           min(trans_pts[0][1], trans_pts[1][1]), max(trans_pts[0][1], trans_pts[1][1]))
+
+            viz_img1 = ax1.imshow(visual['data'], cmap=cm.Greys_r, extent=proj_extent, origin='upper',
+                                 vmin=visual['min_data_val'], vmax=visual['max_data_val'],
+                                 zorder=z_ord['sat_vis'], transform=crs_geos)
+
+            inf_img1 = ax1.imshow(infrared['data'], cmap=cm.nipy_spectral_r, origin='upper',
+                                 vmin=190, vmax=270, extent=proj_extent, zorder=z_ord['sat_inf'],
+                                 alpha=0.4, transform=crs_geos)
+
+            viz_img2 = ax2.imshow(visual['data'], cmap=cm.Greys_r, extent=proj_extent, origin='upper',
+                                 vmin=visual['min_data_val'], vmax=visual['max_data_val'],
+                                 zorder=z_ord['sat_vis'], transform=crs_geos)
+
+            inf_img2 = ax2.imshow(infrared['data'], cmap=cm.nipy_spectral_r, origin='upper',
+                                 vmin=190, vmax=270, extent=proj_extent, zorder=z_ord['sat_inf'],
+                                 alpha=0.4, transform=crs_geos, aspect="auto")
+
+
+            cbar_bounds = np.arange(190, 270, 10)
+            cbar_sat = fig.colorbar(inf_img1, ticks=[x for x in cbar_bounds], spacing='proportional',
+                                fraction=0.046, pad=0.02, shrink=0.53, ax=[ax1, ax2],
+                                orientation='horizontal')
+            cbar_sat.set_ticklabels([str(x) for x in cbar_bounds], update_ticks=True)
+            cbar_sat.ax.tick_params(labelsize=6)
+            cbar_sat.set_label('Cloud-top Temperature (K)', fontsize=8)
+
+    if (wwa_polys is not None):
+        wwa_keys = wwa_polys.keys()
+
+        if ('SV' in wwa_keys):
+            sv_polys = cfeature.ShapelyFeature(wwa_polys['SV'], ccrs.PlateCarree())
+            ax1.add_feature(sv_polys, linewidth=.8, facecolor='none', edgecolor='yellow', zorder=z_ord['wwa'])
+            ax2.add_feature(sv_polys, linewidth=.8, facecolor='none', edgecolor='yellow', zorder=z_ord['wwa'])
+        if ('TO' in wwa_keys):
+            to_polys = cfeature.ShapelyFeature(wwa_polys['TO'], ccrs.PlateCarree())
+            ax1.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red', zorder=z_ord['wwa'])
+            ax2.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red', zorder=z_ord['wwa'])
+
+    # plt.title('GLM FED {} {}\n WTLMA Sources {}'.format(glm_obj.scan_date, glm_obj.scan_time,
+    #                     wtlma_obj._start_time_pp()), loc='right')
+    ax1.set_aspect('equal', adjustable='box')
+    ax2.set_aspect('equal', adjustable='box')
+    if (save):
+        if (outpath is not None):
+            fname = 'sbs-plan-{}-{}z.png'.format(glm_obj.scan_date, glm_obj.scan_time)
+            path = join(outpath, fname)
+            plt.savefig(path, dpi=500, bbox_inches='tight')
+        else:
+            raise ValueError('Error: Outpath cannot be None')
+    if (show):
+        plt.show()
+    plt.close('all')
+
+
+
 def plot_mercator_glm_subset(data_dict, extent_coords):
 
     y1, x1 = geod_to_scan(point1[0], point1[1])
