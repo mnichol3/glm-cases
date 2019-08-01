@@ -48,6 +48,16 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
         decrease in data quality due to distance
     wwa_polys : dict; key : str, value : polygon; optional
         NWS Severe Thunderstorm and/or Tornado warning polygons
+    satellite_data: dict, optional
+        Dictionary of satellite data & metadata to plot
+    show : bool, optional
+        If True, the plot will be displayed in the matplotlib GUI. Default is True
+    save : bool, optional
+        If True, the plot will be saved to the location specified by the outpath
+        parameter, which must be specified. Default is False
+    outpath : str, optional
+        The path to the directory to save the plot. If save is True, outpath
+        cannot be None
     """
     z_ord = {'map': 9, 'sat_vis': 2, 'sat_inf': 3, 'glm': 4, 'lma': 5, 'wwa': 6, 'top': 10}
 
@@ -106,14 +116,16 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
     cbar1 = plt.colorbar(cmesh, norm=glm_norm, ticks=bounds, spacing='proportional',
                         fraction=0.046, pad=0.08, shrink=0.85)
     cbar1.ax.set_yticklabels([str(x) for x in bounds])
-    cbar1.set_label('GLM Flash Extent Density')
+    cbar1.ax.tick_params(labelsize=6)
+    cbar1.set_label('GLM Flash Extent Density', fontsize=8)
 
     ############################## Plot LMA data ##############################
     scat = plt.scatter(wtlma_obj.data['lon'], wtlma_obj.data['lat'], c=wtlma_obj.data['P'],
                        marker='o', s=20, cmap=cm.gist_ncar_r, vmin=-20, vmax=100,
                        zorder=z_ord['lma'], transform=crs_plt)
     cbar2 = plt.colorbar(scat, fraction=0.046, pad=0.08, shrink=0.85)
-    cbar2.set_label('WTLMA Source Power (dBW)')
+    cbar2.ax.tick_params(labelsize=6)
+    cbar2.set_label('WTLMA Source Power (dBW)', fontsize=8)
 
     ############################ Plot x-sect coords ############################
     if (points_to_plot is not None):
@@ -177,7 +189,8 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
             cbar_sat = plt.colorbar(inf_img, ticks=[x for x in cbar_bounds], spacing='proportional',
                             fraction=0.046, pad=0.08, shrink=0.85)
             cbar_sat.set_ticklabels([str(x) for x in cbar_bounds], update_ticks=True)
-            cbar_sat.set_label('Cloud-top Temperature (K)')
+            cbar_sat.ax.tick_params(labelsize=6)
+            cbar_sat.set_label('Cloud-top Temperature (K)', fontsize=8)
 
     if (wwa_polys is not None):
         wwa_keys = wwa_polys.keys()
@@ -189,9 +202,10 @@ def plot_mercator_dual(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None
             to_polys = cfeature.ShapelyFeature(wwa_polys['TO'], crs_plt)
             ax.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red', zorder=z_ord['wwa'])
 
-    plt.title('GLM FED {} {}\n WTLMA Sources {}'.format(glm_obj.scan_date, glm_obj.scan_time,
-                        wtlma_obj._start_time_pp()), loc='right')
-    #plt.tight_layout()
+    plt.title('GLM Flash Extent Density {} {}z\n WTLMA Sources {}z'.format(
+            glm_obj.scan_date, glm_obj.scan_time, wtlma_obj._start_time_pp()), loc='right',
+            fontsize=8)
+
     plt.gca().set_aspect('equal', adjustable='box')
     if (save):
         if (outpath is not None):
@@ -228,6 +242,16 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
         decrease in data quality due to distance
     wwa_polys : dict; key : str, value : polygon; optional
         NWS Severe Thunderstorm and/or Tornado warning polygons
+    satellite_data: dict, optional
+        Dictionary of satellite data & metadata to plot
+    show : bool, optional
+        If True, the plot will be displayed in the matplotlib GUI. Default is True
+    save : bool, optional
+        If True, the plot will be saved to the location specified by the outpath
+        parameter, which must be specified. Default is False
+    outpath : str, optional
+        The path to the directory to save the plot. If save is True, outpath
+        cannot be None
     """
     z_ord = {'map':6 , 'sat_vis': 1, 'sat_inf': 2, 'glm': 3, 'lma': 4, 'wwa': 5, 'top': 10}
     tx_counties_reader = shpreader.Reader(TX_SHP_PATH)
@@ -286,7 +310,8 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
     cbar1 = plt.colorbar(cmesh, norm=glm_norm, ticks=bounds, spacing='proportional',
                         fraction=0.046, pad=0.08, shrink=0.85)
     cbar1.ax.set_yticklabels([str(x) for x in bounds])
-    cbar1.set_label('GLM Flash Extent Density')
+    cbar1.ax.tick_params(labelsize=6)
+    cbar1.set_label('GLM Flash Extent Density', fontsize=8)
 
     ############################## Plot LMA data ##############################
     lma_norm = colors.LogNorm(vmin=1, vmax=400)
@@ -302,7 +327,8 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
     cbar2 = plt.colorbar(lma_mesh, ticks=lma_bounds, spacing='proportional',fraction=0.046,
                         pad=0.08, shrink=0.85)
     cbar2.ax.set_yticklabels([str(x) for x in lma_bounds])
-    cbar2.set_label('WTLMA Source Power Density (dBW)')
+    cbar2.ax.tick_params(labelsize=6)
+    cbar2.set_label('WTLMA Source Power Density (dBW)', fontsize=8)
 
     ############################ Plot x-sect coords ############################
     if (points_to_plot is not None):
@@ -357,7 +383,8 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
             cbar_sat = plt.colorbar(inf_img, ticks=[x for x in cbar_bounds], spacing='proportional',
                                 fraction=0.046, pad=0.08, shrink=0.85)
             cbar_sat.set_ticklabels([str(x) for x in cbar_bounds], update_ticks=True)
-            cbar_sat.set_label('Cloud-top Temperature (K)')
+            cbar_sat.ax.tick_params(labelsize=6)
+            cbar_sat.set_label('Cloud-top Temperature (K)', fontsize=8)
 
     if (wwa_polys is not None):
         wwa_keys = wwa_polys.keys()
@@ -369,8 +396,9 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
             to_polys = cfeature.ShapelyFeature(wwa_polys['TO'], ccrs.PlateCarree())
             ax.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red', zorder=z_ord['wwa'])
 
-    plt.title('GLM FED {} {}\n WTLMA Sources {}'.format(glm_obj.scan_date, glm_obj.scan_time,
-                        wtlma_obj._start_time_pp()), loc='right')
+    plt.title('GLM Flash Extent Density {} {}z\n WTLMA Power-Weighted Source Density {}z'.format(
+                glm_obj.scan_date, glm_obj.scan_time, wtlma_obj._start_time_pp()), loc='right',
+                fontsize=8)
     # plt.tight_layout()
     plt.gca().set_aspect('equal', adjustable='box')
     if (save):
@@ -389,8 +417,38 @@ def plot_mercator_dual_2(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=No
 def plot_merc_glm_lma_sbs(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=None,
                          range_rings=False, wwa_polys=None, satellite_data=None,
                          show=True, save=False, outpath=None):
+    """
+    Creates a figure with two side-by-side subplots. The first subplot displays
+    the GLM Flash Extent Density as a color mesh. The second subplot displays
+    the WTLMA power-weighted source density. Both subplots are plotted over
+    a map & GOES-16 ABI Ch.2 & Ch.13 'Sandwhich' imagery
+
+    Parameters
+    ----------
+    glm_obj : LocalGLMFile
+    wtlma_obj : LocalWTLMAFile
+    grid_extent : dictionary
+        Dictionary that defines the extent of the data grid
+        Keys: min_lon, max_lon, min_lat, max_lat
+    points_to_plot : tuple of tuples or list of tuples, optional
+        Format: [(lat1, lon1), (lat2, lon2)]
+    range_rings : bool, optional
+        If true, plots color-coded WTLMA range-rings to indicate the possibly
+        decrease in data quality due to distance
+    wwa_polys : dict; key : str, value : polygon; optional
+        NWS Severe Thunderstorm and/or Tornado warning polygons
+    satellite_data: dict, optional
+        Dictionary of satellite data & metadata to plot
+    show : bool, optional
+        If True, the plot will be displayed in the matplotlib GUI. Default is True
+    save : bool, optional
+        If True, the plot will be saved to the location specified by the outpath
+        parameter, which must be specified. Default is False
+    outpath : str, optional
+        The path to the directory to save the plot. If save is True, outpath
+        cannot be None
+    """
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-    from mpl_toolkits.axes_grid1 import make_axes_locatable
 
     z_ord = {'map':6 , 'sat_vis': 1, 'sat_inf': 2, 'glm': 3, 'lma': 4, 'wwa': 5, 'top': 10}
     tx_counties_reader = shpreader.Reader(TX_SHP_PATH)
@@ -422,16 +480,11 @@ def plot_merc_glm_lma_sbs(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=N
     Xs, Ys = georeference(glm_obj.data['x'], glm_obj.data['y'], glm_obj.data['lon_0'], glm_obj.data['height'],
                           glm_obj.data['sweep_ang_axis'])
 
-    # fig = plt.figure(figsize=(12, 8))
-    #
-    # ax1 = fig.add_subplot(121, projection=ccrs.Mercator())
-    # ax2 = fig.add_subplot(122, projection=ccrs.Mercator())
-
     fig, (ax1, ax2) = plt.subplots(1, 2, subplot_kw={'projection': ccrs.Mercator()},
                         figsize=(12, 8))
 
     states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='black',
-                             name='admin_1_states_provinces_shp', zorder=0)
+                        name='admin_1_states_provinces_shp', zorder=0)
 
     for ax in [ax1, ax2]:
         ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=1)
@@ -449,14 +502,8 @@ def plot_merc_glm_lma_sbs(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=N
     cmesh = ax1.pcolormesh(Xs, Ys, glm_obj.data['data'], norm=glm_norm, transform=crs_plt,
                         cmap=cm.jet, zorder=z_ord['glm'])
 
-    axins1 = inset_axes(ax1,
-                   width="5%",  # width = 5% of parent_bbox width
-                   height="100%",  # height : 50%
-                   loc='lower left',
-                   bbox_to_anchor=(1, 0., 1, 1),
-                   bbox_transform=ax1.transAxes,
-                   borderpad=0,
-                   )
+    axins1 = inset_axes(ax1, width="5%", height="100%", loc='lower left', bbox_to_anchor=(1, 0., 1, 1),
+                        bbox_transform=ax1.transAxes, borderpad=0)
 
     cbar1 = plt.colorbar(cmesh, norm=glm_norm, ticks=bounds, spacing='proportional',
                         fraction=0.046, pad=0, cax=axins1)
@@ -477,17 +524,11 @@ def plot_merc_glm_lma_sbs(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=N
 
     lma_bounds = [5, 10, 15, 20, 25, 50, 100, 200, 300, 400]
 
-    axins2 = inset_axes(ax2,
-                   width="5%",  # width = 5% of parent_bbox width
-                   height="100%",  # height : 50%
-                   loc='lower left',
-                   bbox_to_anchor=(1, 0., 1, 1),
-                   bbox_transform=ax2.transAxes,
-                   borderpad=0,
-                   )
+    axins2 = inset_axes(ax2, width="5%", height="100%", loc='lower left', bbox_to_anchor=(1, 0., 1, 1),
+                    bbox_transform=ax2.transAxes, borderpad=0)
 
     cbar2 = plt.colorbar(lma_mesh, ticks=lma_bounds, spacing='proportional',fraction=0.046,
-                        pad=0.02, cax=axins2)
+                    pad=0.02, cax=axins2)
 
     cbar2.ax.set_yticklabels([str(x) for x in lma_bounds])
     cbar2.ax.tick_params(labelsize=6)
@@ -507,11 +548,13 @@ def plot_merc_glm_lma_sbs(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=N
             lats = [float(x[1]) for x in coord_list.coords[:]]
             max_lat = max(lats)
 
-            # https://stackoverflow.com/questions/27574897/plotting-disconnected-entities-with-shapely-descartes-and-matplotlib
-            mpl_poly = Polygon(np.array(coord_list), ec=clrs[idx], fc="none", transform=crs_plt,
-                               linewidth=1.25, zorder=z_ord['map'])
-            ax1.add_patch(mpl_poly)
-            #ax2.add_patch(mpl_poly)
+            # Only way mpl won't throw a fit about using the patch twice
+            for ax in [ax1, ax2]:
+                # https://stackoverflow.com/questions/27574897/plotting-disconnected-entities-
+                # with-shapely-descartes-and-matplotlib
+                mpl_poly = Polygon(np.array(coord_list), ec=clrs[idx], fc="none", transform=crs_plt,
+                                   linewidth=1.25, zorder=z_ord['map'])
+                ax.add_patch(mpl_poly)
 
     if (satellite_data):
         if (len(satellite_data) != 2):
@@ -573,8 +616,11 @@ def plot_merc_glm_lma_sbs(glm_obj, wtlma_obj, grid_extent=None, points_to_plot=N
             ax1.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red', zorder=z_ord['wwa'])
             ax2.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red', zorder=z_ord['wwa'])
 
-    # plt.title('GLM FED {} {}\n WTLMA Sources {}'.format(glm_obj.scan_date, glm_obj.scan_time,
-    #                     wtlma_obj._start_time_pp()), loc='right')
+    ax1.set_title('GLM Flash Extent Density {} {}z'.format(glm_obj.scan_date, glm_obj.scan_time),
+                   loc='center', fontsize=8)
+    ax2.set_title('WTLMA Power-Weighted Source Density {}z'.format(wtlma_obj._start_time_pp()),
+                   loc='center', fontsize=8)
+
     ax1.set_aspect('equal', adjustable='box')
     ax2.set_aspect('equal', adjustable='box')
     if (save):
