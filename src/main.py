@@ -217,10 +217,6 @@ def make_wtlma_glm_mercator_dual_hitemp(local_wtlma_path, local_glm_path, date, 
 
 
 def main():
-    ############################ DEBUG ####################################
-    # from pympler.tracker import SummaryTracker
-    # tracker =  SummaryTracker()
-    #######################################################################
 
     ############################# Data Paths ##############################
 
@@ -283,7 +279,6 @@ def main():
                   save=True, outpath=img_outpath)
 
         print('------------------------------------------------------------------------------')
-        break
     #######################################################################
 
 
@@ -335,7 +330,6 @@ def main():
     #               step_time, point1, point2, wwa_fname, sat_data, 2, extent, show=True,
     #               save=False, outpath=img_outpath)
     #     print('------------------------------------------------------------------------------')
-    #     exit(0)
     #######################################################################
 
 
