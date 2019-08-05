@@ -7,6 +7,8 @@ import six
 import pandas as pd
 from sys import exit, getrefcount
 from datetime import datetime
+from os.path import isfile
+from os import remove
 
 import wtlma
 import goesawsinterface
@@ -138,17 +140,33 @@ def make_wtlma_glm_mercator_dual(local_wtlma_path, local_glm_path, date, time,
                    'min_lon': plot_extent[2], 'max_lon': plot_extent[3]}
 
     glm_scans = localglminterface.get_files_in_range(local_glm_path, dt, dt)
+    glm_scans.sort(key=lambda x: x.filename.split('.')[1])
 
-    print('GLM 5-min window: {}'.format(window))
-    print('GLM metadata: {} {}z {}'.format(glm_scans[0].scan_date, glm_scans[0].scan_time,
-                glm_scans[0].filename))
+    glm_scan_idx = 0 # Selects lowest filename ending
+    # ex: IXTR99_KNES_232054_40202.2019052320 <--
+    #     IXTR99_KNES_232054_14562.2019052321
+
+    glm_meta1 = 'GLM 5-min window: {}'.format(window)
+    glm_meta2 = 'GLM metadata: {} {}z {}'.format(glm_scans[glm_scan_idx].scan_date,
+                glm_scans[glm_scan_idx].scan_time, glm_scans[glm_scan_idx].filename)
+
+    print(glm_meta1)
+    print(glm_meta2)
     # 2 files for each time, apparently from 2 diff sources but same data
-    glm_data = glm_utils.read_file(glm_scans[0].abs_path, meta=True, window=window)
+    glm_data = glm_utils.read_file(glm_scans[glm_scan_idx].abs_path, meta=True, window=window)
 
     print('Fetching LMA data...')
     files = wtlma.get_files_in_range(local_wtlma_path, dt, dt)
+    wtlma_fname = files[0].filename
     wtlma_abs_path = wtlma._parse_abs_path(local_wtlma_path, files[0])
     wtlma_data = wtlma.parse_file(wtlma_abs_path, sub_t=sub_time)
+
+    if (logpath is not None):
+        with open(logpath, 'a') as logfile:
+            write(glm_meta1 + '\n')
+            write(glm_meta2 + '\n')
+            write('WTLMA filename: {}\n'.format(wtlma_fname))
+            write('WTLMA subset time: {}\n'.format(sub_time))
 
     print('Fetching WWA Polygons...')
     wwa_polys = plotting_utils.get_wwa_polys(wwa_fname, date, time, wwa_type=['SV', 'TO'])
@@ -164,13 +182,19 @@ def make_wtlma_glm_mercator_dual(local_wtlma_path, local_glm_path, date, time,
                                             range_rings=True, wwa_polys=wwa_polys,
                                             satellite_data=sat_data, grid_extent=grid_extent,
                                             show=show, save=save, outpath=outpath)
+    elif (func == 3):
+        plotting_funcs.plot_merc_glm_lma_sbs(glm_data, wtlma_data, points_to_plot=None,
+                                            range_rings=True, wwa_polys=wwa_polys,
+                                            satellite_data=sat_data, grid_extent=grid_extent,
+                                            show=show, save=save, outpath=outpath)
     else:
-        raise ValueError('Invalid func param, must be 1 or 2')
+        raise ValueError('Invalid func param, must be 1, 2, or 3')
 
 
 
 def make_wtlma_glm_mercator_dual_hitemp(local_wtlma_path, local_glm_path, date, time,
-         wwa_fname, sat_data, func, plot_extent, window=False, show=True, save=False, outpath=None):
+         wwa_fname, sat_data, func, plot_extent, window=False, show=True, save=False,
+         outpath=None, logpath=None):
 
     dt = _format_date_time(date, time)
     sub_time = _format_time_wtlma(time)
@@ -180,16 +204,34 @@ def make_wtlma_glm_mercator_dual_hitemp(local_wtlma_path, local_glm_path, date, 
                    'min_lon': plot_extent[2], 'max_lon': plot_extent[3]}
 
     glm_scans = localglminterface.get_files_in_range(local_glm_path, dt, dt)
-    print('GLM 5-min window: {}'.format(window))
-    print('GLM metadata: {} {}z {}'.format(glm_scans[0].scan_date, glm_scans[0].scan_time,
-                glm_scans[0].filename))
+    glm_scans.sort(key=lambda x: x.filename.split('.')[1])
+
+    glm_scan_idx = 0 # Selects lowest filename ending
+    # ex: IXTR99_KNES_232054_40202.2019052320 <--
+    #     IXTR99_KNES_232054_14562.2019052321
+
+    glm_meta1 = 'GLM 5-min window: {}'.format(window)
+    glm_meta2 = 'GLM metadata: {} {}z {}'.format(glm_scans[glm_scan_idx].scan_date,
+                glm_scans[glm_scan_idx].scan_time, glm_scans[glm_scan_idx].filename)
+
+    print(glm_meta1)
+    print(glm_meta2)
+
     # 2 files for each time, apparently from 2 diff sources but same data
-    glm_data = glm_utils.read_file(glm_scans[0].abs_path, meta=True, window=window)
+    glm_data = glm_utils.read_file(glm_scans[glm_scan_idx].abs_path, meta=True, window=window)
 
     print('Fetching LMA data...')
     files = wtlma.get_files_in_range(local_wtlma_path, dt, dt)
+    wtlma_fname = files[0]
     wtlma_abs_path = wtlma._parse_abs_path(local_wtlma_path, files[0])
     wtlma_data = wtlma.parse_file(wtlma_abs_path, sub_t=sub_time)
+
+    if (logpath is not None):
+        with open(logpath, 'a') as logfile:
+            logfile.write(glm_meta1 + '\n')
+            logfile.write(glm_meta2 + '\n')
+            logfile.write('WTLMA filename: {}\n'.format(wtlma_fname))
+            logfile.write('WTLMA subset time: {}\n'.format(sub_time))
 
     print('Fetching WWA Polygons...')
     wwa_polys = plotting_utils.get_wwa_polys(wwa_fname, date, time, wwa_type=['SV', 'TO'])
@@ -211,12 +253,23 @@ def make_wtlma_glm_mercator_dual_hitemp(local_wtlma_path, local_glm_path, date, 
                                             satellite_data=sat_data, grid_extent=grid_extent,
                                             show=show, save=save, outpath=outpath)
     else:
-        raise ValueError('Invalid func param, must be 1 or 2')
+        raise ValueError('Invalid func param, must be 1, 2, or 3')
 
 
 
 
 def main():
+
+    logpath = '/home/mnichol3/Coding/glm-cases/misc/runlog.txt'
+    satellite = 'goes16'
+    vis_prod = 'ABI-L1b-Rad'
+    inf_prod = 'ABI-L2-CMIP'
+    sector = 'M2'
+    vis_chan = '2'
+    inf_chan = '13'
+
+    if (isfile(logpath)):
+        remove(logpath)
 
     ############################# Data Paths ##############################
 
@@ -242,7 +295,9 @@ def main():
 
     wwa_fname = ('/home/mnichol3/Coding/glm-cases/resources/wwa_201905230000_201905240000'
                  '/wwa_201905230000_201905240000.shp')
+
     case_coords = '/home/mnichol3/Coding/glm-cases/resources/05232019-coords.txt'
+
     d_dict = {'date': str, 'wsr-time': str, 'mrms-time': str, 'lat1': float,
               'lon1': float, 'lat2': float, 'lon2': float}
     case_steps = pd.read_csv(case_coords, sep=',', header=0, dtype=d_dict)
@@ -250,15 +305,16 @@ def main():
 
     ######################## Mercator Hi-Temp plot ########################
     extent = [35.362, 36.992, -102.443, -100.00]
+    geo_extent = 'Geospatial extent: {}'.format(extent)
 
     first_dt = _format_date_time(case_steps.iloc[0]['date'], case_steps.iloc[0]['mrms-time'])
     last_dt = _format_date_time(case_steps.iloc[-1]['date'], case_steps.iloc[-1]['mrms-time'])
 
-    viz_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L1b-Rad',
-          first_dt, last_dt, 'M2', '2', prompt=False)
+    viz_files = goes_utils.get_abi_files(local_abi_path, satellite, vis_prod,
+          first_dt, last_dt, sector, vis_chan, prompt=False)
 
-    inf_files = goes_utils.get_abi_files(local_abi_path, 'goes16', 'ABI-L2-CMIP',
-          first_dt, last_dt, 'M2', '13', prompt=False)
+    inf_files = goes_utils.get_abi_files(local_abi_path, satellite, inf_prod,
+          first_dt, last_dt, sector, inf_chan, prompt=False)
 
     total_files = len(viz_files)
 
@@ -267,18 +323,37 @@ def main():
         viz_data = goes_utils.read_file(viz_file)
         inf_data = goes_utils.read_file(inf_files[idx])
         scan_time = viz_data['scan_date']
-        print('Processing: {} ({}/{})'.format(scan_time, idx + 1, total_files))
-        print('GOES vis metadata: {}'.format(viz_data['scan_date']))
-        print('GOES inf metadata: {}'.format(inf_data['scan_date']))
+
+        step_meta = 'Processing: {} ({}/{})'.format(scan_time, idx + 1, total_files)
+        # Keep extra space after "chan-{}"
+        goes_vis_meta = 'Sat vis: {} {} Sec-{} Chan-{}  {}'.format(satellite, vis_prod,
+                    sector, vis_chan, viz_data['scan_date'])
+        goes_inf_meta = 'Sat inf: {} {} Sec-{} Chan-{} {}'.format(satellite, inf_prod,
+                    sector, inf_chan, inf_data['scan_date'])
+
+        print(step_meta)
+        print(geo_extent)
+        print(goes_vis_meta)
+        print(goes_inf_meta)
+
+        with open(logpath, 'a') as logfile:
+            logfile.write(step_meta + '\n')
+            logfile.write(geo_extent + '\n')
+            logfile.write(goes_vis_meta + '\n')
+            logfile.write(goes_inf_meta + '\n')
+
         time = datetime.strftime(scan_time, '%H%M')
         date = datetime.strftime(scan_time, '%m%d%Y')
 
-
         make_wtlma_glm_mercator_dual_hitemp(local_wtlma_path, local_glm_path, date, time,
                   wwa_fname, (viz_data, inf_data), 3, extent, window=False, show=False,
-                  save=True, outpath=img_outpath)
+                  save=True, outpath=img_outpath, logpath=logpath)
 
-        print('------------------------------------------------------------------------------')
+        fin = '------------------------------------------------------------------------------'
+        print(fin)
+
+        with open(logpath, 'a') as logfile:
+            logfile.write(fin + '\n')
     #######################################################################
 
 
