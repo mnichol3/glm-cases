@@ -22,7 +22,7 @@ def test_glm_plot(abs_path):
     glm_obj = glm_utils.read_file(abs_path, window=False, meta=True)
 
     tx_county_path = '/home/mnichol3/Coding/glm-cases/resources/Texas_County_Boundaries/Texas_County_Boundaries.shp'
-    ok_county_path = '//home/mnichol3/Coding/glm-cases/resources/tl_2016_40_cousub/tl_2016_40_cousub.shp'
+    ok_county_path = '/home/mnichol3/Coding/glm-cases/resources/tl_2016_40_cousub/tl_2016_40_cousub.shp'
 
     tx_counties_reader = shpreader.Reader(tx_county_path)
     tx_counties_list = list(tx_counties_reader.geometries())
@@ -51,7 +51,7 @@ def test_glm_plot(abs_path):
     ax.add_feature(ok_counties, linewidth=.6, facecolor='none', edgecolor='gray', zorder=1)
 
     #ax.set_extent([-102.5, -100, 35, 36.5], crs=ccrs.PlateCarree())
-    ax.set_extent([-103, -99, 34, 37], crs=ccrs.PlateCarree())
+    ax.set_extent([-103, -100.25, 35.5, 37], crs=ccrs.PlateCarree())
 
     lon_ticks = [x for x in np.arange(-180, 181, 0.5)]
     lat_ticks = [x for x in np.arange(-90, 91, 0.5)]
@@ -157,7 +157,7 @@ def plot_wwa(abs_path, datetime):
     ax.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red', zorder=1)
 
     #ax.set_extent([-102.5, -100, 35, 36.5], crs=ccrs.PlateCarree())
-    ax.set_extent([-103, -99, 34, 37], crs=ccrs.PlateCarree())
+    ax.set_extent([-103, -100.25, 35.5, 37], crs=ccrs.PlateCarree())
 
     lon_ticks = [x for x in np.arange(-180, 181, 0.5)]
     lat_ticks = [x for x in np.arange(-90, 91, 0.5)]
@@ -208,6 +208,10 @@ def _dump_garbage():
 # #plot_wwa(wwa_abs_path, '201905232120')
 # dump_shp(wwa_abs_path, pretty=True)
 
-#abs_path = join(base_path, f1)
-#test_glm_plot(abs_path)
-#are_equal(f1, f2, base_path)
+# path = '/media/mnichol3/pmeyers1/MattNicholson/glm/glm20190523'
+# f1 = 'IXTR99_KNES_232059_14586.2019052322.nc'
+# f2 = 'IXTR99_KNES_232100_14590.2019052322.nc'
+# # f3 = 'IXTR99_KNES_232059_14586.2019052321.nc'
+# f4 = 'IXTR99_KNES_232100_40226.2019052321.nc'
+# # test_glm_plot(join(path, f3))
+# test_glm_plot(join(path, f4))
