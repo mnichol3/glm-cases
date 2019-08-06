@@ -679,6 +679,131 @@ def plot_mercator_glm_subset(data_dict, extent_coords):
 
 
 
+def plot_merc_abi_mrms(sat_data, mrms_obj, grid_extent=None, points_to_plot=None,
+                       range_rings=False, wwa_polys=None, show=True, save=False,
+                       outpath=None):
+
+    z_ord = {'map':6 , 'mrms': 1, 'sat': 2, 'glm': 3, 'lma': 4, 'wwa': 5, 'top': 10}
+
+    sat_height = sat_data['sat_height']
+    sat_lon = sat_data['sat_lon']
+    sat_sweep = sat_data['sat_sweep']
+    scan_date = sat_data['scan_date']
+
+    tx_counties_reader = shpreader.Reader(TX_SHP_PATH)
+    tx_counties_list = list(tx_counties_reader.geometries())
+    tx_counties = cfeature.ShapelyFeature(tx_counties_list, ccrs.PlateCarree())
+
+    ok_counties_reader = shpreader.Reader(OK_SHP_PATH)
+    ok_counties_list = list(ok_counties_reader.geometries())
+    ok_counties = cfeature.ShapelyFeature(ok_counties_list, ccrs.PlateCarree())
+
+    if (grid_extent is None):
+        extent = [min(mrms_obj.grid_lons), max(mrms_obj.grid_lons),
+                  min(mrms_obj.grid_lats), max(mrms_obj.grid_lats)]
+    else:
+        extent = grid_extent
+
+    globe = ccrs.Globe(semimajor_axis=visual['semimajor_ax'], semiminor_axis=visual['semiminor_ax'],
+                       flattening=None, inverse_flattening=visual['inverse_flattening'])
+
+    crs_geos = ccrs.Geostationary(central_longitude=sat_lon, satellite_height=sat_height,
+                                   false_easting=0, false_northing=0, globe=globe, sweep_axis=sat_sweep)
+
+    crs_plt = ccrs.PlateCarree() # Globe keyword was messing everything up
+
+    trans_pts = crs_geos.transform_points(crs_plt, np.array([x_min, x_max]), np.array([y_min, y_max]))
+
+    proj_extent = (min(trans_pts[0][0], trans_pts[1][0]), max(trans_pts[0][0], trans_pts[1][0]),
+                   min(trans_pts[0][1], trans_pts[1][1]), max(trans_pts[0][1], trans_pts[1][1]))
+
+    fig = plt.figure(figsize=(10, 5))
+    ax = fig.add_subplot(1, 1, 1, projection=ccrs.Mercator())
+    ax.set_extent(extent, crs=crs_plt)
+
+    states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='black',
+                        name='admin_1_states_provinces_shp', zorder=0)
+
+    ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=z_ord['map'])
+    ax.add_feature(tx_counties, linewidth=.6, facecolor='none', edgecolor='gray', zorder=z_ord['map'])
+    ax.add_feature(ok_counties, linewidth=.6, facecolor='none', edgecolor='gray', zorder=z_ord['map'])
+
+    mrms_ref = np.memmap(mrms_obj.get_data_path(), dtype='float32', mode='r', shape=mrms_obj.shape)
+    mrms_ref = np.asarray(mrms_ref)
+    mrms_ref = mrms_ref.astype('float')
+    mrms_ref[mrms_ref == 0] = np.nan
+
+    refl = plt.pcolormesh(mrms_obj.grid_lons, mrms_obj.grid_lats, mrms_ref, transform=ccrs.PlateCarree(),
+                cmap=cm.gist_ncar, zorder=z_ord['mrms'])
+
+    cbar_mrms = plt.colorbar(refl,fraction=0.046, pad=0.04)
+    plt.setp(cbar_mrms.ax.yaxis.get_ticklabels(), fontsize=12)
+    cbar_mrms.set_label('Reflectivity (dbz)', fontsize = 14, labelpad = 20)
+
+    inf_img1 = ax.imshow(infrared['data'], cmap=cm.nipy_spectral_r, origin='upper',
+                                 vmin=190, vmax=270, extent=proj_extent, zorder=z_ord['sat'],
+                                 alpha=0.4, transform=crs_geos)
+
+    cbar_bounds = np.arange(190, 270, 10)
+    cbar_sat = fig.colorbar(inf_img1, ticks=[x for x in cbar_bounds], spacing='proportional',
+                        fraction=0.046, pad=0.02, shrink=0.53, ax=[ax1, ax2],
+                        orientation='horizontal')
+    cbar_sat.set_ticklabels([str(x) for x in cbar_bounds], update_ticks=True)
+    cbar_sat.ax.tick_params(labelsize=6)
+    cbar_sat.set_label('Cloud-top Temperature (K)', fontsize=8)
+
+    if (range_rings):
+        clrs = ['g', 'y']
+        for idx, x in enumerate([100, 250]):
+            coord_list = geodesic_point_buffer(cent_lat, cent_lon, x)
+            lats = [float(x[1]) for x in coord_list.coords[:]]
+            max_lat = max(lats)
+
+            mpl_poly = Polygon(np.array(coord_list), ec=clrs[idx], fc="none", transform=crs_plt,
+                                   linewidth=1.25, zorder=z_ord['map'])
+            ax.add_patch(mpl_poly)
+
+    if (wwa_polys is not None):
+        wwa_keys = wwa_polys.keys()
+
+        if ('SV' in wwa_keys):
+            sv_polys = cfeature.ShapelyFeature(wwa_polys['SV'], ccrs.PlateCarree())
+            ax1.add_feature(sv_polys, linewidth=.8, facecolor='none', edgecolor='yellow', zorder=z_ord['wwa'])
+            ax2.add_feature(sv_polys, linewidth=.8, facecolor='none', edgecolor='yellow', zorder=z_ord['wwa'])
+        if ('TO' in wwa_keys):
+            to_polys = cfeature.ShapelyFeature(wwa_polys['TO'], ccrs.PlateCarree())
+            ax1.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red', zorder=z_ord['wwa'])
+            ax2.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red', zorder=z_ord['wwa'])
+
+    lon_ticks = [x for x in np.arange(-180, 181, 0.5)]
+    lat_ticks = [x for x in np.arange(-90, 91, 0.5)]
+
+    gl = ax.gridlines(crs=ccrs.PlateCarree(), linewidth=1, color='gray',
+                      alpha=0.5, linestyle='--', draw_labels=True)
+    gl.xlabels_top = False
+    gl.ylabels_right=False
+    gl.xlocator = mticker.FixedLocator(lon_ticks)
+    gl.ylocator = mticker.FixedLocator(lat_ticks)
+    gl.xformatter = LONGITUDE_FORMATTER
+    gl.yformatter = LATITUDE_FORMATTER
+    gl.xlabel_style = {'color': 'red', 'weight': 'bold'}
+    gl.ylabel_style = {'color': 'red', 'weight': 'bold'}
+
+    ax.set_aspect('equal', adjustable='box')
+
+    if (save):
+        if (outpath is not None):
+            fname = 'abi-mrms-{}-{}z.png'.format(mrms_obj.validity_date, mrms_obj.validity_time)
+            path = join(outpath, fname)
+            plt.savefig(path, dpi=500, bbox_inches='tight')
+        else:
+            raise ValueError('Error: Outpath cannot be None')
+    if (show):
+        plt.show()
+    plt.close('all')
+
+
+
 def plot_cross_cubic_single(grb, point1, point2, first=False):
     """
     Plots the cross section of a single MRMSGrib object's data from point1 to point2
@@ -890,7 +1015,7 @@ def plot_mrms_cross_section(data=None, abs_path=None, lons=None, lats=None):
 
 
 def plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtlma_obj=None,
-            wtlma_coords=None, show=False, save=False, outpath=None):
+            wtlma_coords=None, show=True, save=False, outpath=None):
     """
     Plots a cross-section of MRMS reflectivity data from all scan angles, with WTLMA
     events overlayed. If the 'data' parameter is given, then that data is plotted.
@@ -1251,9 +1376,11 @@ def plot_mrms_glm(grb_obj, glm_obj, wtlma_obj=None, points_to_plot=None, wwa_pol
         wwa_keys = wwa_polys.keys()
 
         if ('SV' in wwa_keys):
-            ax.add_feature(wwa_polys['SV'], linewidth=.8, facecolor='none', edgecolor='yellow', zorder=z_ord['wwa'])
+            sv_polys = cfeature.ShapelyFeature(wwa_polys['SV'], ccrs.PlateCarree())
+            ax.add_feature(sv_polys, linewidth=.8, facecolor='none', edgecolor='yellow', zorder=z_ord['wwa'])
         if ('TO' in wwa_keys):
-            ax.add_feature(wwa_polys['TO'], linewidth=.8, facecolor='none', edgecolor='red', zorder=z_ord['wwa'])
+            to_polys = cfeature.ShapelyFeature(wwa_polys['TO'], ccrs.PlateCarree())
+            ax.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red', zorder=z_ord['wwa'])
 
     lon_ticks = [x for x in np.arange(-180, 181, 0.5)]
     lat_ticks = [x for x in np.arange(-90, 91, 0.5)]
