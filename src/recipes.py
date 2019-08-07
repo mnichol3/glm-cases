@@ -338,11 +338,16 @@ def make_mrms_xsect2(local_mrms_path, local_wtlma_path, date, time, point1, poin
     wtlma_abs_path = wtlma._parse_abs_path(local_wtlma_path, files[0])
     wtlma_data = wtlma.parse_file(wtlma_abs_path, sub_t=sub_time)
     # filter_by_dist(lma_df, dist, start_point, end_point, num_pts) dist in m
-    filtered_data, coords = plotting_utils.filter_by_dist(wtlma_data.data, 4000, point1, point2, 100)
+    filtered_data, wtlma_coords = plotting_utils.filter_by_dist(wtlma_data.data, 4000,
+                                                                point1, point2, 100)
     wtlma_data._set_data(filtered_data)
 
-    plotting_funcs.run_mrms_xsect2(local_mrms_path, time, point1, point2, wtlma_data, coords,
-            show=show, save=save, outpath=outpath)
+    cross_data, lats, lons = plotting_funcs.process_slice(local_mrms_path, time,
+                                                          point1, point2)
+
+    plotting_funcs.plot_mrms_cross_section2(data=cross_data, lons=lons, lats=lats,
+                                            wtlma_obj=wtlma_data, wtlma_coords=wtlma_coords,
+                                            show=show, save=save, outpath=outpath)
 
 
 
