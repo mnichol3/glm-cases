@@ -16,7 +16,7 @@ def main():
                  '/wwa_201905230000_201905240000.shp')
     #func_name = 'wtlma_glm_mercator_dual'
     #func_ext = 'hitemp'
-    func_name = 'mrms_glm_plot'
+    func_name = 'plot_merc_abi_mrms'
     func_ext = None
     func_mode = 3
 

@@ -226,6 +226,19 @@ def driver(paths, case_coords, extent, sat_meta, func_name, plot_sets,
                                 outpath=paths['img_outpath'],
                                 logpath=paths['logpath']
                                 )
+                elif (func_name == 'plot_merc_abi_mrms'):
+                    make_merc_abi_mrms(
+                                paths['local_mrms_path'],
+                                sat_data[1],
+                                step_date,
+                                step_time,
+                                extent,
+                                paths['memmap_path'],
+                                paths['wwa'],
+                                points_to_plot=(point1, point2),
+                                show=plot_sets['show'],
+                                save=plot_sets['save'],
+                                outpath=paths['img_outpath'])
                 else:
                     raise ValueError("Invalid function name")
             fin = '------------------------------------------------------------------------------'
@@ -235,6 +248,29 @@ def driver(paths, case_coords, extent, sat_meta, func_name, plot_sets,
                 logfile.write(fin + '\n')
 
 
+
+def make_merc_abi_mrms(local_mrms_path, sat_data, date, time, extent, memmap_path,
+                       wwa_fname, points_to_plot=None, show=True, save=False, outpath=None):
+    """
+    points_to_plot : list of tuples, optional
+        Coordinate pairs to plot
+        Format: [(lat1, lon1), (lat2, lon2)]
+    """
+
+    ext_point1 = (extent[0], extent[2])
+    ext_point2 = (extent[1], extent[3])
+
+    grid_extent = {'min_lat': extent[0], 'max_lat': extent[1],
+                   'min_lon': extent[2], 'max_lon': extent[3]}
+
+    mrms_obj = plotting_utils.get_composite_ref(local_mrms_path, time, ext_point1,
+                            ext_point2, memmap_path)
+
+    wwa_polys = plotting_utils.get_wwa_polys(wwa_fname, date, time, wwa_type=['SV', 'TO'])
+
+    plotting_funcs.plot_merc_abi_mrms(sat_data, mrms_obj, grid_extent=grid_extent,
+                            points_to_plot=points_to_plot, range_rings=False,
+                            wwa_polys=wwa_polys, show=show, save=save, outpath=outpath)
 
 
 
