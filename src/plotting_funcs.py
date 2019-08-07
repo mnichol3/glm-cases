@@ -1452,6 +1452,7 @@ def run_mrms_xsect2(base_path, slice_time, point1, point2, wtlma_obj, wtlma_coor
         List of coordinates of filtered WTLMA events (?)
         Format: (lat, lon)
     """
+    print('Warning: Depricated')
     cross_data, lats, lons = process_slice(base_path, slice_time, point1, point2)
     plot_mrms_cross_section2(data=cross_data, lons=lons, lats=lats, wtlma_obj=wtlma_obj,
             wtlma_coords=wtlma_coords, show=show, save=save, outpath=outpath)
@@ -1473,6 +1474,7 @@ def run_mrms_xsect_inset(base_path, slice_time, point1, point2):
     point2 : tuple of floats
         Second point defining the cross section
     """
+    print('Warning: Depricated')
     base_path = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
     f_out = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
 
