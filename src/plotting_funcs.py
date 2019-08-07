@@ -748,11 +748,11 @@ def plot_merc_abi_mrms(sat_data, mrms_obj, grid_extent=None, points_to_plot=None
     plt.setp(cbar_mrms.ax.yaxis.get_ticklabels(), fontsize=12)
     cbar_mrms.set_label('Reflectivity (dbz)', fontsize = 14, labelpad = 20)
 
-    inf_img1 = plt.imshow(sat_data['data'], cmap=cm.nipy_spectral_r, origin='upper',
-                                 vmin=190, vmax=270, extent=proj_extent, zorder=z_ord['sat'],
-                                 alpha=0.4, transform=crs_geos)
+    inf_img1 = plt.imshow(sat_data['data'], cmap=cm.Greys, origin='upper',
+                                 vmin=190, vmax=290, extent=proj_extent, zorder=z_ord['sat'],
+                                 alpha=0.8, transform=crs_geos)
 
-    cbar_bounds = np.arange(190, 270, 10)
+    cbar_bounds = np.arange(190, 290, 10)
     cbar_sat = fig.colorbar(inf_img1, ticks=[x for x in cbar_bounds], spacing='proportional',
                         fraction=0.046, pad=0.02, shrink=0.53)
     cbar_sat.set_ticklabels([str(x) for x in cbar_bounds], update_ticks=True)
