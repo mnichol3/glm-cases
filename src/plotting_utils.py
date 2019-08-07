@@ -316,6 +316,7 @@ def process_slice_inset(base_path, slice_time, point1, point2):
         plot_cross_section_inset(inset_data=dict['f_inset_data'], inset_lons=dict['f_inset_lons'],
             inset_lats=dict['f_inset_lats'], abs_path=fname, points=(point1, point2))
     """
+    print('Warning: Depricated')
     BASE_PATH_XSECT = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
     BASE_PATH_XSECT_COORDS = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/coords'
 
@@ -335,14 +336,14 @@ def process_slice_inset(base_path, slice_time, point1, point2):
     for grb in grbs[1:]:
         cross_sections = np.vstack((cross_sections, get_cross_neighbor(grb, point1, point2)))
 
-    ang2 = 'mrms-ang2-' + str(valid_date) + '-' + str(valid_time) + 'z.txt'
-    f_ang2_lons = 'mrms-ang2-' + str(valid_date) + '-' + str(valid_time) + 'z-lons.txt'
-    f_ang2_lats = 'mrms-ang2-' + str(valid_date) + '-' + str(valid_time) + 'z-lats.txt'
-
-    f_out = to_file(BASE_PATH_XSECT, fname, cross_sections)
-    f_lons = to_file(BASE_PATH_XSECT_COORDS, f_ang2_lons, grbs[6].grid_lons)
-    f_lats = to_file(BASE_PATH_XSECT_COORDS, f_ang2_lats, grbs[6].grid_lats)
-    f_inset = to_file(BASE_PATH_XSECT, ang2, grbs[6].data)
+    # ang2 = 'mrms-ang2-' + str(valid_date) + '-' + str(valid_time) + 'z.txt'
+    # f_ang2_lons = 'mrms-ang2-' + str(valid_date) + '-' + str(valid_time) + 'z-lons.txt'
+    # f_ang2_lats = 'mrms-ang2-' + str(valid_date) + '-' + str(valid_time) + 'z-lats.txt'
+    #
+    # f_out = to_file(BASE_PATH_XSECT, fname, cross_sections)
+    # f_lons = to_file(BASE_PATH_XSECT_COORDS, f_ang2_lons, grbs[6].grid_lons)
+    # f_lats = to_file(BASE_PATH_XSECT_COORDS, f_ang2_lats, grbs[6].grid_lats)
+    # f_inset = to_file(BASE_PATH_XSECT, ang2, grbs[6].data)
 
     return {'x_sect': f_out, 'f_inset_lons': f_lons, 'f_inset_lats': f_lats, 'f_inset_data': f_inset}
 
