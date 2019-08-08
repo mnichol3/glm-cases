@@ -14,11 +14,16 @@ def main():
     case_coords = '/home/mnichol3/Coding/glm-cases/resources/05232019-coords.txt'
     wwa_fname = ('/home/mnichol3/Coding/glm-cases/resources/wwa_201905230000_201905240000'
                  '/wwa_201905230000_201905240000.shp')
-    #func_name = 'wtlma_glm_mercator_dual'
-    #func_ext = 'hitemp'
-    func_name = 'plot_merc_abi_mrms'
-    func_ext = None
-    func_mode = 3
+
+    func_name = 'wtlma_glm_mercator_dual'
+    func_ext = 'hitemp'
+
+    # func_name = 'plot_merc_abi_mrms'
+    # func_ext = None
+
+    # func_name = 'mrms_xsect2'
+    # func_ext = None
+    func_mode = 2
 
     extent = [35.362, 36.992, -102.443, -100.00]
 
@@ -33,8 +38,8 @@ def main():
     }
 
     plot_sets = {
-        'show': True,
-        'save': False
+        'show': False,
+        'save': True
     }
 
     paths = _pat_paths()

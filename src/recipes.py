@@ -69,24 +69,14 @@ def driver(paths, case_coords, extent, sat_meta, func_name, plot_sets,
             step_meta = 'Processing: {} ({}/{})'.format(scan_time, idx + 1, total_files)
             geo_extent = 'Geospatial extent: {}'.format(extent)
 
-            if (vis_files):
-                vis_data = goes_utils.read_file(vis_files[step_time])
-                                                    # Keep extra space after "chan-{}"
-                goes_vis_meta = 'Sat vis: {} {} Sec-{} Chan-{}  {}'.format(sat_meta['satellite'],
-                            sat_meta['vis_prod'], sat_meta['sector'], sat_meta['vis_chan'],
-                            vis_data['scan_date'])
-            else:
-                vis_data = None
-                goes_vis_meta = 'No visible satellite data'
+                                                # Keep extra space after "chan-{}"
+            goes_vis_meta = 'Sat vis: {} {} Sec-{} Chan-{}  {}'.format(sat_meta['satellite'],
+                        sat_meta['vis_prod'], sat_meta['sector'], sat_meta['vis_chan'],
+                        vis_data['scan_date'])
 
-            if (inf_files):
-                inf_data = goes_utils.read_file(inf_files[step_time])
-                goes_inf_meta = 'Sat inf: {} {} Sec-{} Chan-{} {}'.format(sat_meta['satellite'],
-                            sat_meta['inf_prod'], sat_meta['sector'], sat_meta['inf_chan'],
-                            inf_data['scan_date'])
-            else:
-                inf_data = None
-                goes_inf_meta = 'No infrared satellite data'
+            goes_inf_meta = 'Sat inf: {} {} Sec-{} Chan-{} {}'.format(sat_meta['satellite'],
+                        sat_meta['inf_prod'], sat_meta['sector'], sat_meta['inf_chan'],
+                        inf_data['scan_date'])
 
             print(step_meta)
             print(geo_extent)
