@@ -1112,6 +1112,12 @@ def plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtl
 
     ax.set_title('MRMS Reflectivity Cross Section with WTLMA Sources < 19000m AGL\n{}'.format(wtlma_obj._start_time_pp()), loc='left')
     ax.xaxis.set_major_locator(plt.MaxNLocator(10))
+
+    for tick in ax.xaxis.get_major_ticks():
+        tick.label.set_fontsize(8)
+        tick.label.set_rotation(30)
+        tick.label.set_horizontalalignment("right")
+
     ax.set_ylabel('Altitude (m)')
     ax.set_xlabel('Lon, Lat')
     ax.margins(0, tight=True)
