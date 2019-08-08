@@ -329,7 +329,15 @@ def make_mrms_glm_plot(local_mrms_path, local_glm_path, local_wtlma_path, date,
 
     glm_scans = localglminterface.get_files_in_range(local_glm_path, t1, t1)
     # 2 files for each time, apparently from 2 diff sources but same data
-    glm_obj = glm_utils.read_file(glm_scans[1].abs_path, meta=True)
+    glm_scans.sort(key=lambda x: x.filename.split('.')[1])
+
+    glm_scan_idx = 0 # Selects lowest filename ending
+    # ex: IXTR99_KNES_232054_40202.2019052320 <--
+    #     IXTR99_KNES_232054_14562.2019052321
+
+    # 2 files for each time, apparently from 2 diff sources but same data
+    glm_obj = glm_utils.read_file(glm_scans[glm_scan_idx].abs_path, meta=True)
+
     wwa_polys = plotting_utils.get_wwa_polys(wwa_fname, date, time, wwa_type=['SV', 'TO'])
     # func sig : plot_mrms_glm(grb_obj, glm_obj, wtlma_obj=None, points_to_plot=None, wwa_polys=None)
     plotting_funcs.plot_mrms_glm(mrms_obj, glm_obj, wtlma_obj=wtlma_data,
