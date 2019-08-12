@@ -27,7 +27,8 @@ def driver(paths, case_coords, extent, sat_meta, func_name, plot_sets,
         'wtlma_glm_mercator_dual': True,
         'wtlma_glm_mercator_dual_2': True,
         'wtlma_glm_mercator_dual_hitemp': True,
-        'plot_merc_abi_mrms': True
+        'plot_merc_abi_mrms': True,
+        'plot_mrms_lma_abi_glm': True
     }
 
     vis_files = None
@@ -229,6 +230,24 @@ def driver(paths, case_coords, extent, sat_meta, func_name, plot_sets,
                                 show=plot_sets['show'],
                                 save=plot_sets['save'],
                                 outpath=paths['img_outpath'])
+                elif (func_name == 'plot_mrms_lma_abi_glm'):
+                    make_mrms_lma_abi_glm(
+                                sat_data,
+                                paths['local_mrms_path'],
+                                paths['local_glm_path'],
+                                paths['local_wtlma_path'],
+                                step_date,
+                                step_time,
+                                None,
+                                None,
+                                extent,
+                                paths['memmap_path'],
+                                paths['wwa'],
+                                show=plot_sets['show'],
+                                save=plot_sets['save'],
+                                outpath=paths['img_outpath']),
+                                logpath=paths['logpath']
+                    )
                 else:
                     raise ValueError("Invalid function name")
             fin = '------------------------------------------------------------------------------'
@@ -236,6 +255,56 @@ def driver(paths, case_coords, extent, sat_meta, func_name, plot_sets,
 
             with open(paths['logpath'], 'a') as logfile:
                 logfile.write(fin + '\n')
+
+
+
+def make_mrms_lma_abi_glm(sat_data, local_mrms_path, local_glm_path, local_wtlma_path,
+                          date, time, point1, point2, extent, memmap_path, wwa_fname,
+                          show=True, save=False, outpath=None, logpath=None):
+
+    ext_point1 = (extent[0], extent[2])
+    ext_point2 = (extent[1], extent[3])
+
+    dt = _format_date_time(date, time)
+    sub_time = _format_time_wtlma(time)
+
+    grid_extent = {'min_lat': extent[0], 'max_lat': extent[1],
+                   'min_lon': extent[2], 'max_lon': extent[3]}
+
+    mrms_obj = plotting_utils.get_composite_ref(local_mrms_path, time, ext_point1,
+                            ext_point2, memmap_path)
+
+    glm_scans = localglminterface.get_files_in_range(local_glm_path, dt, dt)
+    glm_scans.sort(key=lambda x: x.filename.split('.')[1])
+    glm_scan_idx = 0
+
+    glm_meta1 = 'GLM 5-min window: {}'.format(window)
+    glm_meta2 = 'GLM Metadata: {} {}z {}'.format(glm_scans[glm_scan_idx].scan_date,
+                            glm_scans[glm_scan_idx].scan_time, glm_scans[glm_scan_idx].filename)
+
+    print(glm_meta1)
+    print(glm_meta2)
+
+    glm_data = glm_utils.read_file(glm_scans[glm_scan_idx].abs_path, meta=True, window=window)
+
+    lma_files = wtlma.get_files_in_range(local_wtlma_path, dt, dt)
+    lma_fname = lma_files[0]
+    lma_abs_path = wtlma._parse_abs_path(local_wtlma_path, lma_fname)
+    lma_obj = wtlma.parse_file(lma_abs_path, sub_t=sub_time)
+
+    if (logpath is not None):
+        with open(logpath, 'a') as logfile:
+            logfile.write(glm_meta1 + '\n')
+            logfile.write(glm_meta2 + '\n')
+            logfile.write('WTLMA filename: {}\n'.format(lma_fname))
+            logfile.write('WTLMA subset time: {}\n'.format(sub_time))
+
+    wwa_polys = plotting_utils.get_wwa_polys(wwa_fname, date, time, wwa_type=['SV', 'TO'])
+
+    plotting_funcs.plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, lma_obj,
+                    grid_extent=grid_extent, points_to_plot=None, range_rings=True,
+                    wwa_polys=Nwwa_polys, show=show, save=save, outpath=outpath,
+                    logpath=logpath)
 
 
 
