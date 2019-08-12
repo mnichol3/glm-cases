@@ -413,9 +413,16 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_sets, extent, hires=True):
                             save=plot_sets['save'], outpath=paths['outpath'],
                             logpath=paths['logpath'])
 
+            fin = ('---------------------------------------'
+                   '---------------------------------------')
+            print(fin)
+
+            with open(paths['logpath'], 'a') as logfile:
+                logfile.write(fin + '\n')
+
     else: # Not high temporal res - go by mrms file times
-        vis_files, inf_files = get_sat_data(first_dt, last_dt, sat_meta, paths,
-                                vis=True, inf=True, file_dict=False)
+        vis_files, inf_files = get_sat_data_dict(first_dt, last_dt, sat_meta,
+                                    paths, vis=True, inf=True, file_dict=False)
 
         print('\n')
         for idx, step in case_steps.iterrows():
@@ -502,6 +509,13 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_sets, extent, hires=True):
                             wwa_polys=wwa_polys, show=plot_sets['show'],
                             save=plot_sets['save'], outpath=paths['outpath'],
                             logpath=paths['logpath'])
+
+            fin = ('---------------------------------------'
+                   '---------------------------------------')
+            print(fin)
+
+            with open(paths['logpath'], 'a') as logfile:
+                logfile.write(fin + '\n')
 
 
 
