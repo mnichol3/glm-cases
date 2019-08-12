@@ -258,53 +258,250 @@ def driver(paths, case_coords, extent, sat_meta, func_name, plot_sets,
 
 
 
-def make_mrms_lma_abi_glm(sat_data, local_mrms_path, local_glm_path, local_wtlma_path,
-                          date, time, point1, point2, extent, memmap_path, wwa_fname,
-                          show=True, save=False, outpath=None, logpath=None):
+def read_case_steps(f_path):
+    d_dict = {'date': str, 'wsr-time': str, 'mrms-time': str, 'lat1': float,
+              'lon1': float, 'lat2': float, 'lon2': float}
+    case_steps = pd.read_csv(f_path, sep=',', header=0, dtype=d_dict)
 
-    ext_point1 = (extent[0], extent[2])
-    ext_point2 = (extent[1], extent[3])
+    return case_steps
 
-    dt = _format_date_time(date, time)
-    sub_time = _format_time_wtlma(time)
+
+
+def get_datetime_bookends(case_df):
+    first_dt = _format_date_time(case_df.iloc[0]['date'], case_df.iloc[0]['mrms-time'])
+    last_dt = _format_date_time(case_df.iloc[-1]['date'], case_df.iloc[-1]['mrms-time'])
+
+    return (first_dt, last_dt)
+
+
+
+def get_sat_data(first_dt, last_dt, sat_meta, paths, vis=True, inf=True, file_dict=False):
+    vis_files = None
+    inf_files = None
+
+    if (vis):
+        if (file_dict):
+            vis_files = goes_utils.get_abi_files_dict(paths['local_abi_path'],
+                            sat_meta['satellite'], sat_meta['vis_prod'], first_dt,
+                            last_dt, sat_meta['sector'], sat_meta['vis_chan'],
+                            prompt=False)
+        else:
+            vis_files = goes_utils.get_abi_files(paths['local_abi_path'], sat_meta['satellite'],
+                            sat_meta['vis_prod'], first_dt, last_dt, sat_meta['sector'],
+                            sat_meta['vis_chan'], prompt=False)
+    if (inf):
+        if (file_dict):
+            inf_files = goes_utils.get_abi_files_dict(paths['local_abi_path'],
+                            sat_meta['satellite'], sat_meta['inf_prod'], first_dt,
+                            last_dt, sat_meta['sector'], sat_meta['inf_chan'],
+                            prompt=False)
+        else:
+            inf_files = goes_utils.get_abi_files(paths['local_abi_path'], sat_meta['satellite'],
+                            sat_meta['inf_prod'], first_dt, last_dt, sat_meta['sector'],
+                            sat_meta['inf_chan'], prompt=False)
+
+    return (vis_files, inf_files)
+
+
+
+def make_mrms_lma_abi_glm(paths, sat_meta, plot_sets, extent, hires=True):
+
+    point1 = None
+    point2 = None
+
+    case_steps = read_case_steps(paths['case_coords'])
+    first_dt, last_dt = get_datetime_bookends(case_steps)
 
     grid_extent = {'min_lat': extent[0], 'max_lat': extent[1],
                    'min_lon': extent[2], 'max_lon': extent[3]}
 
-    mrms_obj = plotting_utils.get_composite_ref(local_mrms_path, time, ext_point1,
-                            ext_point2, memmap_path)
+    ext_point1 = (extent[0], extent[2])
+    ext_point2 = (extent[1], extent[3])
 
-    glm_scans = localglminterface.get_files_in_range(local_glm_path, dt, dt)
-    glm_scans.sort(key=lambda x: x.filename.split('.')[1])
-    glm_scan_idx = 0
+    if (hires):
+        vis_files, inf_files = get_sat_data(first_dt, last_dt, sat_meta, paths,
+                                vis=True, inf=True, file_dict=False)
 
-    glm_meta1 = 'GLM 5-min window: {}'.format(window)
-    glm_meta2 = 'GLM Metadata: {} {}z {}'.format(glm_scans[glm_scan_idx].scan_date,
-                            glm_scans[glm_scan_idx].scan_time, glm_scans[glm_scan_idx].filename)
+        total_files = len(vis_files)
+        print('\n')
 
-    print(glm_meta1)
-    print(glm_meta2)
+        for idx, vis_file in enumerate(vis_files):
+            vis_data = goes_utils.read_file(vis_file)
+            inf_data = goes_utils.read_file(inf_files[idx])
 
-    glm_data = glm_utils.read_file(glm_scans[glm_scan_idx].abs_path, meta=True, window=window)
+            scan_time = vis_data['scan_date']
 
-    lma_files = wtlma.get_files_in_range(local_wtlma_path, dt, dt)
-    lma_fname = lma_files[0]
-    lma_abs_path = wtlma._parse_abs_path(local_wtlma_path, lma_fname)
-    lma_obj = wtlma.parse_file(lma_abs_path, sub_t=sub_time)
+            step_meta = 'Processing: {} ({}/{})'.format(scan_time, idx + 1, total_files)
+            geo_extent = 'Geospatial extent: {}'.format(extent)
 
-    if (logpath is not None):
-        with open(logpath, 'a') as logfile:
-            logfile.write(glm_meta1 + '\n')
-            logfile.write(glm_meta2 + '\n')
-            logfile.write('WTLMA filename: {}\n'.format(lma_fname))
-            logfile.write('WTLMA subset time: {}\n'.format(sub_time))
+                                                # Keep extra space after "chan-{}"
+            goes_vis_meta = 'Sat vis: {} {} Sec-{} Chan-{}  {}'.format(sat_meta['satellite'],
+                        sat_meta['vis_prod'], sat_meta['sector'], sat_meta['vis_chan'],
+                        vis_data['scan_date'])
 
-    wwa_polys = plotting_utils.get_wwa_polys(wwa_fname, date, time, wwa_type=['SV', 'TO'])
+            goes_inf_meta = 'Sat inf: {} {} Sec-{} Chan-{} {}'.format(sat_meta['satellite'],
+                        sat_meta['inf_prod'], sat_meta['sector'], sat_meta['inf_chan'],
+                        inf_data['scan_date'])
 
-    plotting_funcs.plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, lma_obj,
-                    grid_extent=grid_extent, points_to_plot=None, range_rings=True,
-                    wwa_polys=Nwwa_polys, show=show, save=save, outpath=outpath,
-                    logpath=logpath)
+            print(step_meta)
+            print(geo_extent)
+            print(goes_vis_meta)
+            print(goes_inf_meta)
+
+            with open(paths['logpath'], 'a') as logfile:
+                logfile.write(step_meta + '\n')
+                logfile.write(func_name + '\n')
+                logfile.write(geo_extent + '\n')
+                logfile.write(goes_vis_meta + '\n')
+                logfile.write(goes_inf_meta + '\n')
+
+            time = datetime.strftime(scan_time, '%H%M')
+            date = datetime.strftime(scan_time, '%m%d%Y')
+
+            dt = _format_date_time(date, time)
+            sub_time = _format_time_wtlma(time)
+
+            # Only get new MRMS object if new mrms-time is reached
+            if (time in list(case_steps['mrms-time']):
+                mrms_obj = plotting_utils.get_composite_ref(paths['local_mrms_path'],
+                                            time, ext_point1, ext_point2, paths['memmap_path'])
+                df_row = case_steps.loc[case_steps['mrms-time'] == time]
+                point1 = (df_row['lat1'], df_row['lon1'])
+                point2 = (df_row['lat2'], df_row['lon2'])
+
+            ### Get GLM data ###
+            glm_scans = localglminterface.get_files_in_range(paths['local_glm_path'],
+                                                             dt, dt)
+            glm_scans.sort(key=lambda x: x.filename.split('.')[1])
+            glm_scan_idx = 0
+
+            glm_meta1 = 'GLM 5-min window: {}'.format(window)
+            glm_meta2 = 'GLM Metadata: {} {}z {}'.format(
+                                    glm_scans[glm_scan_idx].scan_date,
+                                    glm_scans[glm_scan_idx].scan_time,
+                                    glm_scans[glm_scan_idx].filename
+                                    )
+
+            print(glm_meta1)
+            print(glm_meta2)
+
+            glm_data = glm_utils.read_file(glm_scans[glm_scan_idx].abs_path,
+                                    meta=True, window=window)
+
+            lma_files = wtlma.get_files_in_range(local_wtlma_path, dt, dt)
+            lma_fname = lma_files[0]
+            lma_abs_path = wtlma._parse_abs_path(local_wtlma_path, lma_fname)
+            lma_obj = wtlma.parse_file(lma_abs_path, sub_t=sub_time)
+
+            if (logpath is not None):
+                with open(logpath, 'a') as logfile:
+                    logfile.write(glm_meta1 + '\n')
+                    logfile.write(glm_meta2 + '\n')
+                    logfile.write('WTLMA filename: {}\n'.format(lma_fname))
+                    logfile.write('WTLMA subset time: {}\n'.format(sub_time))
+
+            wwa_polys = plotting_utils.get_wwa_polys(wwa_fname, date, time, wwa_type=['SV', 'TO'])
+
+            if (point1 == None or point2 == None):
+                points_to_plot = None
+            else:
+                points_to_plot = (point1, point2)
+
+            plotting_funcs.plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, lma_obj,
+                            grid_extent=grid_extent, points_to_plot=None, range_rings=True,
+                            wwa_polys=wwa_polys, show=plot_sets['show'],
+                            save=plot_sets['save'], outpath=paths['outpath'],
+                            logpath=paths['logpath'])
+
+    else: # Not high temporal res - go by mrms file times
+        vis_files, inf_files = get_sat_data(first_dt, last_dt, sat_meta, paths,
+                                vis=True, inf=True, file_dict=False)
+
+        print('\n')
+        for idx, step in case_steps.iterrows():
+            date = step['date']
+            time = step['mrms-time']
+
+            point1 = (step['lat1'], step['lon1'])
+            point2 = (step['lat2'], step['lon2'])
+
+            point1 = grib.trunc(point1, 3)
+            point2 = grib.trunc(point2, 3)
+
+            step_meta = 'Processing: {}-{}z ({}/-)'.format(date, time, idx + 1)
+
+            geo_extent = 'Geospatial extent: {}'.format(extent)
+
+            vis_data = goes_utils.read_file(vis_files[step['mrms-time']])
+            inf_data = goes_utils.read_file(inf_files[step['mrms-time']])
+
+            goes_vis_meta = 'Sat vis: {} {} Sec-{} Chan-{}  {}'.format(sat_meta['satellite'],
+                        sat_meta['vis_prod'], sat_meta['sector'], sat_meta['vis_chan'],
+                        vis_data['scan_date'])
+
+            goes_inf_meta = 'Sat inf: {} {} Sec-{} Chan-{} {}'.format(sat_meta['satellite'],
+                        sat_meta['inf_prod'], sat_meta['sector'], sat_meta['inf_chan'],
+                        inf_data['scan_date'])
+
+            print(step_meta)
+            print(geo_extent)
+            print(goes_vis_meta)
+            print(goes_inf_meta)
+
+            with open(paths['logpath'], 'a') as logfile:
+                logfile.write(step_meta + '\n')
+                logfile.write(func_name + '\n')
+                logfile.write(geo_extent + '\n')
+                logfile.write(goes_vis_meta + '\n')
+                logfile.write(goes_inf_meta + '\n')
+
+            ### Get MRMS Composite Ref ###
+            mrms_obj = plotting_utils.get_composite_ref(paths['local_mrms_path'],
+                                        time, ext_point1, ext_point2, paths['memmap_path'])
+
+            t1 = _format_date_time(date, time)
+            sub_time = _format_time_wtlma(time)
+
+            ### Get GLM data ###
+            glm_scans = localglminterface.get_files_in_range(paths['local_glm_path'],
+                                                             dt, dt)
+            glm_scans.sort(key=lambda x: x.filename.split('.')[1])
+            glm_scan_idx = 0
+
+            glm_meta1 = 'GLM 5-min window: {}'.format(window)
+            glm_meta2 = 'GLM Metadata: {} {}z {}'.format(
+                                    glm_scans[glm_scan_idx].scan_date,
+                                    glm_scans[glm_scan_idx].scan_time,
+                                    glm_scans[glm_scan_idx].filename
+                                    )
+
+            print(glm_meta1)
+            print(glm_meta2)
+
+            glm_data = glm_utils.read_file(glm_scans[glm_scan_idx].abs_path,
+                                    meta=True, window=window)
+
+            ### GET WTLMA Data ###
+            lma_files = wtlma.get_files_in_range(local_wtlma_path, dt, dt)
+            lma_fname = lma_files[0]
+            lma_abs_path = wtlma._parse_abs_path(local_wtlma_path, lma_fname)
+            lma_obj = wtlma.parse_file(lma_abs_path, sub_t=sub_time)
+
+            if (logpath is not None):
+                with open(paths['logpath'], 'a') as logfile:
+                    logfile.write(glm_meta1 + '\n')
+                    logfile.write(glm_meta2 + '\n')
+                    logfile.write('WTLMA filename: {}\n'.format(lma_fname))
+                    logfile.write('WTLMA subset time: {}\n'.format(sub_time))
+
+            wwa_polys = plotting_utils.get_wwa_polys(paths['wwa_fname'], date, time,
+                                            wwa_type=['SV', 'TO'])
+
+            plotting_funcs.plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, lma_obj,
+                            grid_extent=grid_extent, points_to_plot=None, range_rings=True,
+                            wwa_polys=wwa_polys, show=plot_sets['show'],
+                            save=plot_sets['save'], outpath=paths['outpath'],
+                            logpath=paths['logpath'])
 
 
 
