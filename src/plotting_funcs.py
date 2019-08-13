@@ -817,7 +817,7 @@ def plot_merc_abi_mrms(sat_data, mrms_obj, grid_extent=None, points_to_plot=None
 
 def plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, wtlma_obj, grid_extent=None,
                 points_to_plot=None, range_rings=False, wwa_polys=None, show=True,
-                save=False, outpath=None, logpath=None):
+                save=False, outpath=None):
     """
     Creates a figure with two side-by-side plots. The first (left) plot displays
     the ABI visual & infrared 'sandwhich' product with GLM FED overlay. The
