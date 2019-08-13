@@ -15,14 +15,15 @@ def main():
     wwa_fname = ('/home/mnichol3/Coding/glm-cases/resources/wwa_201905230000_201905240000'
                  '/wwa_201905230000_201905240000.shp')
 
-    func_name = 'wtlma_glm_mercator_dual'
-    func_ext = 'hitemp'
+    # func_name = 'wtlma_glm_mercator_dual'
+    # func_ext = 'hitemp'
 
     # func_name = 'plot_merc_abi_mrms'
     # func_ext = None
 
-    # func_name = 'mrms_xsect2'
-    # func_ext = None
+    func_name = 'mrms_glm_plot'
+    func_ext = None
+
     func_mode = 2
 
     extent = [35.362, 36.992, -102.443, -100.00]
@@ -37,19 +38,20 @@ def main():
         'glm_5min': False
     }
 
-    plot_sets = {
+    plot_set = {
         'show': False,
         'save': True
     }
 
     paths = _pat_paths()
-    paths['wwa'] = wwa_fname
+    paths['wwa_fname'] = wwa_fname
+    paths['case_coords'] = case_coords
 
     if (isfile(paths['logpath'])):
         remove(paths['logpath'])
 
-    recipes.driver(paths, case_coords, extent, sat_meta, func_name, plot_sets,
-               func_ext=func_ext, func_mode=func_mode, points=None)
+    #recipes.make_wtlma_glm_mercator_dual(paths, sat_meta, plot_sets, extent, 2, hitemp=False)
+    recipes.make_mrms_xsect2(paths, plot_set, plot_lma=True)
 
 
 
@@ -60,8 +62,8 @@ def _matt_paths():
        'local_glm_path': '/media/mnichol3/tsb1/data/glm',
        'local_mrms_path': '/media/mnichol3/tsb1/data/mrms/201905',
        'memmap_path': '/media/mnichol3/tsb1/data/data',
-       'img_outpath': '/home/mnichol3/Coding/glm-cases/imgs/05232019/auto-out',
-       'logpath': '/home/mnichol3/Coding/glm-cases/misc/runlog.txt'
+       'outpath': '/home/mnichol3/Coding/glm-cases/imgs/05232019/auto-out',
+       'logpath': '/home/mnichol3/Coding/glm-cases/misc/runlog.txt',
     }
     return paths
 
@@ -74,8 +76,8 @@ def _pat_paths():
         'local_glm_path': '/media/mnichol3/pmeyers1/MattNicholson/glm',
         'local_mrms_path': '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905',
         'memmap_path': '/media/mnichol3/pmeyers1/MattNicholson/data',
-        'img_outpath': '/home/mnichol3/Coding/glm-cases/imgs/05232019/auto-out',
-        'logpath': '/home/mnichol3/Coding/glm-cases/misc/runlog.txt'
+        'outpath': '/home/mnichol3/Coding/glm-cases/imgs/05232019/auto-out',
+        'logpath': '/home/mnichol3/Coding/glm-cases/misc/runlog.txt',
     }
     return paths
 

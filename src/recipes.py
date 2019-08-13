@@ -54,24 +54,24 @@ def get_datetime_bookends(case_df):
         The first date & time and the last date & time of the case
         Format: MM-DD-YYYY-HH:MM
     """
-    first_dt = _format_date_time(case_df.iloc[0]['date'], case_df.iloc[0]['mrms-time'])
-    last_dt = _format_date_time(case_df.iloc[-1]['date'], case_df.iloc[-1]['mrms-time'])
+    first_t1 = _format_date_time(case_df.iloc[0]['date'], case_df.iloc[0]['mrms-time'])
+    last_t1 = _format_date_time(case_df.iloc[-1]['date'], case_df.iloc[-1]['mrms-time'])
 
-    return (first_dt, last_dt)
+    return (first_t1, last_t1)
 
 
 
-def get_sat_data(first_dt, last_dt, sat_meta, paths, vis=True, inf=True, file_dict=False):
+def get_sat_data(first_t1, last_t1, sat_meta, paths, vis=True, inf=True, file_dict=False):
     """
-    Retrieves the satellite imagery for the period defined by first_dt & last_dt,
+    Retrieves the satellite imagery for the period defined by first_t1 & last_t1,
     inclusive
 
     Parameters
     ----------
-    first_dt : str
+    first_t1 : str
         First date & time string that defines the period
         Format: MM-DD-YYYY-HH:MM
-    last_dt : str
+    last_t1 : str
         Ending date & time string that defines the period
         Format: MM-DD-YYYY-HH:MM
     sat_meta : dict; key: str, val: str
@@ -99,29 +99,29 @@ def get_sat_data(first_dt, last_dt, sat_meta, paths, vis=True, inf=True, file_di
     if (vis):
         if (file_dict):
             vis_files = goes_utils.get_abi_files_dict(paths['local_abi_path'],
-                            sat_meta['satellite'], sat_meta['vis_prod'], first_dt,
-                            last_dt, sat_meta['sector'], sat_meta['vis_chan'],
+                            sat_meta['satellite'], sat_meta['vis_prod'], first_t1,
+                            last_t1, sat_meta['sector'], sat_meta['vis_chan'],
                             prompt=False)
         else:
             vis_files = goes_utils.get_abi_files(paths['local_abi_path'], sat_meta['satellite'],
-                            sat_meta['vis_prod'], first_dt, last_dt, sat_meta['sector'],
+                            sat_meta['vis_prod'], first_t1, last_t1, sat_meta['sector'],
                             sat_meta['vis_chan'], prompt=False)
     if (inf):
         if (file_dict):
             inf_files = goes_utils.get_abi_files_dict(paths['local_abi_path'],
-                            sat_meta['satellite'], sat_meta['inf_prod'], first_dt,
-                            last_dt, sat_meta['sector'], sat_meta['inf_chan'],
+                            sat_meta['satellite'], sat_meta['inf_prod'], first_t1,
+                            last_t1, sat_meta['sector'], sat_meta['inf_chan'],
                             prompt=False)
         else:
             inf_files = goes_utils.get_abi_files(paths['local_abi_path'], sat_meta['satellite'],
-                            sat_meta['inf_prod'], first_dt, last_dt, sat_meta['sector'],
+                            sat_meta['inf_prod'], first_t1, last_t1, sat_meta['sector'],
                             sat_meta['inf_chan'], prompt=False)
 
     return (vis_files, inf_files)
 
 
 
-def make_mrms_lma_abi_glm(paths, sat_meta, plot_sets, extent, hitemp=True):
+def make_mrms_lma_abi_glm(paths, sat_meta, plot_set, extent, hitemp=True):
     """
     Gathers all the data to call plot_mrms_lma_abi_glm()
 
@@ -132,7 +132,7 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_sets, extent, hitemp=True):
     sat_meta : dict; key: str, val: str
         Dict containing metadata about the satellite imagery to retrieve.
         Keys: satellite, vis_prod, inf_prod, sector, vis_chan, inf_chan, glm_5min
-    plot_sets : dict; key: str, val: str
+    plot_set : dict; key: str, val: str
         Dict containing booleans dictating showing & saving the plots
         Keys: save, show
     extent : list of floats
@@ -147,7 +147,7 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_sets, extent, hitemp=True):
     point2 = None
 
     case_steps = read_case_steps(paths['case_coords'])
-    first_dt, last_dt = get_datetime_bookends(case_steps)
+    first_t1, last_t1 = get_datetime_bookends(case_steps)
 
     grid_extent = {'min_lat': extent[0], 'max_lat': extent[1],
                    'min_lon': extent[2], 'max_lon': extent[3]}
@@ -156,7 +156,7 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_sets, extent, hitemp=True):
     ext_point2 = (extent[1], extent[3])
 
     if (hitemp):
-        vis_files, inf_files = get_sat_data(first_dt, last_dt, sat_meta, paths,
+        vis_files, inf_files = get_sat_data(first_t1, last_t1, sat_meta, paths,
                                 vis=True, inf=True, file_dict=False)
 
         total_files = len(vis_files)
@@ -188,7 +188,6 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_sets, extent, hitemp=True):
             with open(paths['logpath'], 'a') as logfile:
                 logfile.write('make_mrms_lma_abi_glm-hitemp\n')
                 logfile.write(step_meta + '\n')
-                logfile.write(func_name + '\n')
                 logfile.write(geo_extent + '\n')
                 logfile.write(goes_vis_meta + '\n')
                 logfile.write(goes_inf_meta + '\n')
@@ -196,24 +195,24 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_sets, extent, hitemp=True):
             time = datetime.strftime(scan_time, '%H%M')
             date = datetime.strftime(scan_time, '%m%d%Y')
 
-            dt = _format_date_time(date, time)
+            t1 = _format_date_time(date, time)
             sub_time = _format_time_wtlma(time)
 
             # Only get new MRMS object if new mrms-time is reached
-            if (time in list(case_steps['mrms-time']):
+            if (time in list(case_steps['mrms-time'])):
                 mrms_obj = plotting_utils.get_composite_ref(paths['local_mrms_path'],
                                             time, ext_point1, ext_point2, paths['memmap_path'])
                 df_row = case_steps.loc[case_steps['mrms-time'] == time]
-                point1 = (df_row['lat1'], df_row['lon1'])
-                point2 = (df_row['lat2'], df_row['lon2'])
+                point1 = (df_row.iloc[0]['lat1'], df_row.iloc[0]['lon1'])
+                point2 = (df_row.iloc[0]['lat2'], df_row.iloc[0]['lon2'])
 
             ### Get GLM data ###
             glm_scans = localglminterface.get_files_in_range(paths['local_glm_path'],
-                                                             dt, dt)
+                                                             t1, t1)
             glm_scans.sort(key=lambda x: x.filename.split('.')[1])
             glm_scan_idx = 0
 
-            glm_meta1 = 'GLM 5-min window: {}'.format(window)
+            glm_meta1 = 'GLM 5-min window: {}'.format(sat_meta['glm_5min'])
             glm_meta2 = 'GLM Metadata: {} {}z {}'.format(
                                     glm_scans[glm_scan_idx].scan_date,
                                     glm_scans[glm_scan_idx].scan_time,
@@ -224,21 +223,22 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_sets, extent, hitemp=True):
             print(glm_meta2)
 
             glm_data = glm_utils.read_file(glm_scans[glm_scan_idx].abs_path,
-                                    meta=True, window=window)
+                                    meta=True, window=sat_meta['glm_5min'])
 
-            lma_files = wtlma.get_files_in_range(local_wtlma_path, dt, dt)
+            lma_files = wtlma.get_files_in_range(paths['local_wtlma_path'], t1, t1)
             lma_fname = lma_files[0]
-            lma_abs_path = wtlma._parse_abs_path(local_wtlma_path, lma_fname)
+            lma_abs_path = wtlma._parse_abs_path(paths['local_wtlma_path'], lma_fname)
             lma_obj = wtlma.parse_file(lma_abs_path, sub_t=sub_time)
 
-            if (logpath is not None):
-                with open(logpath, 'a') as logfile:
+            if (paths['logpath'] is not None):
+                with open(paths['logpath'], 'a') as logfile:
                     logfile.write(glm_meta1 + '\n')
                     logfile.write(glm_meta2 + '\n')
                     logfile.write('WTLMA filename: {}\n'.format(lma_fname))
                     logfile.write('WTLMA subset time: {}\n'.format(sub_time))
 
-            wwa_polys = plotting_utils.get_wwa_polys(wwa_fname, date, time, wwa_type=['SV', 'TO'])
+            wwa_polys = plotting_utils.get_wwa_polys(paths['wwa_fname'], date, time,
+                                                     wwa_type=['SV', 'TO'])
 
             if (point1 == None or point2 == None):
                 points_to_plot = None
@@ -247,8 +247,8 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_sets, extent, hitemp=True):
 
             plotting_funcs.plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, lma_obj,
                             grid_extent=grid_extent, points_to_plot=None, range_rings=True,
-                            wwa_polys=wwa_polys, show=plot_sets['show'],
-                            save=plot_sets['save'], outpath=paths['outpath'])
+                            wwa_polys=wwa_polys, show=plot_set['show'],
+                            save=plot_set['save'], outpath=paths['outpath'])
 
             fin = ('---------------------------------------'
                    '---------------------------------------')
@@ -258,8 +258,8 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_sets, extent, hitemp=True):
                 logfile.write(fin + '\n')
 
     else: # Not high temporal res - go by mrms file times
-        vis_files, inf_files = get_sat_data_dict(first_dt, last_dt, sat_meta,
-                                    paths, vis=True, inf=True, file_dict=False)
+        vis_files, inf_files = get_sat_data(first_t1, last_t1, sat_meta,
+                                    paths, vis=True, inf=True, file_dict=True)
 
         print('\n')
         for idx, step in case_steps.iterrows():
@@ -295,7 +295,6 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_sets, extent, hitemp=True):
             with open(paths['logpath'], 'a') as logfile:
                 logfile.write('make_mrms_lma_abi_glm\n')
                 logfile.write(step_meta + '\n')
-                logfile.write(func_name + '\n')
                 logfile.write(geo_extent + '\n')
                 logfile.write(goes_vis_meta + '\n')
                 logfile.write(goes_inf_meta + '\n')
@@ -309,11 +308,11 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_sets, extent, hitemp=True):
 
             ### Get GLM data ###
             glm_scans = localglminterface.get_files_in_range(paths['local_glm_path'],
-                                                             dt, dt)
+                                                             t1, t1)
             glm_scans.sort(key=lambda x: x.filename.split('.')[1])
             glm_scan_idx = 0
 
-            glm_meta1 = 'GLM 5-min window: {}'.format(window)
+            glm_meta1 = 'GLM 5-min window: {}'.format(sat_meta['glm_5min'])
             glm_meta2 = 'GLM Metadata: {} {}z {}'.format(
                                     glm_scans[glm_scan_idx].scan_date,
                                     glm_scans[glm_scan_idx].scan_time,
@@ -324,15 +323,15 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_sets, extent, hitemp=True):
             print(glm_meta2)
 
             glm_data = glm_utils.read_file(glm_scans[glm_scan_idx].abs_path,
-                                    meta=True, window=window)
+                                    meta=True, window=sat_meta['glm_5min'])
 
             ### GET WTLMA Data ###
-            lma_files = wtlma.get_files_in_range(local_wtlma_path, dt, dt)
+            lma_files = wtlma.get_files_in_range(paths['local_wtlma_path'], t1, t1)
             lma_fname = lma_files[0]
-            lma_abs_path = wtlma._parse_abs_path(local_wtlma_path, lma_fname)
+            lma_abs_path = wtlma._parse_abs_path(paths['local_wtlma_path'], lma_fname)
             lma_obj = wtlma.parse_file(lma_abs_path, sub_t=sub_time)
 
-            if (logpath is not None):
+            if (paths['logpath'] is not None):
                 with open(paths['logpath'], 'a') as logfile:
                     logfile.write(glm_meta1 + '\n')
                     logfile.write(glm_meta2 + '\n')
@@ -344,8 +343,8 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_sets, extent, hitemp=True):
 
             plotting_funcs.plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, lma_obj,
                             grid_extent=grid_extent, points_to_plot=(point1, point2),
-                            range_rings=True, wwa_polys=wwa_polys, show=plot_sets['show'],
-                            save=plot_sets['save'], outpath=paths['outpath'])
+                            range_rings=True, wwa_polys=wwa_polys, show=plot_set['show'],
+                            save=plot_set['save'], outpath=paths['outpath'])
 
             fin = ('---------------------------------------'
                    '---------------------------------------')
@@ -356,7 +355,7 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_sets, extent, hitemp=True):
 
 
 
-def make_merc_abi_mrms(paths, sat_meta, plot_sets, extent, hitemp=False):
+def make_merc_abi_mrms(paths, sat_meta, plot_set, extent, hitemp=False):
     """
     Gathers all the data to call plot_merc_abi_mrms()
 
@@ -367,7 +366,7 @@ def make_merc_abi_mrms(paths, sat_meta, plot_sets, extent, hitemp=False):
     sat_meta : dict; key: str, val: str
         Dict containing metadata about the satellite imagery to retrieve.
         Keys: satellite, vis_prod, inf_prod, sector, vis_chan, inf_chan, glm_5min
-    plot_sets : dict; key: str, val: str
+    plot_set : dict; key: str, val: str
         Dict containing booleans dictating showing & saving the plots
         Keys: save, show
     extent : list of floats
@@ -382,7 +381,7 @@ def make_merc_abi_mrms(paths, sat_meta, plot_sets, extent, hitemp=False):
     point2 = None
 
     case_steps = read_case_steps(paths['case_coords'])
-    first_dt, last_dt = get_datetime_bookends(case_steps)
+    first_t1, last_t1 = get_datetime_bookends(case_steps)
 
     grid_extent = {'min_lat': extent[0], 'max_lat': extent[1],
                    'min_lon': extent[2], 'max_lon': extent[3]}
@@ -391,7 +390,7 @@ def make_merc_abi_mrms(paths, sat_meta, plot_sets, extent, hitemp=False):
     ext_point2 = (extent[1], extent[3])
 
     if (hitemp):
-        vis_files, inf_files = get_sat_data(first_dt, last_dt, sat_meta, paths,
+        vis_files, inf_files = get_sat_data(first_t1, last_t1, sat_meta, paths,
                                 vis=True, inf=True, file_dict=False)
 
         total_files = len(vis_files)
@@ -423,7 +422,6 @@ def make_merc_abi_mrms(paths, sat_meta, plot_sets, extent, hitemp=False):
             with open(paths['logpath'], 'a') as logfile:
                 logfile.write('make_merc_abi_mrms-hitemp\n')
                 logfile.write(step_meta + '\n')
-                logfile.write(func_name + '\n')
                 logfile.write(geo_extent + '\n')
                 logfile.write(goes_vis_meta + '\n')
                 logfile.write(goes_inf_meta + '\n')
@@ -432,14 +430,15 @@ def make_merc_abi_mrms(paths, sat_meta, plot_sets, extent, hitemp=False):
             date = datetime.strftime(scan_time, '%m%d%Y')
 
             # Only get new MRMS object if new mrms-time is reached
-            if (time in list(case_steps['mrms-time']):
+            if (time in list(case_steps['mrms-time'])):
                 mrms_obj = plotting_utils.get_composite_ref(paths['local_mrms_path'],
                                             time, ext_point1, ext_point2, paths['memmap_path'])
                 df_row = case_steps.loc[case_steps['mrms-time'] == time]
-                point1 = (df_row['lat1'], df_row['lon1'])
-                point2 = (df_row['lat2'], df_row['lon2'])
+                point1 = (df_row.iloc[0]['lat1'], df_row.iloc[0]['lon1'])
+                point2 = (df_row.iloc[0]['lat2'], df_row.iloc[0]['lon2'])
 
-            wwa_polys = plotting_utils.get_wwa_polys(wwa_fname, date, time, wwa_type=['SV', 'TO'])
+            wwa_polys = plotting_utils.get_wwa_polys(paths['wwa_fname'], date, time,
+                                                     wwa_type=['SV', 'TO'])
 
             if (point1 == None or point2 == None):
                 points_to_plot = None
@@ -448,8 +447,8 @@ def make_merc_abi_mrms(paths, sat_meta, plot_sets, extent, hitemp=False):
 
             plotting_funcs.plot_merc_abi_mrms(sat_data, mrms_obj, grid_extent=grid_extent,
                                     points_to_plot=points_to_plot, range_rings=True,
-                                    wwa_polys=wwa_polys, show=plot_sets['show'],
-                                    save=plot_sets['save'], outpath=paths['outpath'])
+                                    wwa_polys=wwa_polys, show=plot_set['show'],
+                                    save=plot_set['save'], outpath=paths['outpath'])
 
             fin = ('---------------------------------------'
                    '---------------------------------------')
@@ -459,8 +458,8 @@ def make_merc_abi_mrms(paths, sat_meta, plot_sets, extent, hitemp=False):
                 logfile.write(fin + '\n')
 
     else: # Not high temporal res - go by mrms file times
-        vis_files, inf_files = get_sat_data_dict(first_dt, last_dt, sat_meta,
-                                    paths, vis=True, inf=True, file_dict=False)
+        vis_files, inf_files = get_sat_data(first_t1, last_t1, sat_meta,
+                                    paths, vis=True, inf=True, file_dict=True)
 
         print('\n')
         for idx, step in case_steps.iterrows():
@@ -496,7 +495,6 @@ def make_merc_abi_mrms(paths, sat_meta, plot_sets, extent, hitemp=False):
             with open(paths['logpath'], 'a') as logfile:
                 logfile.write('make_merc_abi_mrms\n')
                 logfile.write(step_meta + '\n')
-                logfile.write(func_name + '\n')
                 logfile.write(geo_extent + '\n')
                 logfile.write(goes_vis_meta + '\n')
                 logfile.write(goes_inf_meta + '\n')
@@ -510,8 +508,8 @@ def make_merc_abi_mrms(paths, sat_meta, plot_sets, extent, hitemp=False):
 
             plotting_funcs.plot_merc_abi_mrms(sat_data, mrms_obj, grid_extent=grid_extent,
                                     points_to_plot=points_to_plot, range_rings=True,
-                                    wwa_polys=wwa_polys, show=plot_sets['show'],
-                                    save=plot_sets['save'], outpath=paths['outpath'])
+                                    wwa_polys=wwa_polys, show=plot_set['show'],
+                                    save=plot_set['save'], outpath=paths['outpath'])
 
             fin = ('---------------------------------------'
                    '---------------------------------------')
@@ -558,7 +556,7 @@ def make_mrms_glm_plot(paths, extent, plot_lma=False):
     sat_meta : dict; key: str, val: str
         Dict containing metadata about the satellite imagery to retrieve.
         Keys: satellite, vis_prod, inf_prod, sector, vis_chan, inf_chan, glm_5min
-    plot_sets : dict; key: str, val: str
+    plot_set : dict; key: str, val: str
         Dict containing booleans dictating showing & saving the plots
         Keys: save, show
     extent : list of floats
@@ -568,7 +566,7 @@ def make_mrms_glm_plot(paths, extent, plot_lma=False):
         If True, WTLMA data is plotted
     """
     case_steps = read_case_steps(paths['case_coords'])
-    first_dt, last_dt = get_datetime_bookends(case_steps)
+    first_t1, last_t1 = get_datetime_bookends(case_steps)
 
     grid_extent = {'min_lat': extent[0], 'max_lat': extent[1],
                    'min_lon': extent[2], 'max_lon': extent[3]}
@@ -612,7 +610,6 @@ def make_mrms_glm_plot(paths, extent, plot_lma=False):
         with open(paths['logpath'], 'a') as logfile:
             logfile.write('make_mrms_glm_plot\n')
             logfile.write(step_meta + '\n')
-            logfile.write(func_name + '\n')
             logfile.write(geo_extent + '\n')
             logfile.write(goes_vis_meta + '\n')
             logfile.write(goes_inf_meta + '\n')
@@ -621,12 +618,12 @@ def make_mrms_glm_plot(paths, extent, plot_lma=False):
                                     time, ext_point1, ext_point2, paths['memmap_path'])
 
         glm_scans = localglminterface.get_files_in_range(paths['local_glm_path'],
-                                                         dt, dt)
+                                                         t1, t1)
 
         glm_scans.sort(key=lambda x: x.filename.split('.')[1])
         glm_scan_idx = 0
 
-        glm_meta1 = 'GLM 5-min window: {}'.format(window)
+        glm_meta1 = 'GLM 5-min window: {}'.format(sat_meta['glm_5min'])
         glm_meta2 = 'GLM Metadata: {} {}z {}'.format(
                                 glm_scans[glm_scan_idx].scan_date,
                                 glm_scans[glm_scan_idx].scan_time,
@@ -637,18 +634,18 @@ def make_mrms_glm_plot(paths, extent, plot_lma=False):
         print(glm_meta2)
 
         glm_obj = glm_utils.read_file(glm_scans[glm_scan_idx].abs_path,
-                                        meta=True, window=window)
+                                        meta=True, window=sat_meta['glm_5min'])
 
         if (plot_lma):
             t1 = _format_date_time(date, time)
             sub_time = _format_time_wtlma(time)
 
-            lma_files = wtlma.get_files_in_range(local_wtlma_path, dt, dt)
+            lma_files = wtlma.get_files_in_range(paths['local_wtlma_path'], t1, t1)
             lma_fname = lma_files[0]
-            lma_abs_path = wtlma._parse_abs_path(local_wtlma_path, lma_fname)
+            lma_abs_path = wtlma._parse_abs_path(paths['local_wtlma_path'], lma_fname)
             lma_obj = wtlma.parse_file(lma_abs_path, sub_t=sub_time)
 
-        if (logpath is not None):
+        if (paths['logpath'] is not None):
             with open(paths['logpath'], 'a') as logfile:
                 logfile.write(glm_meta1 + '\n')
                 logfile.write(glm_meta2 + '\n')
@@ -671,7 +668,7 @@ def make_mrms_glm_plot(paths, extent, plot_lma=False):
 
 
 
-def make_mrms_xsect2(paths, plot_sets, plot_lma=True):
+def make_mrms_xsect2(paths, plot_set, plot_lma=True):
     """
     Contains helper-function calls needed for run_mrms_xsect2()
 
@@ -679,7 +676,7 @@ def make_mrms_xsect2(paths, plot_sets, plot_lma=True):
     ----------
     paths : dict; key: str, val: str
         Dict containing local directory paths for the various data sources
-    plot_sets : dict; key: str, val: str
+    plot_set : dict; key: str, val: str
         Dict containing booleans dictating showing & saving the plots
         Keys: save, show
     plot_lma : bool, optional
@@ -689,7 +686,6 @@ def make_mrms_xsect2(paths, plot_sets, plot_lma=True):
     wtlma_coords = None
 
     case_steps = read_case_steps(paths['case_coords'])
-    first_dt, last_dt = get_datetime_bookends(case_steps)
 
     for idx, step in case_steps.iterrows():
         date = step['date']
@@ -711,10 +707,10 @@ def make_mrms_xsect2(paths, plot_sets, plot_lma=True):
             logfile.write('X-sect bounds: {}, {}\n'.format(point1, point2))
 
         if (plot_lma):
-            dt = _format_date_time(date, time)
+            t1 = _format_date_time(date, time)
             sub_time = _format_time_wtlma(time)
 
-            files = wtlma.get_files_in_range(paths['local_wtlma_path'], dt, dt)
+            files = wtlma.get_files_in_range(paths['local_wtlma_path'], t1, t1)
             wtlma_abs_path = wtlma._parse_abs_path(paths['local_wtlma_path'], files[0])
             wtlma_data = wtlma.parse_file(wtlma_abs_path, sub_t=sub_time)
             # filter_by_dist(lma_df, dist, start_point, end_point, num_pts) dist in m
@@ -726,17 +722,28 @@ def make_mrms_xsect2(paths, plot_sets, plot_lma=True):
                                                                         )
             wtlma_data._set_data(filtered_data)
 
-        cross_data, lats, lons = plotting_funcs.process_slice(paths['local_mrms_path'],
-                                                              time, point1, point2)
+        try:
+            cross_data, lats, lons = plotting_funcs.process_slice(paths['local_mrms_path'],
+                                                                  time, point1, point2)
+        except IndexError as err:
+            print('IndexError: {}\n'.format(err))
+            print('MRMS time: {}z\n'.format(time))
 
-        plotting_funcs.plot_mrms_cross_section2(data=cross_data, lons=lons, lats=lats,
-                                                wtlma_obj=wtlma_data, wtlma_coords=wtlma_coords,
-                                                show=plot_set['show'], save=plot_set['save'],
-                                                outpath=plot_set['outpath'])
+            with open(paths['logpath'], 'a') as logfile:
+                logfile.write('{}\n'.format(err))
+                
+            break
+        else:
+            plotting_funcs.plot_mrms_cross_section2(data=cross_data, lons=lons,
+                                                    lats=lats, wtlma_obj=wtlma_data,
+                                                    wtlma_coords=wtlma_coords,
+                                                    show=plot_set['show'],
+                                                    save=plot_set['save'],
+                                                    outpath=paths['outpath'])
 
 
 
-def make_wtlma_glm_mercator_dual(paths, sat_meta, plot_sets, extent, func_num, hitemp=True):
+def make_wtlma_glm_mercator_dual(paths, sat_meta, plot_set, extent, func_num, hitemp=True):
     """
     Gathers all the data to call the plot_mercator_dual family of funcs
 
@@ -747,7 +754,7 @@ def make_wtlma_glm_mercator_dual(paths, sat_meta, plot_sets, extent, func_num, h
     sat_meta : dict; key: str, val: str
         Dict containing metadata about the satellite imagery to retrieve.
         Keys: satellite, vis_prod, inf_prod, sector, vis_chan, inf_chan, glm_5min
-    plot_sets : dict; key: str, val: str
+    plot_set : dict; key: str, val: str
         Dict containing booleans dictating showing & saving the plots
         Keys: save, show
     extent : list of floats
@@ -766,7 +773,7 @@ def make_wtlma_glm_mercator_dual(paths, sat_meta, plot_sets, extent, func_num, h
     point2 = None
 
     case_steps = read_case_steps(paths['case_coords'])
-    first_dt, last_dt = get_datetime_bookends(case_steps)
+    first_t1, last_t1 = get_datetime_bookends(case_steps)
 
     grid_extent = {'min_lat': extent[0], 'max_lat': extent[1],
                    'min_lon': extent[2], 'max_lon': extent[3]}
@@ -775,7 +782,7 @@ def make_wtlma_glm_mercator_dual(paths, sat_meta, plot_sets, extent, func_num, h
     ext_point2 = (extent[1], extent[3])
 
     if (hitemp):
-        vis_files, inf_files = get_sat_data(first_dt, last_dt, sat_meta, paths,
+        vis_files, inf_files = get_sat_data(first_t1, last_t1, sat_meta, paths,
                                 vis=True, inf=True, file_dict=False)
 
         total_files = len(vis_files)
@@ -807,7 +814,6 @@ def make_wtlma_glm_mercator_dual(paths, sat_meta, plot_sets, extent, func_num, h
             with open(paths['logpath'], 'a') as logfile:
                 logfile.write('wtlma_glm_mercator_dual-{}-hitemp\n'.format(func_num))
                 logfile.write(step_meta + '\n')
-                logfile.write(func_name + '\n')
                 logfile.write(geo_extent + '\n')
                 logfile.write(goes_vis_meta + '\n')
                 logfile.write(goes_inf_meta + '\n')
@@ -815,22 +821,22 @@ def make_wtlma_glm_mercator_dual(paths, sat_meta, plot_sets, extent, func_num, h
             time = datetime.strftime(scan_time, '%H%M')
             date = datetime.strftime(scan_time, '%m%d%Y')
 
-            dt = _format_date_time(date, time)
+            t1 = _format_date_time(date, time)
             sub_time = _format_time_wtlma(time)
 
             # Only get new MRMS object if new mrms-time is reached
-            if (time in list(case_steps['mrms-time']):
+            if (time in list(case_steps['mrms-time'])):
                 df_row = case_steps.loc[case_steps['mrms-time'] == time]
-                point1 = (df_row['lat1'], df_row['lon1'])
-                point2 = (df_row['lat2'], df_row['lon2'])
+                point1 = (df_row.iloc[0]['lat1'], df_row.iloc[0]['lon1'])
+                point2 = (df_row.iloc[0]['lat2'], df_row.iloc[0]['lon2'])
 
             ### Get GLM data ###
             glm_scans = localglminterface.get_files_in_range(paths['local_glm_path'],
-                                                             dt, dt)
+                                                             t1, t1)
             glm_scans.sort(key=lambda x: x.filename.split('.')[1])
             glm_scan_idx = 0
 
-            glm_meta1 = 'GLM 5-min window: {}'.format(window)
+            glm_meta1 = 'GLM 5-min window: {}'.format(sat_meta['glm_5min'])
             glm_meta2 = 'GLM Metadata: {} {}z {}'.format(
                                     glm_scans[glm_scan_idx].scan_date,
                                     glm_scans[glm_scan_idx].scan_time,
@@ -841,21 +847,23 @@ def make_wtlma_glm_mercator_dual(paths, sat_meta, plot_sets, extent, func_num, h
             print(glm_meta2)
 
             glm_data = glm_utils.read_file(glm_scans[glm_scan_idx].abs_path,
-                                    meta=True, window=window)
+                                    meta=True, window=sat_meta['glm_5min'])
 
-            lma_files = wtlma.get_files_in_range(local_wtlma_path, dt, dt)
+            lma_files = wtlma.get_files_in_range(paths['local_wtlma_path'], t1, t1)
             lma_fname = lma_files[0]
-            lma_abs_path = wtlma._parse_abs_path(local_wtlma_path, lma_fname)
+            lma_abs_path = wtlma._parse_abs_path(paths['local_wtlma_path'], lma_fname)
             lma_obj = wtlma.parse_file(lma_abs_path, sub_t=sub_time)
+            print(lma_obj)
 
-            if (logpath is not None):
-                with open(logpath, 'a') as logfile:
+            if (paths['logpath'] is not None):
+                with open(paths['logpath'], 'a') as logfile:
                     logfile.write(glm_meta1 + '\n')
                     logfile.write(glm_meta2 + '\n')
                     logfile.write('WTLMA filename: {}\n'.format(lma_fname))
                     logfile.write('WTLMA subset time: {}\n'.format(sub_time))
 
-            wwa_polys = plotting_utils.get_wwa_polys(wwa_fname, date, time, wwa_type=['SV', 'TO'])
+            wwa_polys = plotting_utils.get_wwa_polys(paths['wwa_fname'], date, time,
+                                                     wwa_type=['SV', 'TO'])
 
             if (point1 == None or point2 == None):
                 points_to_plot = None
@@ -868,8 +876,8 @@ def make_wtlma_glm_mercator_dual(paths, sat_meta, plot_sets, extent, func_num, h
                                                   range_rings=True, wwa_polys=wwa_polys,
                                                   satellite_data=(vis_data, inf_data),
                                                   grid_extent=grid_extent,
-                                                  show=plot_sets['show'],
-                                                  save=plot_sets['save'],
+                                                  show=plot_set['show'],
+                                                  save=plot_set['save'],
                                                   outpath=paths['outpath'])
             elif (func_num == 2):
                 plotting_funcs.plot_mercator_dual_2(glm_data, lma_obj,
@@ -877,17 +885,17 @@ def make_wtlma_glm_mercator_dual(paths, sat_meta, plot_sets, extent, func_num, h
                                                     range_rings=True, wwa_polys=wwa_polys,
                                                     satellite_data=(vis_data, inf_data),
                                                     grid_extent=grid_extent,
-                                                    show=plot_sets['show'],
-                                                    save=plot_sets['save'],
+                                                    show=plot_set['show'],
+                                                    save=plot_set['save'],
                                                     outpath=paths['outpath'])
             elif (func_num == 3):
-                plotting_funcs.plot_mercator_dual_sbs(glm_data, lma_obj,
+                plotting_funcs.plot_merc_glm_lma_sbs(glm_data, lma_obj,
                                                   points_to_plot=points_to_plot,
                                                   range_rings=True, wwa_polys=wwa_polys,
                                                   satellite_data=(vis_data, inf_data),
                                                   grid_extent=grid_extent,
-                                                  show=plot_sets['show'],
-                                                  save=plot_sets['save'],
+                                                  show=plot_set['show'],
+                                                  save=plot_set['save'],
                                                   outpath=paths['outpath'])
             else:
                 raise ValueError('Invalid func_num, must be 1, 2, or 3')
@@ -900,8 +908,8 @@ def make_wtlma_glm_mercator_dual(paths, sat_meta, plot_sets, extent, func_num, h
                 logfile.write(fin + '\n')
 
     else: # Not high temporal res - go by mrms file times
-        vis_files, inf_files = get_sat_data_dict(first_dt, last_dt, sat_meta,
-                                    paths, vis=True, inf=True, file_dict=False)
+        vis_files, inf_files = get_sat_data(first_t1, last_t1, sat_meta,
+                                    paths, vis=True, inf=True, file_dict=True)
 
         print('\n')
         for idx, step in case_steps.iterrows():
@@ -937,7 +945,6 @@ def make_wtlma_glm_mercator_dual(paths, sat_meta, plot_sets, extent, func_num, h
             with open(paths['logpath'], 'a') as logfile:
                 logfile.write('wtlma_glm_mercator_dual-{}\n'.format(func_num))
                 logfile.write(step_meta + '\n')
-                logfile.write(func_name + '\n')
                 logfile.write(geo_extent + '\n')
                 logfile.write(goes_vis_meta + '\n')
                 logfile.write(goes_inf_meta + '\n')
@@ -947,11 +954,11 @@ def make_wtlma_glm_mercator_dual(paths, sat_meta, plot_sets, extent, func_num, h
 
             ### Get GLM data ###
             glm_scans = localglminterface.get_files_in_range(paths['local_glm_path'],
-                                                             dt, dt)
+                                                             t1, t1)
             glm_scans.sort(key=lambda x: x.filename.split('.')[1])
             glm_scan_idx = 0
 
-            glm_meta1 = 'GLM 5-min window: {}'.format(window)
+            glm_meta1 = 'GLM 5-min window: {}'.format(sat_meta['glm_5min'])
             glm_meta2 = 'GLM Metadata: {} {}z {}'.format(
                                     glm_scans[glm_scan_idx].scan_date,
                                     glm_scans[glm_scan_idx].scan_time,
@@ -962,15 +969,15 @@ def make_wtlma_glm_mercator_dual(paths, sat_meta, plot_sets, extent, func_num, h
             print(glm_meta2)
 
             glm_data = glm_utils.read_file(glm_scans[glm_scan_idx].abs_path,
-                                    meta=True, window=window)
+                                    meta=True, window=sat_meta['glm_5min'])
 
             ### GET WTLMA Data ###
-            lma_files = wtlma.get_files_in_range(local_wtlma_path, dt, dt)
+            lma_files = wtlma.get_files_in_range(paths['local_wtlma_path'], t1, t1)
             lma_fname = lma_files[0]
-            lma_abs_path = wtlma._parse_abs_path(local_wtlma_path, lma_fname)
+            lma_abs_path = wtlma._parse_abs_path(paths['local_wtlma_path'], lma_fname)
             lma_obj = wtlma.parse_file(lma_abs_path, sub_t=sub_time)
 
-            if (logpath is not None):
+            if (paths['logpath'] is not None):
                 with open(paths['logpath'], 'a') as logfile:
                     logfile.write(glm_meta1 + '\n')
                     logfile.write(glm_meta2 + '\n')
@@ -982,30 +989,30 @@ def make_wtlma_glm_mercator_dual(paths, sat_meta, plot_sets, extent, func_num, h
 
             if (func_num == 1):
                 plotting_funcs.plot_mercator_dual(glm_data, lma_obj,
-                                                  points_to_plot=points_to_plot,
+                                                  points_to_plot=(point1, point2),
                                                   range_rings=True, wwa_polys=wwa_polys,
                                                   satellite_data=(vis_data, inf_data),
                                                   grid_extent=grid_extent,
-                                                  show=plot_sets['show'],
-                                                  save=plot_sets['save'],
+                                                  show=plot_set['show'],
+                                                  save=plot_set['save'],
                                                   outpath=paths['outpath'])
             elif (func_num == 2):
                 plotting_funcs.plot_mercator_dual_2(glm_data, lma_obj,
-                                                    points_to_plot=points_to_plot,
+                                                    points_to_plot=(point1, point2),
                                                     range_rings=True, wwa_polys=wwa_polys,
                                                     satellite_data=(vis_data, inf_data),
                                                     grid_extent=grid_extent,
-                                                    show=plot_sets['show'],
-                                                    save=plot_sets['save'],
+                                                    show=plot_set['show'],
+                                                    save=plot_set['save'],
                                                     outpath=paths['outpath'])
             elif (func_num == 3):
-                plotting_funcs.plot_mercator_dual_sbs(glm_data, lma_obj,
-                                                  points_to_plot=points_to_plot,
+                plotting_funcs.plot_merc_glm_lma_sbs(glm_data, lma_obj,
+                                                  points_to_plot=(point1, point2),
                                                   range_rings=True, wwa_polys=wwa_polys,
                                                   satellite_data=(vis_data, inf_data),
                                                   grid_extent=grid_extent,
-                                                  show=plot_sets['show'],
-                                                  save=plot_sets['save'],
+                                                  show=plot_set['show'],
+                                                  save=plot_set['save'],
                                                   outpath=paths['outpath'])
             else:
                 raise ValueError('Invalid func_num, must be 1, 2, or 3')
