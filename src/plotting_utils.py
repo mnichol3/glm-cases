@@ -548,7 +548,6 @@ def get_composite_ref(base_path, slice_time, point1, point2, memmap_path):
     -------
     comp_obj : MRMSComposite object
     """
-    #memmap_path = '/media/mnichol3/pmeyers1/MattNicholson/data'
     scans = fetch_scans(base_path, slice_time)
 
     grbs = get_grib_objs(scans, base_path, point1, point2)
@@ -559,7 +558,7 @@ def get_composite_ref(base_path, slice_time, point1, point2, memmap_path):
     minor_axis = grbs[0].minor_axis
     data_shape = grbs[0].shape
 
-    fname = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z.txt'
+    fname = 'mrms-cross-{}-{}z.txt'.format(valid_date, valid_time)
 
     scan_0 = np.memmap(grbs[0].get_data_path(), dtype='float32', mode='r', shape=grbs[0].shape)
     composite = np.empty_like(scan_0)
@@ -579,13 +578,14 @@ def get_composite_ref(base_path, slice_time, point1, point2, memmap_path):
     fname = '{}-{}-{}'.format('comp_ref', valid_date, valid_time)
     outpath = join(memmap_path, fname)
 
-    # write the composite data to memmap arr
+    # write the composite data to memmap array
     fp = np.memmap(outpath, dtype='float32', mode='w+', shape=data_shape)
     fp[:] = composite[:]
     del fp
 
     comp_obj = MRMSComposite(valid_date, valid_time, major_axis, minor_axis,
-                             outpath, fname, data_shape, grid_lons=grbs[0].grid_lons, grid_lats=grbs[0].grid_lats)
+                             outpath, fname, data_shape, grid_lons=grbs[0].grid_lons,
+                             grid_lats=grbs[0].grid_lats)
 
     return comp_obj
 
