@@ -202,16 +202,15 @@ def get_cross_neighbor(grb, point1, point2, first=False):
     zi : numpy nd array
         Array containing cross-section reflectivity
     """
-    BASE_PATH = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
-    BASE_PATH_XSECT = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
-    BASE_PATH_XSECT_COORDS = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/coords'
     lons = grb.grid_lons
     lats = grb.grid_lats
 
     x, y = np.meshgrid(lons, lats)
-    #z = grb.data
+
+    # Read the MRMS reflectivity data from the grib object's memory-mapped array
     z = np.memmap(grb.get_data_path(), dtype='float32', mode='r', shape=grb.shape)
 
+    # Calculate the coordinates of a line defined by point1 & point2 to sample
     line = [(point1[0], point1[1]), (point2[0], point2[1])]
 
     y_world, x_world = np.array(list(zip(*line)))
@@ -227,18 +226,17 @@ def get_cross_neighbor(grb, point1, point2, first=False):
 
     d_lats, d_lons = calc_coords(point1, point2, num)
 
+    # Sample the points along the line in order to get the reflectivity values
     zi = z[row.astype(int), col.astype(int)]
-
-    del z
 
     return (zi, d_lats, d_lons)
 
 
 
-def process_slice(base_path, slice_time, point1, point2, write=False):
+def process_slice(base_path, slice_time, point1, point2):
     """
-    Does all the heavy lifting to compute a vertical cross section slice of MRMS
-    data
+    Computes a vertical cross section slice of MRMS reflectivity data along the
+    line defined by point1 & point2
 
     Parameters
     ----------
@@ -252,27 +250,16 @@ def process_slice(base_path, slice_time, point1, point2, write=False):
     point2 : tuple of floats
         Second coordinate pair defining the cross section
         Format: (lat, lon)
-    write: bool, optional
-        If true, the cross section array will be written to a file
 
     Returns
     -------
-    Tuple
+    Tuple of (numpy array, list, list)
         Contains the cross section array, lats, and lons
     """
-    BASE_PATH_XSECT = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
-    BASE_PATH_XSECT_COORDS = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/coords'
-
     cross_sections = np.array([])
 
     scans = fetch_scans(base_path, slice_time) # z = 33
-
     grbs = get_grib_objs(scans, base_path, point1, point2)
-
-    valid_date = grbs[0].validity_date
-    valid_time = grbs[0].validity_time
-
-    fname = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z.txt'
 
     cross_sections, lats, lons = np.asarray(get_cross_neighbor(grbs[0], point1, point2))
 
@@ -280,11 +267,7 @@ def process_slice(base_path, slice_time, point1, point2, write=False):
         x_sect, _, _ = get_cross_neighbor(grb, point1, point2)
         cross_sections = np.vstack((cross_sections, x_sect))
 
-    if (write):
-        f_out = to_file(BASE_PATH_XSECT, fname, cross_sections)
-        return f_out
-    else:
-        return (cross_sections, lats, lons)
+    return (cross_sections, lats, lons)
 
 
 
