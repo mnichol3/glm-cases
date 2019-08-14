@@ -179,7 +179,7 @@ def get_cross_cubic(grb, point1, point2, first=False):
 
 
 
-def get_cross_neighbor(grb, point1, point2, first=False):
+def get_cross_neighbor(grb, point1, point2):
     """
     Calculates the cross section of a single MRMSGrib object's data from point1 to point2
     using nearest-neighbor interpolation
@@ -193,9 +193,6 @@ def get_cross_neighbor(grb, point1, point2, first=False):
     point2 : tuple of float
         Coordinates of the second point that defined the cross section
         Format: (lat, lon)
-    first : bool, optional
-        If True, the cross section latitude & longitude coordinates will be calculated
-        and written to text files
 
     Returns
     -------
