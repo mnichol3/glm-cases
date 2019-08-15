@@ -123,7 +123,7 @@ def get_sat_data(first_t1, last_t1, sat_meta, paths, vis=True, inf=True, file_di
 
 
 
-def make_mrms_lma_abi_glm(paths, sat_meta, plot_set, extent, hitemp=True):
+def make_mrms_lma_abi_glm(paths, sat_meta, plot_set, extent, hitemp=True, lma_bins=100):
     """
     Gathers all the data to call plot_mrms_lma_abi_glm()
 
@@ -143,6 +143,8 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_set, extent, hitemp=True):
     hitemp : bool, optional
         If True, imagery is created at 1-min timesteps. If False, imagery is
         created according to MRMS timesteps
+    lma_bins : int, optional
+        The number of bins to use for the LMA historam. Default: 100
     """
 
     point1 = None
@@ -248,9 +250,9 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_set, extent, hitemp=True):
                 points_to_plot = (point1, point2)
 
             plotting_funcs.plot_mrms_lma_abi_glm((vis_data, inf_data), mrms_obj,
-                            glm_obj, lma_obj, grid_extent=grid_extent, points_to_plot=points_to_plot,
+                            glm_obj, lma_obj, grid_extent=grid_extent, points_to_plot=None,
                             range_rings=True, wwa_polys=wwa_polys, show=plot_set['show'],
-                            save=plot_set['save'], outpath=paths['outpath'])
+                            save=plot_set['save'], outpath=paths['outpath'], lma_bins=lma_bins)
 
             fin = ('---------------------------------------'
                    '---------------------------------------')
@@ -346,7 +348,7 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_set, extent, hitemp=True):
             plotting_funcs.plot_mrms_lma_abi_glm((vis_data, inf_data), mrms_obj,
                             glm_obj, lma_obj, grid_extent=grid_extent, points_to_plot=(point1, point2),
                             range_rings=True, wwa_polys=wwa_polys, show=plot_set['show'],
-                            save=plot_set['save'], outpath=paths['outpath'])
+                            save=plot_set['save'], outpath=paths['outpath'], lma_bins=lma_bins)
 
             fin = ('---------------------------------------'
                    '---------------------------------------')

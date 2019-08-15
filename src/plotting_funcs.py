@@ -818,7 +818,7 @@ def plot_merc_abi_mrms(sat_data, mrms_obj, grid_extent=None, points_to_plot=None
 
 def plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, wtlma_obj, grid_extent=None,
                 points_to_plot=None, range_rings=False, wwa_polys=None, show=True,
-                save=False, outpath=None):
+                save=False, outpath=None, lma_bins=100):
     """
     Creates a figure with two side-by-side plots. The first (left) plot displays
     the ABI visual & infrared 'sandwhich' product with GLM FED overlay. The
@@ -851,6 +851,8 @@ def plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, wtlma_obj, grid_extent=No
     outpath : str, optional
         The path to the directory to save the plot. If save is True, outpath
         cannot be None
+    lma_bins : int, optional
+        The number of bins to use for the LMA historam. Default: 100
     """
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
@@ -924,19 +926,21 @@ def plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, wtlma_obj, grid_extent=No
     cbar1.ax.set_yticklabels([str(x) for x in bounds])
     cbar1.ax.tick_params(labelsize=6)
     cbar1.set_label('GLM Flash Extent Density', fontsize=8)
+    cbar1.ax.minorticks_off()
 
     ############################## Plot LMA data ##############################
-    lma_norm = colors.LogNorm(vmin=1, vmax=400)
+    lma_norm = colors.LogNorm(vmin=1, vmax=650) # Changed from 400
 
+    # bins changed from 100
     H, X_edges, Y_edges = np.histogram2d(wtlma_obj.data['lon'], wtlma_obj.data['lat'],
-                          bins=100, range=[[extent['min_lon'], extent['max_lon']],
+                          bins=lma_bins, range=[[extent['min_lon'], extent['max_lon']],
                           [extent['min_lat'], extent['max_lat']]],
                           weights=wtlma_obj.data['P']) # bins=[len(grid_lons), len(grid_lats)]
 
     lma_mesh = ax2.pcolormesh(X_edges, Y_edges, H.T, norm=lma_norm, transform=crs_plt,
-                        cmap=cm.inferno, zorder=z_ord['lma'])
+                        cmap=cm.hot, zorder=z_ord['lma'])
 
-    lma_bounds = [5, 10, 15, 20, 25, 50, 100, 200, 300, 400]
+    lma_bounds = [5, 10, 15, 20, 25, 50, 100, 200, 400, 650]
 
     axins2 = inset_axes(ax2, width="5%", height="100%", loc='lower left', bbox_to_anchor=(1, 0., 1, 1),
                     bbox_transform=ax2.transAxes, borderpad=0)
@@ -947,6 +951,7 @@ def plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, wtlma_obj, grid_extent=No
     cbar2.ax.set_yticklabels([str(x) for x in lma_bounds])
     cbar2.ax.tick_params(labelsize=6)
     cbar2.set_label('WTLMA Power-Weighted Source Density (dBW)', fontsize=8)
+    cbar2.ax.minorticks_off()
 
     ############################## Plot MRMS data ##############################
     mrms_ref = np.memmap(mrms_obj.get_data_path(), dtype='float32', mode='r',
@@ -955,8 +960,14 @@ def plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, wtlma_obj, grid_extent=No
     mrms_ref = mrms_ref.astype('float')
     mrms_ref[mrms_ref == 0] = np.nan
 
-    ref_plot = ax2.pcolormesh(mrms_obj.grid_lons, mrms_obj.grid_lats, mrms_ref,
-                transform=crs_plt, cmap=cm.gist_ncar, zorder=z_ord['mrms'])
+    # ref_plot = ax2.pcolormesh(mrms_obj.grid_lons, mrms_obj.grid_lats, mrms_ref,
+    #             transform=crs_plt, cmap=cm.gist_ncar, zorder=z_ord['mrms'])
+
+    mrms_extent = [min(mrms_obj.grid_lons), max(mrms_obj.grid_lons),
+                   min(mrms_obj.grid_lats), max(mrms_obj.grid_lats)]
+    ref_plot = ax2.imshow(mrms_ref, cmap=cm.gist_ncar, origin='upper', vmin=0,
+                          vmax=70, extent=mrms_extent, zorder=z_ord['mrms'],
+                          transform=crs_plt, alpha=0.5)
 
     cbar_mrms = fig.colorbar(ref_plot, spacing='proportional',
                         fraction=0.046, pad=0, ax=ax2,
