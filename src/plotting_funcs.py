@@ -20,7 +20,7 @@ from sys import exit
 
 from glm_utils import georeference
 import grib
-from plotting_utils import to_file, load_data, load_coordinates, parse_coord_fnames, process_slice, process_slice_inset
+from plotting_utils import to_file, load_data, load_coordinates, parse_coord_fnames, process_slice
 from plotting_utils import geodesic_point_buffer
 from proj_utils import scan_to_geod
 
