@@ -39,8 +39,8 @@ def main():
     }
 
     plot_set = {
-        'show': False,
-        'save': True
+        'show': True,
+        'save': False
     }
 
     paths = _pat_paths()
@@ -50,8 +50,9 @@ def main():
     if (isfile(paths['logpath'])):
         remove(paths['logpath'])
 
-    #recipes.make_wtlma_glm_mercator_dual(paths, sat_meta, plot_sets, extent, 2, hitemp=False)
-    recipes.make_mrms_xsect2(paths, plot_set, plot_lma=True)
+    #recipes.make_wtlma_glm_mercator_dual(paths, sat_meta, plot_set, extent, 3, hitemp=False)
+    #recipes.make_mrms_xsect2(paths, plot_set, plot_lma=True)
+    recipes.make_mrms_lma_abi_glm(paths, sat_meta, plot_set, extent, hitemp=True)
 
 
 
