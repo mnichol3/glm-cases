@@ -929,9 +929,8 @@ def plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, wtlma_obj, grid_extent=No
     cbar1.ax.minorticks_off()
 
     ############################## Plot LMA data ##############################
-    lma_norm = colors.LogNorm(vmin=1, vmax=650) # Changed from 400
+    lma_norm = colors.LogNorm(vmin=1, vmax=650)
 
-    # bins changed from 100
     H, X_edges, Y_edges = np.histogram2d(wtlma_obj.data['lon'], wtlma_obj.data['lat'],
                           bins=lma_bins, range=[[extent['min_lon'], extent['max_lon']],
                           [extent['min_lat'], extent['max_lat']]],
