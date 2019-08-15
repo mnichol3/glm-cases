@@ -946,7 +946,7 @@ def plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, wtlma_obj, grid_extent=No
 
     cbar2.ax.set_yticklabels([str(x) for x in lma_bounds])
     cbar2.ax.tick_params(labelsize=6)
-    cbar2.set_label('WTLMA Source Power Density (dBW)', fontsize=8)
+    cbar2.set_label('WTLMA Power-Weighted Source Density (dBW)', fontsize=8)
 
     ############################## Plot MRMS data ##############################
     mrms_ref = np.memmap(mrms_obj.get_data_path(), dtype='float32', mode='r',
@@ -1053,7 +1053,7 @@ def plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, wtlma_obj, grid_extent=No
 
     ax1.set_title('GLM Flash Extent Density {} {}z'.format(glm_obj.scan_date, glm_obj.scan_time),
                    loc='center', fontsize=8)
-    ax2.set_title(('WTLMA Power-Weighted Source Density & MRMS Composite'
+    ax2.set_title(('WTLMA Source Density & MRMS Composite'
                    ' Reflectivity {}z').format(wtlma_obj._start_time_pp()),
                    loc='center', fontsize=8)
 

@@ -175,4 +175,5 @@ class MRMSGrib(object):
 
 
     def __repr__(self):
-        return '<MRMSGrib object - {}z>'.format(str(self.scan_angle) + '-' + str(self.validity_date) + '-' + str(self.validity_time))
+        return '<MRMSGrib object - {}-{}-{}z>'.format(self.scan_angle, self.validity_date,
+                                                      self.validity_time)
