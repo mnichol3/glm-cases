@@ -16,6 +16,7 @@ import scipy.ndimage
 import re
 from matplotlib.patches import Polygon
 from os.path import join
+from sys import exit
 
 from glm_utils import georeference
 import grib
@@ -853,7 +854,9 @@ def plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, wtlma_obj, grid_extent=No
     """
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-    z_ord = {'map':6 , 'sat_vis': 1, 'sat_inf': 2, 'glm': 3, 'lma': 4, 'wwa': 5, 'top': 10}
+    z_ord = {'map':6 , 'mrms': 1, 'sat_vis': 1, 'sat_inf': 2, 'glm': 3, 'lma': 4,
+             'wwa': 5, 'top': 10}
+
     tx_counties_reader = shpreader.Reader(TX_SHP_PATH)
     tx_counties_list = list(tx_counties_reader.geometries())
     tx_counties = cfeature.ShapelyFeature(tx_counties_list, ccrs.PlateCarree())
@@ -877,7 +880,7 @@ def plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, wtlma_obj, grid_extent=No
         extent = grid_extent
 
     globe = ccrs.Globe(semimajor_axis=glm_obj.data['semi_major_axis'],
-                semiminor_axis=glm_obj.data['semi_minor_axis'],vflattening=None,
+                semiminor_axis=glm_obj.data['semi_minor_axis'],flattening=None,
                 inverse_flattening=glm_obj.data['inv_flattening'])
 
     crs_plt = ccrs.PlateCarree() # Globe keyword was messing everything up
@@ -889,10 +892,10 @@ def plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, wtlma_obj, grid_extent=No
                         figsize=(12, 8))
 
     states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='black',
-                        name='admin_1_states_provinces_shp', zorder=0)
+                        name='admin_1_states_provinces_shp')
 
     for ax in [ax1, ax2]:
-        ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=1)
+        ax.add_feature(states, linewidth=.8, edgecolor='gray', zorder=0)
         ax.add_feature(tx_counties, linewidth=.6, facecolor='none', edgecolor='gray',
                     zorder=z_ord['map'])
 
@@ -956,7 +959,7 @@ def plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, wtlma_obj, grid_extent=No
                 transform=crs_plt, cmap=cm.gist_ncar, zorder=z_ord['mrms'])
 
     cbar_mrms = fig.colorbar(ref_plot, spacing='proportional',
-                        fraction=0.046, pad=0.02, shrink=0.53, ax=ax2,
+                        fraction=0.046, pad=0, ax=ax2,
                         orientation='horizontal')
     cbar_mrms.ax.tick_params(labelsize=6)
     cbar_mrms.set_label('MRMS Composite Reflectivity (dbz)', fontsize=8)
@@ -986,12 +989,30 @@ def plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, wtlma_obj, grid_extent=No
                             transform=crs_plt, linewidth=1.25, zorder=z_ord['map'])
                 ax.add_patch(mpl_poly)
 
+    ############################## Plot WWA Polys ##############################
+    if (wwa_polys is not None):
+        wwa_keys = wwa_polys.keys()
+
+        if ('SV' in wwa_keys):
+            sv_polys = cfeature.ShapelyFeature(wwa_polys['SV'], crs_plt)
+            ax1.add_feature(sv_polys, linewidth=.8, facecolor='none', edgecolor='yellow',
+                        zorder=z_ord['wwa'])
+            ax2.add_feature(sv_polys, linewidth=.8, facecolor='none', edgecolor='yellow',
+                        zorder=z_ord['wwa'])
+
+        if ('TO' in wwa_keys):
+            to_polys = cfeature.ShapelyFeature(wwa_polys['TO'], crs_plt)
+            ax1.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red',
+                        zorder=z_ord['wwa'])
+            ax2.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red',
+                        zorder=z_ord['wwa'])
+
     ############################## Plot Sat data ##############################
-    if (len(satellite_data) != 2):
+    if (len(sat_data) != 2):
         raise ValueError('Error: Invalid satellite data params to produce sandwhich image')
     else:
-        visual = satellite_data[0]
-        infrared = satellite_data[1]
+        visual = sat_data[0]
+        infrared = sat_data[1]
 
         sat_height = visual['sat_height']
         sat_lon = visual['sat_lon']
@@ -1024,28 +1045,11 @@ def plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, wtlma_obj, grid_extent=No
 
         cbar_bounds = np.arange(190, 270, 10)
         cbar_sat = fig.colorbar(inf_img1, ticks=[x for x in cbar_bounds], spacing='proportional',
-                            fraction=0.046, pad=0.02, shrink=0.53, ax=ax1,
+                            fraction=0.046, pad=0, ax=ax1,
                             orientation='horizontal')
         cbar_sat.set_ticklabels([str(x) for x in cbar_bounds], update_ticks=True)
         cbar_sat.ax.tick_params(labelsize=6)
         cbar_sat.set_label('Cloud-top Temperature (K)', fontsize=8)
-
-    ############################## Plot WWA Polys ##############################
-    if (wwa_polys is not None):
-        wwa_keys = wwa_polys.keys()
-
-        if ('SV' in wwa_keys):
-            sv_polys = cfeature.ShapelyFeature(wwa_polys['SV'], ccrs.PlateCarree())
-            ax1.add_feature(sv_polys, linewidth=.8, facecolor='none', edgecolor='yellow',
-                        order=z_ord['wwa'])
-            ax2.add_feature(sv_polys, linewidth=.8, facecolor='none', edgecolor='yellow',
-                        zorder=z_ord['wwa'])
-        if ('TO' in wwa_keys):
-            to_polys = cfeature.ShapelyFeature(wwa_polys['TO'], ccrs.PlateCarree())
-            ax1.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red',
-                        zorder=z_ord['wwa'])
-            ax2.add_feature(to_polys, linewidth=.8, facecolor='none', edgecolor='red',
-                        zorder=z_ord['wwa'])
 
     ax1.set_title('GLM Flash Extent Density {} {}z'.format(glm_obj.scan_date, glm_obj.scan_time),
                    loc='center', fontsize=8)

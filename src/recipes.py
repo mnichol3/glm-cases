@@ -92,6 +92,8 @@ def get_sat_data(first_t1, last_t1, sat_meta, paths, vis=True, inf=True, file_di
     Returns
     -------
     Tuple of either list or dict
+        Tuple containing the ABI file names
+        Format: (visible, infrared)
     """
     vis_files = None
     inf_files = None
@@ -222,7 +224,7 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_set, extent, hitemp=True):
             print(glm_meta1)
             print(glm_meta2)
 
-            glm_data = glm_utils.read_file(glm_scans[glm_scan_idx].abs_path,
+            glm_obj = glm_utils.read_file(glm_scans[glm_scan_idx].abs_path,
                                     meta=True, window=sat_meta['glm_5min'])
 
             lma_files = wtlma.get_files_in_range(paths['local_wtlma_path'], t1, t1)
@@ -245,9 +247,9 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_set, extent, hitemp=True):
             else:
                 points_to_plot = (point1, point2)
 
-            plotting_funcs.plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, lma_obj,
-                            grid_extent=grid_extent, points_to_plot=None, range_rings=True,
-                            wwa_polys=wwa_polys, show=plot_set['show'],
+            plotting_funcs.plot_mrms_lma_abi_glm((vis_data, inf_data), mrms_obj,
+                            glm_obj, lma_obj, grid_extent=grid_extent, points_to_plot=points_to_plot,
+                            range_rings=True, wwa_polys=wwa_polys, show=plot_set['show'],
                             save=plot_set['save'], outpath=paths['outpath'])
 
             fin = ('---------------------------------------'
@@ -322,7 +324,7 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_set, extent, hitemp=True):
             print(glm_meta1)
             print(glm_meta2)
 
-            glm_data = glm_utils.read_file(glm_scans[glm_scan_idx].abs_path,
+            glm_obj = glm_utils.read_file(glm_scans[glm_scan_idx].abs_path,
                                     meta=True, window=sat_meta['glm_5min'])
 
             ### GET WTLMA Data ###
@@ -341,8 +343,8 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_set, extent, hitemp=True):
             wwa_polys = plotting_utils.get_wwa_polys(paths['wwa_fname'], date, time,
                                             wwa_type=['SV', 'TO'])
 
-            plotting_funcs.plot_mrms_lma_abi_glm(sat_data, mrms_obj, glm_obj, lma_obj,
-                            grid_extent=grid_extent, points_to_plot=(point1, point2),
+            plotting_funcs.plot_mrms_lma_abi_glm((vis_data, inf_data), mrms_obj,
+                            glm_obj, lma_obj, grid_extent=grid_extent, points_to_plot=(point1, point2),
                             range_rings=True, wwa_polys=wwa_polys, show=plot_set['show'],
                             save=plot_set['save'], outpath=paths['outpath'])
 
@@ -731,7 +733,7 @@ def make_mrms_xsect2(paths, plot_set, plot_lma=True):
 
             with open(paths['logpath'], 'a') as logfile:
                 logfile.write('{}\n'.format(err))
-                
+
             break
         else:
             plotting_funcs.plot_mrms_cross_section2(data=cross_data, lons=lons,
