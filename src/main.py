@@ -15,17 +15,6 @@ def main():
     wwa_fname = ('/home/mnichol3/Coding/glm-cases/resources/wwa_201905230000_201905240000'
                  '/wwa_201905230000_201905240000.shp')
 
-    # func_name = 'wtlma_glm_mercator_dual'
-    # func_ext = 'hitemp'
-
-    # func_name = 'plot_merc_abi_mrms'
-    # func_ext = None
-
-    func_name = 'mrms_glm_plot'
-    func_ext = None
-
-    func_mode = 2
-
     extent = [35.362, 36.992, -102.443, -100.00]
 
     sat_meta = {
@@ -39,8 +28,8 @@ def main():
     }
 
     plot_set = {
-        'show': True,
-        'save': False
+        'show': False,
+        'save': True
     }
 
     paths = _pat_paths()
