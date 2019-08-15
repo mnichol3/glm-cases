@@ -89,7 +89,7 @@ def load_coordinates(abs_path):
 
 
 
-def parse_coord_fnames(abs_path):
+def parse_coord_fnames(abs_path, xsect_coord_path):
     date_re = re.compile(r'(\d{8})')
     time_re = re.compile(r'(\d{4})z')
     f_base = 'mrms-cross-'
@@ -102,13 +102,13 @@ def parse_coord_fnames(abs_path):
         if (time_match is not None):
             val_time = time_match.group(1)
 
-            f_lon = f_base + val_date + '-' + val_time + 'z' + '-lons.txt'
+            f_lon = '{}{}-{}z-lons.txt'.format(f_base, val_date, val_time)
 
-            f_lon = join(BASE_PATH_XSECT_COORDS, f_lon)
+            f_lon = join(xsect_coord_path, f_lon)
 
-            f_lat = f_base + val_date + '-' + val_time + 'z' + '-lats.txt'
+            f_lat = '{}{}-{}z-lats.txt'.format(f_base, val_date, val_time)
 
-            f_lat = join(BASE_PATH_XSECT_COORDS, f_lat)
+            f_lat = join(xsect_coord_path, f_lat)
 
             return (f_lon, f_lat)
 
@@ -116,7 +116,7 @@ def parse_coord_fnames(abs_path):
 
 
 
-def get_cross_cubic(grb, point1, point2, first=False):
+def get_cross_cubic(grb, point1, point2):
     """
     Calculates the cross section of a single MRMSGrib object's data from point1 to point2
     using cubic interpolation
@@ -130,18 +130,12 @@ def get_cross_cubic(grb, point1, point2, first=False):
     point2 : tuple of float
         Coordinates of the second point that defined the cross section
         Format: (lat, lon)
-    first : bool, optional
-        If True, the cross section latitude & longitude coordinates will be calculated
-        and written to text files
 
     Returns
     -------
     zi : numpy nd array
         Array containing cross-section reflectivity
     """
-    BASE_PATH = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
-    BASE_PATH_XSECT = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
-    BASE_PATH_XSECT_COORDS = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/coords'
     lons = grb.grid_lons
     lats = grb.grid_lats
 
@@ -161,16 +155,6 @@ def get_cross_cubic(grb, point1, point2, first=False):
 
     valid_date = grb.validity_date
     valid_time = grb.validity_time
-
-    if (first):
-
-        fname_lons = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lons.txt'
-        fname_lats = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lats.txt'
-
-        d_lats, d_lons = calc_coords(point1, point2, num)
-
-        to_file(BASE_PATH_XSECT + '/coords', fname_lons, d_lons)
-        to_file(BASE_PATH_XSECT + '/coords', fname_lats, d_lats)
 
     # Extract the values along the line, using cubic interpolation
     zi = scipy.ndimage.map_coordinates(z, np.vstack((row, col)), order=1, mode='nearest')
@@ -265,67 +249,6 @@ def process_slice(base_path, slice_time, point1, point2):
         cross_sections = np.vstack((cross_sections, x_sect))
 
     return (cross_sections, lats, lons)
-
-
-
-def process_slice_inset(base_path, slice_time, point1, point2):
-    """
-    Does all the heavy lifting to compute a vertical cross section slice of MRMS
-    data with geographical plot inset
-
-    Parameters
-    ----------
-    base_path : str
-        Path to the parent MRMS data directory
-    slice_time : str
-        Validity time of the desired data
-    point1 : tuple of floats
-        First coordinate pair defining the cross section
-        Format: (lat, lon)
-    point2 : tuple of floats
-        Second coordinate pair defining the cross section
-        Format: (lat, lon)
-
-    Returns
-    -------
-    Dictionary
-        Keys: x_sect, f_inset_lons, f_inset_lats, f_inset_data
-
-    ex:
-        dict = process_slice2(base_path, slice_time, point1, point2)
-        plot_cross_section_inset(inset_data=dict['f_inset_data'], inset_lons=dict['f_inset_lons'],
-            inset_lats=dict['f_inset_lats'], abs_path=fname, points=(point1, point2))
-    """
-    print('Warning: Depricated')
-    BASE_PATH_XSECT = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
-    BASE_PATH_XSECT_COORDS = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/coords'
-
-    cross_sections = np.array([])
-
-    scans = fetch_scans(base_path, '2124') # z = 33
-
-    grbs = get_grib_objs(scans, base_path, point1, point2)
-
-    valid_date = grbs[0].validity_date
-    valid_time = grbs[0].validity_time
-
-    fname = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z.txt'
-
-    cross_sections = np.asarray(get_cross_neighbor(grbs[0], point1, point2))
-
-    for grb in grbs[1:]:
-        cross_sections = np.vstack((cross_sections, get_cross_neighbor(grb, point1, point2)))
-
-    # ang2 = 'mrms-ang2-' + str(valid_date) + '-' + str(valid_time) + 'z.txt'
-    # f_ang2_lons = 'mrms-ang2-' + str(valid_date) + '-' + str(valid_time) + 'z-lons.txt'
-    # f_ang2_lats = 'mrms-ang2-' + str(valid_date) + '-' + str(valid_time) + 'z-lats.txt'
-    #
-    # f_out = to_file(BASE_PATH_XSECT, fname, cross_sections)
-    # f_lons = to_file(BASE_PATH_XSECT_COORDS, f_ang2_lons, grbs[6].grid_lons)
-    # f_lats = to_file(BASE_PATH_XSECT_COORDS, f_ang2_lats, grbs[6].grid_lats)
-    # f_inset = to_file(BASE_PATH_XSECT, ang2, grbs[6].data)
-
-    return {'x_sect': f_out, 'f_inset_lons': f_lons, 'f_inset_lats': f_lats, 'f_inset_data': f_inset}
 
 
 
@@ -680,46 +603,6 @@ def get_wwa_polys(abs_path, date, time, wwa_type=['SV', 'TO']):
 
 
 
-def custom_cmap():
-
-    # gist_ncar = {'red': ((0.0, 0.0, 0.0), (0.3098, 0.0, 0.0), (0.3725, 0.3993, 0.3993),
-    #                     (0.4235, 0.5003, 0.5003), (0.5333, 1.0, 1.0), (0.7922, 1.0, 1.0),
-    #                     (0.8471, 0.6218, 0.6218), (0.898, 0.9235, 0.9235), (1.0, 0.9961, 0.9961)),
-    #             'green': ((0.0, 0.0, 0.0), (0.051, 0.3722, 0.3722), (0.1059, 0.0, 0.0),
-    #                     (0.1569, 0.7202, 0.7202), (0.1608, 0.7537, 0.7537), (0.1647, 0.7752, 0.7752),
-    #                     (0.2157, 1.0, 1.0), (0.2588, 0.9804, 0.9804), (0.2706, 0.9804, 0.9804),
-    #                     (0.3176, 1.0, 1.0), (0.3686, 0.8081, 0.8081), (0.4275, 1.0, 1.0),
-    #                     (0.5216, 1.0, 1.0), (0.6314, 0.7292, 0.7292), (0.6863, 0.2796, 0.2796),
-    #                     (0.7451, 0.0, 0.0), (0.7922, 0.0, 0.0), (0.8431, 0.1753, 0.1753),
-    #                     (0.898, 0.5, 0.5), (1.0, 0.9725, 0.9725)),
-    #             'blue': ((0.0, 0.502, 0.502), (0.051, 0.0222, 0.0222), (0.1098, 1.0, 1.0),
-    #                     (0.2039, 1.0, 1.0), (0.2627, 0.6145, 0.6145), (0.3216, 0.0, 0.0),
-    #                     (0.4157, 0.0, 0.0), (0.4745, 0.2342, 0.2342), (0.5333, 0.0, 0.0),
-    #                     (0.5804, 0.0, 0.0), (0.6314, 0.0549, 0.0549), (0.6902, 0.0, 0.0),
-    #                     (0.7373, 0.0, 0.0), (0.7922, 0.9738, 0.9738), (0.8, 1.0, 1.0),
-    #                     (0.8431, 1.0, 1.0), (0.898, 0.9341, 0.9341), (1.0, 0.9961, 0.9961))}
-
-    new_cm = LinearSegmentedColormap.from_list('new_cm',
-                ['darkgray', 'royalblue', 'cyan', 'limegreen', 'yellow', 'red',
-                 'black', 'lavenderblush'])
-    new_cm = new_cm.reversed()
-
-    # cms = [LinearSegmentedColormap('gist_ncar', segmentdata=gist_ncar),
-    #        LinearSegmentedColormap('new_cm', segmentdata=new_cm)]
-
-    # cms = [LinearSegmentedColormap('gist_ncar', segmentdata=gist_ncar), new_cm]
-    #
-    # np.random.seed(19680801)
-    # data = np.random.randn(30, 30)
-    # fig, axs = plt.subplots(1, 2, figsize=(6, 3), constrained_layout=True)
-    # for [ax, cmap] in zip(axs, cms):
-    #     psm = ax.pcolormesh(data, cmap=cmap, rasterized=True, vmin=-4, vmax=4)
-    #     fig.colorbar(psm, ax=ax)
-    # plt.show()
-    return new_cm
-
-
-
 def _valid_wwa_time(issued, expired, target):
     target = int(target)
     expired = int(expired)
@@ -747,5 +630,3 @@ def _format_wwa_time(date, time):
     """
     dt = datetime.datetime.strptime(date + time,'%m%d%Y%H%M')
     return datetime.datetime.strftime(dt, '%Y%m%d%H%M')
-
-custom_cmap()

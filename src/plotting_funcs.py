@@ -1095,10 +1095,6 @@ def plot_cross_cubic_single(grb, point1, point2, first=False):
     None, displays a plot of the cross section
 
     """
-    BASE_PATH = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
-    BASE_PATH_XSECT = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
-    BASE_PATH_XSECT_COORDS = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/coords'
-
     lons = grb.grid_lons
     lats = grb.grid_lats
 
@@ -1118,16 +1114,6 @@ def plot_cross_cubic_single(grb, point1, point2, first=False):
 
     valid_date = grb.validity_date
     valid_time = grb.validity_time
-
-    if (first):
-
-        fname_lons = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lons.txt'
-        fname_lats = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lats.txt'
-
-        d_lons, d_lats = calc_coords(point1, point2, num)
-
-        to_file(BASE_PATH_XSECT + '/coords', fname_lons, d_lons)
-        to_file(BASE_PATH_XSECT + '/coords', fname_lats, d_lats)
 
     # Extract the values along the line, using cubic interpolation
     zi = scipy.ndimage.map_coordinates(z, np.vstack((row, col)), order=1, mode='nearest')
@@ -1166,10 +1152,6 @@ def plot_cross_neighbor_single(grb, point1, point2, first=False):
     -------
     None, displays a plot of the cross section
     """
-    BASE_PATH = '/media/mnichol3/pmeyers1/MattNicholson/mrms/201905'
-    BASE_PATH_XSECT = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect'
-    BASE_PATH_XSECT_COORDS = '/media/mnichol3/pmeyers1/MattNicholson/mrms/x_sect/coords'
-
     lons = grb.grid_lons
     lats = grb.grid_lats
 
@@ -1187,16 +1169,6 @@ def plot_cross_neighbor_single(grb, point1, point2, first=False):
     valid_date = grb.validity_date
     valid_time = grb.validity_time
 
-    if (first):
-
-        fname_lons = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lons.txt'
-        fname_lats = 'mrms-cross-' + str(valid_date) + '-' + str(valid_time) + 'z-lats.txt'
-
-        d_lons, d_lats = calc_coords(point1, point2, num)
-
-        to_file(BASE_PATH_XSECT + '/coords', fname_lons, d_lons)
-        to_file(BASE_PATH_XSECT + '/coords', fname_lats, d_lats)
-
     zi = z[row.astype(int), col.astype(int)] #(10000,)
 
     fig, axes = plt.subplots(nrows=2)
@@ -1205,78 +1177,6 @@ def plot_cross_neighbor_single(grb, point1, point2, first=False):
     axes[0].axis('image')
 
     axes[1].plot(zi)
-
-    plt.show()
-
-
-
-def plot_mrms_cross_section(data=None, abs_path=None, lons=None, lats=None):
-    """
-    Plots a cross-section of MRMS reflectivity data from all scan angles. If
-    the 'data' parameter is given, then that data is plotted. If 'abs_path' is
-    given, then data from the text file located at that absolute path is read and
-    plotted
-
-    Parameters
-    ----------
-    data : numpy 2d array, optional
-        2d array of reflectivity data
-    abs_path : str, optional
-        Absolute path of the text file containing the reflectivity cross-section
-        data. Must be given if data is None
-    lons : list of float, optional
-        List of longitude coordinates from the vertical slice. Must be given if
-        cross section data is passed in through the data parameter
-    lats : list of float, optional
-        List of latitude coordinates from the vertical slice. Must be given if
-        cross section data is passed in through the data parameter
-
-    Returns
-    -------
-    None, displays a plot of the reflectivity cross section
-    """
-
-    scan_angles = np.array([0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75,
-                            3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9,
-                            10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
-
-    if (data is not None):
-        if (lons is None or lats is None):
-            raise ValueError('lons and/or lats parameters cannot be None')
-        else:
-            lats = grib.trunc(lats, 2)
-            lons = grib.trunc(lons, 2)
-            coords = []
-            for idx, x in enumerate(lons):
-                coords.append('(' + str(x) + ', ' + str(lats[idx]) + ')')
-    else:
-        if (abs_path is None):
-            raise ValueError('data and abs_path parameters cannot both be None')
-        else:
-            data = load_data(abs_path)
-            f_lon, f_lat = parse_coord_fnames(abs_path)
-            lons = load_coordinates(f_lon)
-            lats = load_coordinates(f_lat)
-
-            coords = []
-            for idx, x in enumerate(lons):
-                coords.append(str(x) + ', ' + str(lats[idx]))
-
-    fig = plt.figure()
-    ax = plt.gca()
-
-    xs = np.arange(0, 1000)
-
-    #im = ax.pcolormesh(xs, scan_angles, data, cmap=mpl.cm.gist_ncar)
-    im = ax.pcolormesh(coords, scan_angles, data, cmap=mpl.cm.gist_ncar, vmin=0, vmax=65)
-    cbar = fig.colorbar(im, ax=ax, ticks=[10,20,30,40,50,60])
-    cbar.set_label('Reflectivity (dbz)', rotation=90)
-    ax.set_title('MRMS Reflectivity Cross Section')
-    ax.xaxis.set_major_locator(plt.MaxNLocator(10))
-    ax.set_ylabel('Scan Angle (Deg)')
-    ax.set_xlabel('Lon, Lat')
-
-    fig.tight_layout()
 
     plt.show()
 
@@ -1323,17 +1223,7 @@ def plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtl
             for idx, x in enumerate(lons):
                 coords.append('(' + str(x) + ', ' + str(lats[idx]) + ')')
     else:
-        if (abs_path is None):
-            raise ValueError('data and abs_path parameters cannot both be None')
-        else:
-            data = load_data(abs_path)
-            f_lon, f_lat = parse_coord_fnames(abs_path)
-            lons = load_coordinates(f_lon)
-            lats = load_coordinates(f_lat)
-
-            coords = []
-            for idx, x in enumerate(lons):
-                coords.append(str(x) + ', ' + str(lats[idx]))
+        raise ValueError('Data parameter cannot be None')
 
     if (wtlma_obj is None):
         raise ValueError('Missing wtlma_obj param')
@@ -1369,7 +1259,9 @@ def plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtl
     cbar2 = fig.colorbar(scatt, ax=ax)
     cbar2.set_label('WTLMA Stroke Power (dBW)', rotation=90)
 
-    ax.set_title('MRMS Reflectivity Cross Section with WTLMA Sources < 19000m AGL\n{}'.format(wtlma_obj._start_time_pp()), loc='left')
+    ax.set_title('MRMS Reflectivity Cross Section with WTLMA Sources < 19000m AGL\n{}'
+                 .format(wtlma_obj._start_time_pp()), loc='left')
+
     ax.xaxis.set_major_locator(plt.MaxNLocator(10))
 
     for tick in ax.xaxis.get_major_ticks():
@@ -1396,7 +1288,8 @@ def plot_mrms_cross_section2(data=None, abs_path=None, lons=None, lats=None, wtl
 
 
 
-def plot_mrms_cross_section_inset(data=None, inset_data=None, inset_lons=None, inset_lats=None, abs_path=None, lons=None, lats=None, points=None):
+def plot_mrms_cross_section_inset(data=None, inset_data=None, inset_lons=None,
+            inset_lats=None, abs_path=None, lons=None, lats=None, points=None):
     """
     Plots a cross-section of MRMS reflectivity data from all scan angles. If
     the 'data' parameter is given, then that data is plotted. If 'abs_path' is
@@ -1431,28 +1324,12 @@ def plot_mrms_cross_section_inset(data=None, inset_data=None, inset_lons=None, i
             raise ValueError('lons and/or lats parameters cannot be None')
         else:
             coords = list(zip(lons, lats))
-    else:
-        if (abs_path is None):
-            raise ValueError('data and abs_path parameters cannot both be None')
-        else:
-            data = load_data(abs_path)
-            f_lon, f_lat = parse_coord_fnames(abs_path)
-            lons = load_coordinates(f_lon)
-            lats = load_coordinates(f_lat)
-            inset_data = load_data(inset_data)
-            inset_lons = load_data(inset_lons)
-            inset_lats = load_data(inset_lats)
-
-            coords = []
-            for idx, x in enumerate(lons):
-                coords.append(str(x) + ', ' + str(lats[idx]))
 
     fig = plt.figure()
     ax = plt.gca()
 
     xs = np.arange(0, 1000)
 
-    #im = ax.pcolormesh(xs, scan_angles, data, cmap=mpl.cm.gist_ncar)
     im = ax.pcolormesh(coords, scan_angles, data, cmap=mpl.cm.gist_ncar)
     cbar = fig.colorbar(im, ax=ax)
     cbar.set_label('Reflectivity (dbz)', rotation=90)
