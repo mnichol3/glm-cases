@@ -32,6 +32,11 @@ def main():
         'save': True
     }
 
+    # plot_set = {
+    #         'show': True,
+    #         'save': False
+    # }
+
     paths = _pat_paths()
     paths['wwa_fname'] = wwa_fname
     paths['case_coords'] = case_coords
@@ -40,8 +45,8 @@ def main():
         remove(paths['logpath'])
 
     #recipes.make_wtlma_glm_mercator_dual(paths, sat_meta, plot_set, extent, 3, hitemp=False)
-    #recipes.make_mrms_xsect2(paths, plot_set, plot_lma=True)
-    recipes.make_mrms_lma_abi_glm(paths, sat_meta, plot_set, extent, hitemp=True, lma_bins=100)
+    recipes.make_mrms_xsect2(paths, plot_set, plot_lma=True)
+    # recipes.make_mrms_lma_abi_glm(paths, sat_meta, plot_set, extent, hitemp=True, lma_bins=100)
 
 
 

@@ -250,7 +250,7 @@ def make_mrms_lma_abi_glm(paths, sat_meta, plot_set, extent, hitemp=True, lma_bi
                 points_to_plot = (point1, point2)
 
             plotting_funcs.plot_mrms_lma_abi_glm((vis_data, inf_data), mrms_obj,
-                            glm_obj, lma_obj, grid_extent=grid_extent, points_to_plot=None,
+                            glm_obj, lma_obj, grid_extent=grid_extent, points_to_plot=points_to_plot,
                             range_rings=True, wwa_polys=wwa_polys, show=plot_set['show'],
                             save=plot_set['save'], outpath=paths['outpath'], lma_bins=lma_bins)
 
