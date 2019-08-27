@@ -179,6 +179,38 @@ def plot_wwa(abs_path, datetime):
 
 
 
+def calc_geo_area():
+    import pyproj
+    import shapely
+    import shapely.ops as ops
+    from shapely.geometry.polygon import Polygon
+    from functools import partial
+
+             # x0       x1       y0      y1
+    extent = [-102.443, -100.00, 35.362, 36.992]
+
+    poly = Polygon([(extent[0], extent[2]), (extent[0], extent[3]),
+                    (extent[1], extent[3]), (extent[1], extent[2]),
+                    (extent[0], extent[2])])
+
+    print('Polygon bounds: {}'.format(poly.bounds))
+
+    poly_aea = ops.transform(
+        partial(
+            pyproj.transform,
+            pyproj.Proj(init='EPSG:4326'),
+            pyproj.Proj(
+                proj='aea',
+                lat1=poly.bounds[1],
+                lat2=poly.bounds[3]
+            )
+        ),
+        poly
+    )
+
+    print('Area (km^2): {}'.format(poly_aea.area/1000))
+
+
 def _valid_wwa_time(issued, expired, target):
     target = int(target)
     expired = int(expired)
